@@ -84,6 +84,7 @@
     <div id="bars"></div>
     <div id="verdict" class="verdict"></div>
     <p class="meta" id="barMeta"></p>
+    <p class="meta" id="barNote" style="display:none"></p>
   </div>
 
   <div class="card">
@@ -174,7 +175,7 @@ function fmtE(v){ const vM=v*1000;
   if(vM>=1e3) return (vM/1e3).toFixed(0)+" kJ";
   return Math.round(vM)+" J"; }
 
-function renderBars(m){
+function renderBars(m, ms){
   const bars=document.getElementById("bars");
   const precs=PREC.filter(p=>m.e[p]!=null);
   const max=Math.max(...precs.map(p=>m.e[p]));
@@ -203,6 +204,14 @@ function renderBars(m){
     "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null
       ? " · INT8 = 8-bit (throughput collapse spikes per-token energy)"
       : " · INT8 not measured on this GPU (only A800 has INT8 runs)");
+
+  // rebound footnote: a larger model swings back to a penalty after a smaller one already saved
+  const note=document.getElementById("barNote");
+  const rebound = ms && dn>0 && ms.some(x=>x.size < m.size && (dPct(x,"NF4")||0) < 0);
+  if(rebound){
+    note.style.display="";
+    note.innerHTML="Why does a <b>bigger</b> model swing back to a penalty here? The crossover isn't perfectly monotonic — once weights fit comfortably in memory, the saving from less memory traffic shrinks while the per-token dequantization overhead stays, so kernel/throughput and architecture effects can tip the balance back. Quantization payoff depends on the model–GPU fit, not size alone.";
+  } else { note.style.display="none"; note.innerHTML=""; }
 }
 
 function renderCross(gpuKey, selIdx){
@@ -271,7 +280,7 @@ function renderHint(m){
 
 function render(){
   const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
-  renderBars(m); renderCross(g,i); renderHint(m);
+  renderBars(m, DATA[g].models); renderCross(g,i); renderHint(m);
 }
 
 gpuSel.addEventListener("change",()=>{ fillModels(); render(); track("explore",ctx()); });
