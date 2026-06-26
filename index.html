@@ -61,10 +61,10 @@
   <header>
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>“Quantization doesn't always save energy. See for yourself.”</p>
-    <p class="badge" style="margin-top:8px">From the working paper <i>“Weight-Only Quantization Does Not Always Save Energy”</i> · <b>peer review complete</b>, under review at <i>Sustainable Computing: Informatics and Systems</i>.</p>
+    <p class="badge" style="margin-top:8px">From the working paper <i>“Weight-Only Quantization Does Not Always Save Energy”</i> · <b>under review</b> at <i>Sustainable Computing: Informatics and Systems</i> (2 reviews received).</p>
     <div class="cta">
-      <a class="btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Read the preprint on SSRN →</a>
-      <a class="ghost" href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Evidence hub &amp; dataset</a>
+      <a id="ssrnCta" class="btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Read the preprint on SSRN →</a>
+      <a id="hubCta" class="ghost" href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Evidence hub &amp; dataset</a>
     </div>
   </header>
 
@@ -80,7 +80,7 @@
   </div>
 
   <div class="card">
-    <h2>Inference energy per 1k tokens</h2>
+    <h2>Inference energy per 1M tokens</h2>
     <div id="bars"></div>
     <div id="verdict" class="verdict"></div>
     <p class="meta" id="barMeta"></p>
@@ -102,7 +102,9 @@
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">“Weight-Only Quantization Does Not Always Save Energy”</a>
     · real GPU measurements (NVML 10Hz, 256 tokens/run, 10 iterations) · dataset: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a>.
-    Energy in J / 1k tokens; ΔE% is relative to each model's FP16 baseline.
+    Energy shown per 1M tokens; ΔE% is relative to each model's FP16 baseline.
+    INT8 was measured only on A800 in this dataset.
+    <br>Tip: switch GPU to <b>RTX 5090</b> or <b>T4</b> and step up to a 7B model to watch NF4 flip from penalty (red) to savings (green) — the crossover effect.
     <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · under review at <i>Sustainable Computing: Informatics and Systems</i>.
   </footer>
 </div>
@@ -166,7 +168,11 @@ function fillModels(){
 }
 
 function dPct(m,p){ return m.e[p]==null?null:(m.e[p]-m.e.FP16)/m.e.FP16*100; }
-function fmtE(v){ return v>=1000 ? (v/1000).toFixed(2)+" kJ" : Math.round(v)+" J"; }
+/* stored values are J per 1k tokens; display per 1M tokens (×1000) for fleet-scale intuition */
+function fmtE(v){ const vM=v*1000;
+  if(vM>=1e6) return (vM/1e6).toFixed(2)+" MJ";
+  if(vM>=1e3) return (vM/1e3).toFixed(0)+" kJ";
+  return Math.round(vM)+" J"; }
 
 function renderBars(m){
   const bars=document.getElementById("bars");
@@ -194,7 +200,9 @@ function renderBars(m){
   else{ v.className="verdict up"; v.innerHTML=`<span class="big">↑</span> NF4 adds ${dn.toFixed(0)}% energy — quantization actually costs more for this model.`; }
 
   document.getElementById("barMeta").textContent =
-    "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null? " · INT8 = 8-bit (throughput collapse spikes per-token energy)":"");
+    "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null
+      ? " · INT8 = 8-bit (throughput collapse spikes per-token energy)"
+      : " · INT8 not measured on this GPU (only A800 has INT8 runs)");
 }
 
 function renderCross(gpuKey, selIdx){
@@ -266,11 +274,41 @@ function render(){
   renderBars(m); renderCross(g,i); renderHint(m);
 }
 
-gpuSel.addEventListener("change",()=>{ fillModels(); render(); });
-modelSel.addEventListener("change", render);
+gpuSel.addEventListener("change",()=>{ fillModels(); render(); track("explore",ctx()); });
+modelSel.addEventListener("change",()=>{ render(); track("explore",ctx()); });
 
-// init: RTX 4090D + Qwen2.5-3B (a clear "penalty" example)
-gpuSel.value="RTX 4090D"; fillModels(); modelSel.value="3"; render();
+// init: RTX 5090 + Qwen2.5-3B — a penalty case whose crossover visibly dips into
+// savings at 7B, so the red→green flip is one click away out of the box.
+gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2"; render();
+
+/* ===== Analytics + UTM (provider-agnostic) ===== */
+// Captures inbound utm_* (set on the email/social links pointing here), forwards them
+// to outbound CTAs, and fires events. Works with Plausible (window.plausible) and/or
+// GA4 (window.gtag); no-ops safely if neither analytics snippet is present.
+const UTM = (()=>{ const q=new URLSearchParams(location.search); const o={};
+  ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach(k=>{ if(q.get(k)) o[k]=q.get(k); }); return o; })();
+
+function track(event, props){ try{
+  const p=Object.assign({}, UTM, props||{});
+  if(window.plausible) window.plausible(event,{props:p});
+  if(window.gtag) window.gtag("event",event,p);
+}catch(e){} }
+
+function ctx(){ const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
+  return { gpu:g, model:m.name, nf4_delta_pct:+dPct(m,"NF4").toFixed(1) }; }
+
+// forward inbound UTMs onto outbound links so downstream attribution survives
+function decorate(a){ if(!a) return; try{ const u=new URL(a.href);
+  Object.entries(UTM).forEach(([k,v])=>u.searchParams.set(k,v)); a.href=u.toString(); }catch(e){} }
+decorate(document.getElementById("ssrnCta"));
+decorate(document.getElementById("hubCta"));
+
+const ssrn=document.getElementById("ssrnCta");
+if(ssrn) ssrn.addEventListener("click",()=>track("cta_ssrn_click",ctx()));
+const hub=document.getElementById("hubCta");
+if(hub) hub.addEventListener("click",()=>track("cta_hub_click",ctx()));
+
+track("pageview_demo", {});
 </script>
 </body>
 </html>
