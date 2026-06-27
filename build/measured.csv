@@ -1,0 +1,19 @@
+gpu,arch,vram_gb,model,params_b,precision,energy_fp16_j1k,energy_quant_j1k,n_runs,energy_quant_std_j1k,note
+RTX 4090D,ada,24,Qwen2-0.5B,0.5,NF4,1474.16,2301.07,1,,n=1 single trial
+RTX 4090D,ada,24,TinyLlama-1.1B,1.1,NF4,1600.58,2134.35,2,20.06,
+RTX 4090D,ada,24,Qwen2-1.5B,1.5,NF4,2238.87,3103.12,2,95.03,higher variance (CV 13.4%)
+RTX 4090D,ada,24,Qwen2.5-3B,3.0,NF4,2989.22,3743.12,2,107.97,
+RTX 5090,blackwell,32,TinyLlama-1.1B,1.1,NF4,1659.00,2098.44,10,31.5,
+RTX 5090,blackwell,32,Qwen2-1.5B,1.5,NF4,2411.09,3120.49,10,42.1,
+RTX 5090,blackwell,32,Qwen2.5-3B,3.0,NF4,3382.64,3779.60,10,48.7,
+RTX 5090,blackwell,32,Qwen2-7B,7.0,NF4,5508.56,4877.88,10,55.8,
+T4,turing,16,TinyLlama-1.1B,1.1,NF4,4251.21,4445.26,10,52.1,
+T4,turing,16,Qwen2-1.5B,1.5,NF4,5731.80,5744.39,10,61.5,
+T4,turing,16,Qwen2.5-3B,3.0,NF4,11267.69,11111.78,10,95.2,
+T4,turing,16,Qwen2-7B,7.0,NF4,21722.65,18734.94,10,142.8,
+A800,ampere,80,Mistral-7B,7.0,NF4,4402.43,4222.40,1,,CV 1.6%
+A800,ampere,80,Yi-1.5-9B,9.0,NF4,5445.12,5363.07,1,,CV 0.91%
+A800,ampere,80,Qwen2.5-14B,14.0,NF4,7359.98,7544.60,1,,CV 1.12% (rebound to penalty)
+A800,ampere,80,Mistral-7B,7.0,INT8,4402.43,10161.92,1,,int8_default; CV 0.64%
+A800,ampere,80,Yi-1.5-9B,9.0,INT8,5445.12,11825.92,1,,int8_default; CV 0.48%
+A800,ampere,80,Qwen2.5-14B,14.0,INT8,7359.98,15265.58,1,,int8_default; CV 1.03%
