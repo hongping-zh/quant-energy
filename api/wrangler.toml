@@ -1,0 +1,12 @@
+# Cloudflare Worker config for the should-I-quantize REST endpoint.
+# Deploy:  cd api && npx wrangler deploy   (needs a Cloudflare account + login/token)
+name = "ecocompute-estimator"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Free-plan friendly. After deploy the URL is:
+#   https://ecocompute-estimator.<your-subdomain>.workers.dev
+# To attach a custom domain/route, add a [[routes]] block, e.g.:
+# [[routes]]
+# pattern = "api.yourdomain.com/*"
+# zone_name = "yourdomain.com"
