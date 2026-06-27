@@ -1,0 +1,16 @@
+{
+  "name": "ecocompute-mcp",
+  "version": "1.0.0",
+  "description": "MCP server exposing EcoCompute's deterministic should-I-quantize estimator as a tool",
+  "type": "module",
+  "bin": { "ecocompute-mcp": "server.js" },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "smoke": "node smoke.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  }
+}
