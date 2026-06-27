@@ -69,6 +69,18 @@
   .estci{font-size:14px;color:var(--muted);margin-top:4px}
   .estnotes{font-size:12px;color:var(--muted);margin:10px 0 0;padding-left:18px;line-height:1.6}
   .estnotes li{margin:2px 0}
+  .askbar{display:flex;gap:8px;margin:18px 0 2px}
+  .askbar input{flex:1;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:14px}
+  .askbar input:focus{outline:none;border-color:var(--accent)}
+  .askbar button{appearance:none;background:var(--accent);color:#06223a;border:0;border-radius:10px;padding:0 18px;font-size:13px;font-weight:700;cursor:pointer}
+  .adv{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 14px}
+  .adv summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;padding:11px 0;list-style:none}
+  .adv summary::-webkit-details-marker{display:none}
+  .adv summary::before{content:"\25B8 ";color:var(--accent)}
+  .adv[open] summary::before{content:"\25BE "}
+  .adv .advrow{display:flex;gap:18px;flex-wrap:wrap;padding:0 0 14px}
+  .adv .advrow .field{min-width:130px}
+  .estvram{font-size:12px;color:var(--muted);margin-top:6px}
 </style>
 </head>
 <body>
@@ -123,6 +135,10 @@
   </div><!-- /measuredView -->
 
   <div id="estimateView" style="display:none">
+    <div class="askbar">
+      <input id="pAsk" type="text" placeholder="Ask in plain English — e.g. “13B on A100, INT8, batch 32, ctx 8k”" />
+      <button id="pAskBtn" type="button">Ask</button>
+    </div>
     <div class="controls">
       <div class="field">
         <label for="pN">Model size (parameters, B)</label>
@@ -138,6 +154,20 @@
       </div>
     </div>
 
+    <details class="adv" id="pAdv">
+      <summary>Advanced · batch size &amp; context length (modelled, not measured)</summary>
+      <div class="advrow">
+        <div class="field">
+          <label for="pBatch">Batch size</label>
+          <input id="pBatch" type="number" min="1" max="512" step="1" value="1" />
+        </div>
+        <div class="field">
+          <label for="pCtx">Context length (tokens)</label>
+          <input id="pCtx" type="number" min="128" max="131072" step="128" value="2048" />
+        </div>
+      </div>
+    </details>
+
     <div class="card">
       <h2>Estimated energy change vs FP16</h2>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -146,6 +176,7 @@
         <span id="estConf" class="tag"></span>
       </div>
       <div id="estCi" class="estci"></div>
+      <div id="estVram" class="estvram"></div>
       <div id="estVerdict" class="verdict" style="margin-top:14px"></div>
       <ul id="estNotes" class="estnotes"></ul>
       <p class="meta" id="estMeta" style="margin-top:10px"></p>
@@ -175,6 +206,7 @@
   </footer>
 </div>
 
+<script src="estimate.js"></script>
 <script>
 /* ===== Real measured data (J per 1k tokens) ===== */
 /* RTX 4090D: dataset.md (n=2 gradient); T4 / RTX 5090: *_benchmark_results.csv; A800: a800_summary.csv (int8_default) */
@@ -355,81 +387,12 @@ modelSel.addEventListener("change",()=>{ render(); track("explore",ctx()); });
 // savings at 7B, so the red→green flip is one click away out of the box.
 gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2"; render();
 
-/* ===== Estimator: arbitrary model size + GPU architecture class -> estimated ΔE% =====
-   Deterministic. Mirrors build/estimate.py 1:1. CURVES is calibrated offline by
-   build/fit_curves.py from build/measured.csv (the ecocompute-ai dataset). */
-const CURVES = {
-  "s_cap": { "NF4": 75.0, "INT8": 50.0 },
-  "arch_label": {
-    "turing": "Turing (T4)",
-    "ada": "Ada (RTX 4090/4090D)",
-    "blackwell": "Blackwell (RTX 5090)",
-    "ampere": "Ampere (A100/A800)",
-    "hopper": "Hopper (H100/H200)"
-  },
-  "borrow": { "hopper": "ampere" },
-  "curves": {
-    "ada": { "NF4": { "A":106.0936,"S":90.55,"Nstar":0.381,"resid_std":3.6947,"n_min":0.5,"n_max":3.0,"crossover_b":null,
-      "anchors":[{"N":0.5,"dE":56.09,"model":"Qwen2-0.5B","gpu":"RTX 4090D"},{"N":1.1,"dE":33.35,"model":"TinyLlama-1.1B","gpu":"RTX 4090D"},{"N":1.5,"dE":38.6,"model":"Qwen2-1.5B","gpu":"RTX 4090D"},{"N":3.0,"dE":25.22,"model":"Qwen2.5-3B","gpu":"RTX 4090D"}] } },
-    "ampere": {
-      "INT8": { "A":180.8252,"S":127.9389,"Nstar":10.082,"resid_std":2.4297,"n_min":7.0,"n_max":14.0,"crossover_b":null,
-        "anchors":[{"N":7.0,"dE":130.83,"model":"Mistral-7B","gpu":"A800"},{"N":9.0,"dE":117.18,"model":"Yi-1.5-9B","gpu":"A800"},{"N":14.0,"dE":107.41,"model":"Qwen2.5-14B","gpu":"A800"}] },
-      "NF4": { "A":-1.0293,"S":0.0,"Nstar":200.0,"resid_std":2.7146,"n_min":7.0,"n_max":14.0,"crossover_b":null,
-        "anchors":[{"N":7.0,"dE":-4.09,"model":"Mistral-7B","gpu":"A800"},{"N":9.0,"dE":-1.51,"model":"Yi-1.5-9B","gpu":"A800"},{"N":14.0,"dE":2.51,"model":"Qwen2.5-14B","gpu":"A800"}] }
-    },
-    "blackwell": { "NF4": { "A":45.8272,"S":104.4224,"Nstar":6.0749,"resid_std":2.8022,"n_min":1.1,"n_max":7.0,"crossover_b":4.751,
-      "anchors":[{"N":1.1,"dE":26.49,"model":"TinyLlama-1.1B","gpu":"RTX 5090"},{"N":1.5,"dE":29.42,"model":"Qwen2-1.5B","gpu":"RTX 5090"},{"N":3.0,"dE":11.74,"model":"Qwen2.5-3B","gpu":"RTX 5090"},{"N":7.0,"dE":-11.45,"model":"Qwen2-7B","gpu":"RTX 5090"}] } },
-    "turing": { "NF4": { "A":7.925,"S":79.5646,"Nstar":19.2186,"resid_std":1.316,"n_min":1.1,"n_max":7.0,"crossover_b":2.126,
-      "anchors":[{"N":1.1,"dE":4.56,"model":"TinyLlama-1.1B","gpu":"T4"},{"N":1.5,"dE":0.22,"model":"Qwen2-1.5B","gpu":"T4"},{"N":3.0,"dE":-1.38,"model":"Qwen2.5-3B","gpu":"T4"},{"N":7.0,"dE":-13.75,"model":"Qwen2-7B","gpu":"T4"}] } }
-  }
-};
-const Z=1.96;
-function fmtNum(x){ return (Math.round(x*10)/10).toString(); }
-function _g(x){ return x/(1+x); }
-function _model(N,c){ return c.A - c.S*_g(N/c.Nstar); }
-
-function estimate(N, arch, precision){
-  const curves=CURVES.curves, sCap=(CURVES.s_cap[precision]||75), borrow=CURVES.borrow||{};
-  let srcArch=arch, borrowedFrom=null;
-  if(!curves[arch] || !curves[arch][precision]){
-    if(borrow[arch] && curves[borrow[arch]] && curves[borrow[arch]][precision]){ srcArch=borrow[arch]; borrowedFrom=srcArch; }
-    else if(curves[arch] && !curves[arch][precision]){ return {error:precision+" not measured for this architecture"}; }
-    else { return {error:"no curve for this architecture"}; }
-  }
-  const c=curves[srcArch][precision];
-  let delta=_model(N,c); delta=Math.max(delta,-sCap);
-  let exact=null;
-  if(!borrowedFrom){ for(const a of c.anchors){ if(Math.abs(a.N-N)<1e-6){ exact=a; break; } } }
-  let basis;
-  if(exact){ basis="measured"; delta=exact.dE; }
-  else if(borrowedFrom){ basis="estimated"; }
-  else if(N>=c.n_min && N<=c.n_max){ basis="interpolated"; }
-  else { basis="estimated"; }
-  const base=Math.max(c.resid_std,2);
-  let dd=0; if(N<c.n_min) dd=Math.log(c.n_min/N); else if(N>c.n_max) dd=Math.log(N/c.n_max);
-  const extrap=(base+4)*dd*1.2, bterm=borrowedFrom?10:0;
-  let sigma=Math.sqrt(base*base+extrap*extrap+bterm*bterm);
-  if(basis==="measured") sigma=base*0.5;
-  let lo=Math.max(delta-Z*sigma,-sCap), hi=delta+Z*sigma, width=hi-lo;
-  let confidence;
-  if(basis==="measured") confidence="high";
-  else if(borrowedFrom) confidence="low";
-  else if(basis==="interpolated") confidence=width<12?"high":(width<22?"medium":"low");
-  else confidence=(dd<0.5&&width<25)?"medium":"low";
-  let rec, verdict;
-  if(hi<0){ rec="quantize"; verdict=precision+" ≈ "+delta.toFixed(0)+"% energy — saves; worth quantizing."; }
-  else if(lo>0){ rec="do_not_quantize"; verdict=precision+" ≈ +"+delta.toFixed(0)+"% energy — costs more; keep FP16."; }
-  else { rec="depends"; verdict=precision+" ≈ "+(delta>=0?"+":"")+delta.toFixed(0)+"% energy, but the range crosses zero — near the crossover; verify on your stack."; }
-  const notes=[];
-  if(borrowedFrom) notes.push("No measurements for this architecture; curve shape borrowed from "+(CURVES.arch_label[borrowedFrom]||borrowedFrom)+" — treat as a rough estimate.");
-  if(basis==="estimated"&&!borrowedFrom) notes.push("Extrapolated beyond the measured range ("+fmtNum(c.n_min)+"–"+fmtNum(c.n_max)+"B); uncertainty is wider.");
-  if(c.crossover_b==null && basis!=="measured") notes.push("Crossover is not pinned down within the measured range for this architecture.");
-  return { delta_pct:+delta.toFixed(1), ci:[+lo.toFixed(1),+hi.toFixed(1)], basis, confidence,
-    recommendation:rec, verdict, crossover_b:c.crossover_b, anchors:c.anchors, arch_used:srcArch, notes };
-}
+/* Estimator core lives in estimate.js (loaded above): window.estimate / CURVES / parseQuery / weightGB / modelCurve / fmtNum. */
 
 /* ----- estimator UI ----- */
 const pN=document.getElementById("pN"), pArch=document.getElementById("pArch"), pPrec=document.getElementById("pPrec");
+const pBatch=document.getElementById("pBatch"), pCtx=document.getElementById("pCtx"), pAdv=document.getElementById("pAdv");
+const pAsk=document.getElementById("pAsk"), pAskBtn=document.getElementById("pAskBtn");
 ["turing","ada","blackwell","ampere","hopper"].forEach(a=>{ const o=document.createElement("option"); o.value=a; o.textContent=CURVES.arch_label[a]||a; pArch.appendChild(o); });
 pArch.value="ampere"; // default: a 13B query lands as a high-confidence interpolation
 function fillPrec(){
@@ -447,13 +410,16 @@ function renderEstimate(){
   const bEl=document.getElementById("estBasis"), cfEl=document.getElementById("estConf");
   const vEl=document.getElementById("estVerdict"), nEl=document.getElementById("estNotes"), mEl=document.getElementById("estMeta");
   if(!(N>0)){ valEl.textContent="—"; ciEl.textContent="Enter a model size in billions of parameters."; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
-  const r=estimate(N, pArch.value, pPrec.value);
-  if(r.error){ valEl.textContent="—"; ciEl.textContent=r.error; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
+  const batch=Math.max(1, parseInt(pBatch.value,10)||1), ctx=Math.max(128, parseInt(pCtx.value,10)||2048);
+  const vramEl=document.getElementById("estVram");
+  const r=estimate(N, pArch.value, pPrec.value, {batch, ctx});
+  if(r.error){ valEl.textContent="—"; ciEl.textContent=r.error; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; vramEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
   valEl.textContent=(r.delta_pct>0?"+":"")+r.delta_pct+"%";
   valEl.style.color=r.delta_pct<0?"var(--good)":(r.delta_pct>0?"var(--bad)":"var(--txt)");
   bEl.textContent=r.basis; bEl.className="tag "+r.basis;
-  cfEl.textContent=r.confidence+" confidence"; cfEl.className="tag conf-"+r.confidence;
+  cfEl.textContent=r.confidence+" confidence"+(r.modelled?" · modelled":""); cfEl.className="tag conf-"+r.confidence;
   ciEl.innerHTML="95% range: <b>"+(r.ci[0]>0?"+":"")+r.ci[0]+"%</b> to <b>"+(r.ci[1]>0?"+":"")+r.ci[1]+"%</b>"+(r.crossover_b?(" · crossover ≈ <b>"+r.crossover_b+"B</b>"):"");
+  vramEl.innerHTML="Est. weight memory: <b>"+r.weight_gb+" GB</b> ("+pPrec.value+") vs <b>"+r.weight_gb_fp16+" GB</b> (FP16) — weights only, approx.";
   const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
   if(r.recommendation==="quantize"){ vEl.className="verdict down"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
   else if(r.recommendation==="do_not_quantize"){ vEl.className="verdict up"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
@@ -467,7 +433,7 @@ function renderEstimate(){
       ? "This model is <b>below</b> the crossover — quantization likely <b>costs</b> energy here; keep FP16."
       : "You're <b>near the crossover</b> — the sign is uncertain. Measure on your own stack before deciding.";
   renderEstCurve(pArch.value, pPrec.value, N, r);
-  track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, delta_pct:r.delta_pct, basis:r.basis });
+  track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, batch, ctx, delta_pct:r.delta_pct, basis:r.basis });
 }
 
 function renderEstCurve(arch, precision, N, r){
@@ -482,7 +448,7 @@ function renderEstCurve(arch, precision, N, r){
   const lg=v=>Math.log(v);
   const X=v=> pad.l + (lg(v)-lg(xmin))/(lg(xmax)-lg(xmin))*iw;
   const samples=[]; const steps=64;
-  for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let d=_model(v,c); d=Math.max(d,-sCap); samples.push({x:v,d}); }
+  for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let d=modelCurve(v,c); d=Math.max(d,-sCap); samples.push({x:v,d}); }
   const yvals=samples.map(s=>s.d).concat(c.anchors.map(a=>a.dE)).concat([r.ci[0],r.ci[1],0]);
   let ymin=Math.min(...yvals), ymax=Math.max(...yvals);
   const padY=(ymax-ymin)*0.12||10; ymin-=padY; ymax+=padY;
@@ -527,6 +493,22 @@ tabE.addEventListener("click",()=>setMode(true));
 pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
 pPrec.addEventListener("change",renderEstimate);
 pN.addEventListener("input",renderEstimate);
+pBatch.addEventListener("input",renderEstimate);
+pCtx.addEventListener("input",renderEstimate);
+
+/* ----- plain-English query -> fills the form (rules-based, no LLM) ----- */
+function runAsk(){
+  const q=parseQuery(pAsk.value);
+  if(q.N!=null) pN.value=q.N;
+  if(q.arch){ pArch.value=q.arch; fillPrec(); }
+  if(q.precision && [...pPrec.options].some(o=>o.value===q.precision)) pPrec.value=q.precision;
+  if(q.batch!=null) pBatch.value=q.batch;
+  if(q.ctx!=null) pCtx.value=q.ctx;
+  if(q.batch!=null||q.ctx!=null) pAdv.open=true;
+  renderEstimate(); track("estimate_ask",{ q:pAsk.value });
+}
+pAskBtn.addEventListener("click",runAsk);
+pAsk.addEventListener("keydown",e=>{ if(e.key==="Enter") runAsk(); });
 
 /* ===== Analytics + UTM (provider-agnostic) ===== */
 // Captures inbound utm_* (set on the email/social links pointing here), forwards them
