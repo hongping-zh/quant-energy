@@ -54,6 +54,21 @@
   .badge{font-size:12px;color:var(--muted)}
   .badge b{color:#34d399}
   svg text{font-family:inherit}
+  /* estimator mode */
+  .modetabs{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px}
+  .modetabs button{appearance:none;background:transparent;color:var(--muted);border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+  .modetabs button.active{background:var(--accent);color:#06223a}
+  input[type=number]{width:100%;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px}
+  input[type=number]:focus{outline:none;border-color:var(--accent)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .tag.measured{color:#34d399;border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.1)}
+  .tag.interpolated{color:#38bdf8;border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.1)}
+  .tag.estimated{color:#fbbf24;border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)}
+  .tag.conf-high{color:#34d399} .tag.conf-medium{color:#fbbf24} .tag.conf-low{color:#fb7185}
+  .estval{font-size:42px;font-weight:800;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+  .estci{font-size:14px;color:var(--muted);margin-top:4px}
+  .estnotes{font-size:12px;color:var(--muted);margin:10px 0 0;padding-left:18px;line-height:1.6}
+  .estnotes li{margin:2px 0}
 </style>
 </head>
 <body>
@@ -68,6 +83,12 @@
     </div>
   </header>
 
+  <div class="modetabs" role="tablist">
+    <button id="tabMeasured" class="active" type="button">Measured combos</button>
+    <button id="tabEstimate" type="button">Any model · estimate</button>
+  </div>
+
+  <div id="measuredView">
   <div class="controls">
     <div class="field">
       <label for="gpu">GPU</label>
@@ -99,6 +120,50 @@
   </div>
 
   <div class="hint" id="hint"></div>
+  </div><!-- /measuredView -->
+
+  <div id="estimateView" style="display:none">
+    <div class="controls">
+      <div class="field">
+        <label for="pN">Model size (parameters, B)</label>
+        <input id="pN" type="number" min="0.1" max="500" step="0.1" value="13" />
+      </div>
+      <div class="field">
+        <label for="pArch">GPU architecture class</label>
+        <select id="pArch"></select>
+      </div>
+      <div class="field" style="flex:0 0 160px;min-width:140px">
+        <label for="pPrec">Precision</label>
+        <select id="pPrec"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Estimated energy change vs FP16</h2>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div id="estVal" class="estval"></div>
+        <span id="estBasis" class="tag"></span>
+        <span id="estConf" class="tag"></span>
+      </div>
+      <div id="estCi" class="estci"></div>
+      <div id="estVerdict" class="verdict" style="margin-top:14px"></div>
+      <ul id="estNotes" class="estnotes"></ul>
+      <p class="meta" id="estMeta" style="margin-top:10px"></p>
+    </div>
+
+    <div class="card">
+      <h2>Fitted crossover curve · your model marked with its uncertainty</h2>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve</span>
+        <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors</span>
+        <span><i class="swatch" style="background:#ef4444;width:10px;height:10px;border-radius:50%"></i>Your model ± CI</span>
+        <span>Above zero = penalty · below = savings</span>
+      </div>
+      <div id="estCross"></div>
+    </div>
+
+    <div class="hint" id="estHint"></div>
+  </div><!-- /estimateView -->
 
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">“Weight-Only Quantization Does Not Always Save Energy”</a>
@@ -289,6 +354,179 @@ modelSel.addEventListener("change",()=>{ render(); track("explore",ctx()); });
 // init: RTX 5090 + Qwen2.5-3B — a penalty case whose crossover visibly dips into
 // savings at 7B, so the red→green flip is one click away out of the box.
 gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2"; render();
+
+/* ===== Estimator: arbitrary model size + GPU architecture class -> estimated ΔE% =====
+   Deterministic. Mirrors build/estimate.py 1:1. CURVES is calibrated offline by
+   build/fit_curves.py from build/measured.csv (the ecocompute-ai dataset). */
+const CURVES = {
+  "s_cap": { "NF4": 75.0, "INT8": 50.0 },
+  "arch_label": {
+    "turing": "Turing (T4)",
+    "ada": "Ada (RTX 4090/4090D)",
+    "blackwell": "Blackwell (RTX 5090)",
+    "ampere": "Ampere (A100/A800)",
+    "hopper": "Hopper (H100/H200)"
+  },
+  "borrow": { "hopper": "ampere" },
+  "curves": {
+    "ada": { "NF4": { "A":106.0936,"S":90.55,"Nstar":0.381,"resid_std":3.6947,"n_min":0.5,"n_max":3.0,"crossover_b":null,
+      "anchors":[{"N":0.5,"dE":56.09,"model":"Qwen2-0.5B","gpu":"RTX 4090D"},{"N":1.1,"dE":33.35,"model":"TinyLlama-1.1B","gpu":"RTX 4090D"},{"N":1.5,"dE":38.6,"model":"Qwen2-1.5B","gpu":"RTX 4090D"},{"N":3.0,"dE":25.22,"model":"Qwen2.5-3B","gpu":"RTX 4090D"}] } },
+    "ampere": {
+      "INT8": { "A":180.8252,"S":127.9389,"Nstar":10.082,"resid_std":2.4297,"n_min":7.0,"n_max":14.0,"crossover_b":null,
+        "anchors":[{"N":7.0,"dE":130.83,"model":"Mistral-7B","gpu":"A800"},{"N":9.0,"dE":117.18,"model":"Yi-1.5-9B","gpu":"A800"},{"N":14.0,"dE":107.41,"model":"Qwen2.5-14B","gpu":"A800"}] },
+      "NF4": { "A":-1.0293,"S":0.0,"Nstar":200.0,"resid_std":2.7146,"n_min":7.0,"n_max":14.0,"crossover_b":null,
+        "anchors":[{"N":7.0,"dE":-4.09,"model":"Mistral-7B","gpu":"A800"},{"N":9.0,"dE":-1.51,"model":"Yi-1.5-9B","gpu":"A800"},{"N":14.0,"dE":2.51,"model":"Qwen2.5-14B","gpu":"A800"}] }
+    },
+    "blackwell": { "NF4": { "A":45.8272,"S":104.4224,"Nstar":6.0749,"resid_std":2.8022,"n_min":1.1,"n_max":7.0,"crossover_b":4.751,
+      "anchors":[{"N":1.1,"dE":26.49,"model":"TinyLlama-1.1B","gpu":"RTX 5090"},{"N":1.5,"dE":29.42,"model":"Qwen2-1.5B","gpu":"RTX 5090"},{"N":3.0,"dE":11.74,"model":"Qwen2.5-3B","gpu":"RTX 5090"},{"N":7.0,"dE":-11.45,"model":"Qwen2-7B","gpu":"RTX 5090"}] } },
+    "turing": { "NF4": { "A":7.925,"S":79.5646,"Nstar":19.2186,"resid_std":1.316,"n_min":1.1,"n_max":7.0,"crossover_b":2.126,
+      "anchors":[{"N":1.1,"dE":4.56,"model":"TinyLlama-1.1B","gpu":"T4"},{"N":1.5,"dE":0.22,"model":"Qwen2-1.5B","gpu":"T4"},{"N":3.0,"dE":-1.38,"model":"Qwen2.5-3B","gpu":"T4"},{"N":7.0,"dE":-13.75,"model":"Qwen2-7B","gpu":"T4"}] } }
+  }
+};
+const Z=1.96;
+function fmtNum(x){ return (Math.round(x*10)/10).toString(); }
+function _g(x){ return x/(1+x); }
+function _model(N,c){ return c.A - c.S*_g(N/c.Nstar); }
+
+function estimate(N, arch, precision){
+  const curves=CURVES.curves, sCap=(CURVES.s_cap[precision]||75), borrow=CURVES.borrow||{};
+  let srcArch=arch, borrowedFrom=null;
+  if(!curves[arch] || !curves[arch][precision]){
+    if(borrow[arch] && curves[borrow[arch]] && curves[borrow[arch]][precision]){ srcArch=borrow[arch]; borrowedFrom=srcArch; }
+    else if(curves[arch] && !curves[arch][precision]){ return {error:precision+" not measured for this architecture"}; }
+    else { return {error:"no curve for this architecture"}; }
+  }
+  const c=curves[srcArch][precision];
+  let delta=_model(N,c); delta=Math.max(delta,-sCap);
+  let exact=null;
+  if(!borrowedFrom){ for(const a of c.anchors){ if(Math.abs(a.N-N)<1e-6){ exact=a; break; } } }
+  let basis;
+  if(exact){ basis="measured"; delta=exact.dE; }
+  else if(borrowedFrom){ basis="estimated"; }
+  else if(N>=c.n_min && N<=c.n_max){ basis="interpolated"; }
+  else { basis="estimated"; }
+  const base=Math.max(c.resid_std,2);
+  let dd=0; if(N<c.n_min) dd=Math.log(c.n_min/N); else if(N>c.n_max) dd=Math.log(N/c.n_max);
+  const extrap=(base+4)*dd*1.2, bterm=borrowedFrom?10:0;
+  let sigma=Math.sqrt(base*base+extrap*extrap+bterm*bterm);
+  if(basis==="measured") sigma=base*0.5;
+  let lo=Math.max(delta-Z*sigma,-sCap), hi=delta+Z*sigma, width=hi-lo;
+  let confidence;
+  if(basis==="measured") confidence="high";
+  else if(borrowedFrom) confidence="low";
+  else if(basis==="interpolated") confidence=width<12?"high":(width<22?"medium":"low");
+  else confidence=(dd<0.5&&width<25)?"medium":"low";
+  let rec, verdict;
+  if(hi<0){ rec="quantize"; verdict=precision+" ≈ "+delta.toFixed(0)+"% energy — saves; worth quantizing."; }
+  else if(lo>0){ rec="do_not_quantize"; verdict=precision+" ≈ +"+delta.toFixed(0)+"% energy — costs more; keep FP16."; }
+  else { rec="depends"; verdict=precision+" ≈ "+(delta>=0?"+":"")+delta.toFixed(0)+"% energy, but the range crosses zero — near the crossover; verify on your stack."; }
+  const notes=[];
+  if(borrowedFrom) notes.push("No measurements for this architecture; curve shape borrowed from "+(CURVES.arch_label[borrowedFrom]||borrowedFrom)+" — treat as a rough estimate.");
+  if(basis==="estimated"&&!borrowedFrom) notes.push("Extrapolated beyond the measured range ("+fmtNum(c.n_min)+"–"+fmtNum(c.n_max)+"B); uncertainty is wider.");
+  if(c.crossover_b==null && basis!=="measured") notes.push("Crossover is not pinned down within the measured range for this architecture.");
+  return { delta_pct:+delta.toFixed(1), ci:[+lo.toFixed(1),+hi.toFixed(1)], basis, confidence,
+    recommendation:rec, verdict, crossover_b:c.crossover_b, anchors:c.anchors, arch_used:srcArch, notes };
+}
+
+/* ----- estimator UI ----- */
+const pN=document.getElementById("pN"), pArch=document.getElementById("pArch"), pPrec=document.getElementById("pPrec");
+["turing","ada","blackwell","ampere","hopper"].forEach(a=>{ const o=document.createElement("option"); o.value=a; o.textContent=CURVES.arch_label[a]||a; pArch.appendChild(o); });
+pArch.value="ampere"; // default: a 13B query lands as a high-confidence interpolation
+function fillPrec(){
+  const a=pArch.value, present=new Set();
+  if(CURVES.curves[a]) Object.keys(CURVES.curves[a]).forEach(p=>present.add(p));
+  if(CURVES.borrow[a]&&CURVES.curves[CURVES.borrow[a]]) Object.keys(CURVES.curves[CURVES.borrow[a]]).forEach(p=>present.add(p));
+  const cur=pPrec.value; pPrec.innerHTML="";
+  ["NF4","INT8"].filter(p=>present.has(p)).forEach(p=>{ const o=document.createElement("option"); o.value=p; o.textContent=p; pPrec.appendChild(o); });
+  if([...pPrec.options].some(o=>o.value===cur)) pPrec.value=cur;
+}
+
+function renderEstimate(){
+  const N=parseFloat(pN.value);
+  const valEl=document.getElementById("estVal"), ciEl=document.getElementById("estCi");
+  const bEl=document.getElementById("estBasis"), cfEl=document.getElementById("estConf");
+  const vEl=document.getElementById("estVerdict"), nEl=document.getElementById("estNotes"), mEl=document.getElementById("estMeta");
+  if(!(N>0)){ valEl.textContent="—"; ciEl.textContent="Enter a model size in billions of parameters."; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
+  const r=estimate(N, pArch.value, pPrec.value);
+  if(r.error){ valEl.textContent="—"; ciEl.textContent=r.error; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
+  valEl.textContent=(r.delta_pct>0?"+":"")+r.delta_pct+"%";
+  valEl.style.color=r.delta_pct<0?"var(--good)":(r.delta_pct>0?"var(--bad)":"var(--txt)");
+  bEl.textContent=r.basis; bEl.className="tag "+r.basis;
+  cfEl.textContent=r.confidence+" confidence"; cfEl.className="tag conf-"+r.confidence;
+  ciEl.innerHTML="95% range: <b>"+(r.ci[0]>0?"+":"")+r.ci[0]+"%</b> to <b>"+(r.ci[1]>0?"+":"")+r.ci[1]+"%</b>"+(r.crossover_b?(" · crossover ≈ <b>"+r.crossover_b+"B</b>"):"");
+  const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
+  if(r.recommendation==="quantize"){ vEl.className="verdict down"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
+  else if(r.recommendation==="do_not_quantize"){ vEl.className="verdict up"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
+  else { vEl.className="verdict"; vEl.style.cssText="margin-top:14px;background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)"; }
+  vEl.innerHTML="<span class=\"big\">"+ico+"</span> "+r.verdict;
+  nEl.innerHTML=r.notes.map(n=>"<li>"+n+"</li>").join("");
+  mEl.textContent="Architecture used: "+(CURVES.arch_label[r.arch_used]||r.arch_used)+(r.arch_used!==pArch.value?" (borrowed)":"")+" · estimates are calibrated to measured anchors, not new measurements.";
+  document.getElementById("estHint").innerHTML = r.recommendation==="quantize"
+    ? "This model is <b>above</b> the crossover on this architecture — NF4/INT8 already pays off."
+    : r.recommendation==="do_not_quantize"
+      ? "This model is <b>below</b> the crossover — quantization likely <b>costs</b> energy here; keep FP16."
+      : "You're <b>near the crossover</b> — the sign is uncertain. Measure on your own stack before deciding.";
+  renderEstCurve(pArch.value, pPrec.value, N, r);
+  track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, delta_pct:r.delta_pct, basis:r.basis });
+}
+
+function renderEstCurve(arch, precision, N, r){
+  const curves=CURVES.curves; let src=arch;
+  if(!curves[arch]||!curves[arch][precision]){ if(CURVES.borrow[arch]) src=CURVES.borrow[arch]; }
+  const c=curves[src][precision], sCap=(CURVES.s_cap[precision]||75);
+  const W=700,H=300,pad={l:54,r:18,t:18,b:42};
+  const iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const anchorXs=c.anchors.map(a=>a.N);
+  const xmin=Math.min(0.4, N*0.8, ...anchorXs);
+  const xmax=Math.max(N*1.15, Math.max(...anchorXs)*1.2, 16);
+  const lg=v=>Math.log(v);
+  const X=v=> pad.l + (lg(v)-lg(xmin))/(lg(xmax)-lg(xmin))*iw;
+  const samples=[]; const steps=64;
+  for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let d=_model(v,c); d=Math.max(d,-sCap); samples.push({x:v,d}); }
+  const yvals=samples.map(s=>s.d).concat(c.anchors.map(a=>a.dE)).concat([r.ci[0],r.ci[1],0]);
+  let ymin=Math.min(...yvals), ymax=Math.max(...yvals);
+  const padY=(ymax-ymin)*0.12||10; ymin-=padY; ymax+=padY;
+  const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih;
+  const y0=Y(0);
+  const path=samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" ");
+  const dots=c.anchors.map(a=>`<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)"/>`).join("");
+  const qx=X(N);
+  const qbar=`<line x1="${qx.toFixed(1)}" x2="${qx.toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[0]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
+    <line x1="${(qx-5).toFixed(1)}" x2="${(qx+5).toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[1]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
+    <line x1="${(qx-5).toFixed(1)}" x2="${(qx+5).toFixed(1)}" y1="${Y(r.ci[0]).toFixed(1)}" y2="${Y(r.ci[0]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
+    <circle cx="${qx.toFixed(1)}" cy="${Y(r.delta_pct).toFixed(1)}" r="6" fill="#ef4444" stroke="#0b1020" stroke-width="1.5"/>`;
+  let yticks=[]; const step=niceStep((ymax-ymin)/5);
+  for(let t=Math.ceil(ymin/step)*step;t<=ymax;t+=step) yticks.push(Math.round(t));
+  const ylabels=yticks.map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c2742" stroke-width="1"/><text x="${pad.l-8}" y="${Y(t)+4}" fill="var(--muted)" font-size="11" text-anchor="end">${t>0?"+":""}${t}%</text>`).join("");
+  const xt=[...new Set(anchorXs.concat([N]))].sort((a,b)=>a-b);
+  const xlabels=xt.map(v=>`<text x="${X(v).toFixed(1)}" y="${H-pad.b+18}" fill="${Math.abs(v-N)<1e-9?'#fda4af':'var(--muted)'}" font-size="11" text-anchor="middle">${fmtNum(v)}B</text>`).join("");
+  document.getElementById("estCross").innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="estimated crossover chart">
+    <rect x="${pad.l}" y="${pad.t}" width="${iw}" height="${(y0-pad.t).toFixed(1)}" fill="rgba(244,63,94,.07)"/>
+    <rect x="${pad.l}" y="${y0.toFixed(1)}" width="${iw}" height="${(pad.t+ih-y0).toFixed(1)}" fill="rgba(16,185,129,.07)"/>
+    ${ylabels}
+    <line x1="${pad.l}" x2="${W-pad.r}" y1="${y0}" y2="${y0}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2 3"/>
+    <text x="${W-pad.r}" y="${y0-6}" fill="#fb7185" font-size="10" text-anchor="end">↑ penalty</text>
+    <text x="${W-pad.r}" y="${y0+14}" fill="#34d399" font-size="10" text-anchor="end">↓ savings</text>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+    ${dots}${qbar}${xlabels}
+    <text x="${pad.l+iw/2}" y="${H-4}" fill="var(--muted)" font-size="11" text-anchor="middle">Model size (parameters, B, log scale)</text>
+  </svg>`;
+}
+
+/* ----- mode toggle ----- */
+const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate");
+const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView");
+function setMode(est){
+  viewE.style.display=est?"":"none"; viewM.style.display=est?"none":"";
+  tabE.classList.toggle("active",est); tabM.classList.toggle("active",!est);
+  if(est){ fillPrec(); renderEstimate(); track("mode_estimate",{}); }
+}
+tabM.addEventListener("click",()=>setMode(false));
+tabE.addEventListener("click",()=>setMode(true));
+pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
+pPrec.addEventListener("change",renderEstimate);
+pN.addEventListener("input",renderEstimate);
 
 /* ===== Analytics + UTM (provider-agnostic) ===== */
 // Captures inbound utm_* (set on the email/social links pointing here), forwards them
