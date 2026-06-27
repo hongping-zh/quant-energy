@@ -107,33 +107,53 @@ Rules-based (no LLM) parser that powers the demo's plain-English box. Recognises
 
 Helpers exposed for reuse (memory footprint and the batch/ctx factor above).
 
-## Optional: a real HTTP endpoint (Cloudflare Worker)
+## REST endpoint (Cloudflare Worker) — ready to deploy
 
-`estimate.js` is dependency-free, so a hosted `/v1/estimate` is a few lines — not wired up
-here, but this is all it takes:
+A working Worker that wraps `estimate()` lives in this folder: [`worker.js`](worker.js) +
+[`wrangler.toml`](wrangler.toml). It is dependency-free and bundles to ~16 KiB.
 
-```js
-import { estimate, parseQuery } from "./estimate.js";
+Endpoints:
 
-export default {
-  async fetch(req) {
-    const u = new URL(req.url);
-    const q = u.searchParams.get("q");
-    const p = q ? parseQuery(q) : {
-      N: parseFloat(u.searchParams.get("params_b")),
-      arch: u.searchParams.get("arch"),
-      precision: (u.searchParams.get("precision") || "NF4").toUpperCase(),
-      batch: +u.searchParams.get("batch") || 1,
-      ctx: +u.searchParams.get("ctx") || 2048,
-    };
-    const r = estimate(p.N, p.arch, p.precision, { batch: p.batch, ctx: p.ctx });
-    return new Response(JSON.stringify(r, null, 2),
-      { headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });
-  },
-};
-// GET /v1/estimate?params_b=13&arch=ampere&precision=nf4&batch=32
-// GET /v1/estimate?q=13B%20on%20A100%20int8%20batch%2032
 ```
+GET  /v1/estimate?params_b=13&arch=ampere&precision=nf4&batch=32&ctx=8192
+GET  /v1/estimate?q=13B%20on%20A100%20int8%20batch%2032   # plain-English query
+POST /v1/estimate   {"params_b":13,"arch":"ampere","precision":"NF4","batch":32}
+POST /v1/estimate   {"q":"13B on A100 int8 batch 32"}
+GET  /v1/architectures        # supported archs, precisions, measured ranges
+GET  /openapi.json            # so other agents can auto-discover the tool
+```
+
+Example response:
+
+```json
+{
+  "input": { "params_b": 13, "arch": "ampere", "precision": "INT8", "batch": 32, "ctx": 8192 },
+  "delta_pct": 108.8, "ci": [19.7, 197.9], "basis": "interpolated",
+  "confidence": "low", "recommendation": "do_not_quantize", "modelled": true,
+  "weight_gb": 13, "weight_gb_fp16": 26, "notes": ["Batch/context effect is modelled ..."]
+}
+```
+
+Deploy:
+
+```bash
+cd api
+npx wrangler login            # one-time (or set CLOUDFLARE_API_TOKEN)
+npx wrangler deploy           # -> https://ecocompute-estimator.<subdomain>.workers.dev
+npx wrangler deploy --dry-run --outdir /tmp/build   # build-only sanity check
+```
+
+Local smoke test of the handler (no Cloudflare account needed):
+
+```bash
+node api/test_worker.mjs
+```
+
+## MCP server (for IDE / copilot agents)
+
+To let other agents (Claude Desktop, Cursor, internal copilots) call the estimator as a
+native tool, see [`../mcp`](../mcp) — a stdio MCP server exposing `should_i_quantize` and
+`list_architectures`, reusing the same `estimate.js`. No hosting required.
 
 ## Validation
 
