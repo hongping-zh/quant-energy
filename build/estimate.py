@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """
-Reference estimator (Python). estimate.js in the demo mirrors this logic 1:1.
+Reference estimator (Python). ../estimate.js in the demo mirrors this logic 1:1.
 
-estimate(N, arch, precision) -> dict with:
+estimate(N, arch, precision, data=None, batch=1, ctx=2048) -> dict with:
   delta_pct, ci=[lo,hi], basis (measured|interpolated|estimated),
-  confidence (high|medium|low), anchors, recommendation, verdict, notes
+  confidence (high|medium|low), anchors, recommendation, verdict, notes,
+  modelled (bool), weight_gb, weight_gb_fp16
+
+batch/ctx default to the measurement baseline (=> identical to the pure curve).
+When they deviate they apply a transparent, conservative MODEL (not measurements):
+savings shrink toward zero, never turning into a penalty. Output is flagged
+modelled with lower confidence and a wider band.
 """
 import json, os, math
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CURVES = os.path.join(os.path.dirname(HERE), "curves.json")
 Z = 1.96  # ~95%
+BITS = {"FP16": 16, "INT8": 8, "NF4": 4}  # bits per weight (weight-only quant)
+CTX_BASE = 2048   # measurement context baseline
+BATCH_HALF = 8    # batch where memory-bound savings ~halve
 
 
 def _load():
@@ -26,7 +35,23 @@ def _model(N, c):
     return c["A"] - c["S"] * _g(N / c["Nstar"])
 
 
-def estimate(N, arch, precision, data=None):
+def weight_gb(N, precision):
+    """Approx weight-only memory footprint in GB (standard calc, not measured)."""
+    bits = BITS.get(precision, 16)
+    return round(N * bits / 8.0, 2)
+
+
+def savings_factor(batch=1, ctx=CTX_BASE):
+    """Factor in (0,1] shrinking savings toward zero as batch/context grow.
+    1.0 at batch=1 and ctx<=baseline (reproduces the measured curve)."""
+    b = batch if (batch and batch > 1) else 1
+    f_batch = 1.0 / (1.0 + (b - 1) / BATCH_HALF)
+    c = ctx if (ctx and ctx > CTX_BASE) else CTX_BASE
+    f_ctx = 1.0 / (1.0 + max(0.0, math.log2(c / CTX_BASE)) * 0.12)
+    return f_batch * f_ctx
+
+
+def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     data = data or _load()
     curves = data["curves"]
     s_cap = data["s_cap"].get(precision, 75.0)
@@ -74,10 +99,18 @@ def estimate(N, arch, precision, data=None):
         dd = math.log(N / c["n_max"])
     else:
         dd = 0.0
+    # optional batch/context adjustment (modelled, not measured): shrink savings only
+    factor = savings_factor(batch, ctx)
+    modelled = factor < 0.999
+    delta_base = delta
+    if modelled and delta < 0:
+        delta = delta * factor
+
     extrap = (base + 4.0) * dd * 1.2
     borrowed_term = 10.0 if borrowed_from is not None else 0.0
-    sigma = math.sqrt(base**2 + extrap**2 + borrowed_term**2)
-    if basis == "measured":
+    modelled_term = abs(delta_base) * (1.0 - factor) * 0.5 if modelled else 0.0
+    sigma = math.sqrt(base**2 + extrap**2 + borrowed_term**2 + modelled_term**2)
+    if basis == "measured" and not modelled:
         sigma = base * 0.5
 
     lo = max(delta - Z * sigma, -s_cap)
@@ -85,7 +118,7 @@ def estimate(N, arch, precision, data=None):
     width = hi - lo
 
     # confidence
-    if basis == "measured":
+    if basis == "measured" and not modelled:
         confidence = "high"
     elif borrowed_from is not None:
         confidence = "low"
@@ -93,6 +126,10 @@ def estimate(N, arch, precision, data=None):
         confidence = "high" if width < 12 else ("medium" if width < 22 else "low")
     else:  # estimated/extrapolated
         confidence = "medium" if (dd < 0.5 and width < 25) else "low"
+    if modelled and confidence == "high":
+        confidence = "medium"
+    if modelled and factor < 0.5 and confidence == "medium":
+        confidence = "low"
 
     # recommendation from the band's relation to zero
     if hi < 0:
@@ -115,6 +152,9 @@ def estimate(N, arch, precision, data=None):
         notes.append(f"Extrapolated beyond the measured range ({rng}); wider uncertainty.")
     if c.get("crossover_b") is None and basis != "measured":
         notes.append("Crossover not pinned down within the measured range for this architecture.")
+    if modelled:
+        notes.append(f"Batch/context effect is modelled (batch={batch}, context={ctx}) — "
+                     f"not yet measured; treated as savings shrinking toward zero.")
 
     return {
         "delta_pct": round(delta, 1),
@@ -126,6 +166,9 @@ def estimate(N, arch, precision, data=None):
         "crossover_b": c.get("crossover_b"),
         "anchors": c["anchors"],
         "arch_used": src_arch,
+        "modelled": modelled,
+        "weight_gb": weight_gb(N, precision),
+        "weight_gb_fp16": weight_gb(N, "FP16"),
         "notes": notes,
     }
 
