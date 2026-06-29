@@ -69,35 +69,44 @@
   .estci{font-size:14px;color:var(--muted);margin-top:4px}
   .estnotes{font-size:12px;color:var(--muted);margin:10px 0 0;padding-left:18px;line-height:1.6}
   .estnotes li{margin:2px 0}
-  .askbar{display:flex;gap:8px;margin:18px 0 2px}
-  .askbar input{flex:1;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:14px}
-  .askbar input:focus{outline:none;border-color:var(--accent)}
-  .askbar button{appearance:none;background:var(--accent);color:#06223a;border:0;border-radius:10px;padding:0 18px;font-size:13px;font-weight:700;cursor:pointer}
   .adv{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 14px}
   .adv summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;padding:11px 0;list-style:none}
   .adv summary::-webkit-details-marker{display:none}
   .adv summary::before{content:"\25B8 ";color:var(--accent)}
   .adv[open] summary::before{content:"\25BE "}
   .adv .advrow{display:flex;gap:18px;flex-wrap:wrap;padding:0 0 14px}
+  .ecogate{display:flex;align-items:center;gap:12px;margin:12px 0 4px;font-size:13px}
+  .ecogate-bar{flex:1;height:6px;background:var(--card);border-radius:3px;position:relative;overflow:hidden}
+  .ecogate-fill{position:absolute;top:0;left:0;height:100%;border-radius:3px;transition:width .3s}
+  .ecogate-fill.lock{background:var(--bad)}
+  .ecogate-fill.allow{background:var(--good)}
+  .ecogate-marker{position:absolute;top:-4px;width:3px;height:14px;background:var(--accent);border-radius:2px;transform:translateX(-50%);transition:left .3s}
+  .ecogate-label{font-weight:600;white-space:nowrap}
   .adv .advrow .field{min-width:130px}
   .estvram{font-size:12px;color:var(--muted);margin-top:6px}
+  .schema-output{margin-top:16px}
+  .schema-output summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;padding:8px 0;list-style:none}
+  .schema-output summary::-webkit-details-marker{display:none}
+  .schema-output pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:11px;overflow-x:auto;margin:8px 0 0;line-height:1.5}
+  .schema-output .copybtn{float:right;background:var(--line);color:var(--txt);border:0;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .schema-output .copybtn:hover{background:var(--accent);color:#06223a}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>EcoCompute<span class="dot">.</span></h1>
-    <p>“Quantization doesn't always save energy. See for yourself.”</p>
+    <p>"Quantization doesn't always save energy. See for yourself."</p>
+    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. We tell you <em>whether</em> you should.</p>
     <p class="badge" style="margin-top:8px">From the working paper <i>“Weight-Only Quantization Does Not Always Save Energy”</i> · <b>under review</b> at <i>Sustainable Computing: Informatics and Systems</i> (2 reviews received).</p>
     <div class="cta">
       <a id="ssrnCta" class="btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Read the preprint on SSRN →</a>
-      <a id="hubCta" class="ghost" href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Evidence hub &amp; dataset</a>
     </div>
   </header>
 
   <div class="modetabs" role="tablist">
-    <button id="tabMeasured" class="active" type="button">Measured combos</button>
-    <button id="tabEstimate" type="button">Any model · estimate</button>
+    <button id="tabMeasured" class="active" type="button">Tested models</button>
+    <button id="tabEstimate" type="button">Your model</button>
   </div>
 
   <div id="measuredView">
@@ -135,34 +144,38 @@
   </div><!-- /measuredView -->
 
   <div id="estimateView" style="display:none">
-    <div class="askbar">
-      <input id="pAsk" type="text" placeholder="Ask in plain English — e.g. “13B on A100, INT8, batch 32, ctx 8k”" />
-      <button id="pAskBtn" type="button">Ask</button>
-    </div>
     <div class="controls">
       <div class="field">
         <label for="pN">Model size (parameters, B)</label>
-        <input id="pN" type="number" min="0.1" max="500" step="0.1" value="13" />
+        <input id="pN" type="number" min="0.1" max="500" step="0.1" value="7" />
       </div>
-      <div class="field">
-        <label for="pArch">GPU architecture class</label>
-        <select id="pArch"></select>
+    </div>
+    <div class="ecogate" id="ecoGate">
+      <span class="ecogate-label" id="ecoGateLabel">FP16 zone</span>
+      <div class="ecogate-bar">
+        <div class="ecogate-fill lock" id="ecoGateFill"></div>
+        <div class="ecogate-marker" id="ecoGateMarker"></div>
       </div>
-      <div class="field" style="flex:0 0 160px;min-width:140px">
-        <label for="pPrec">Precision</label>
-        <select id="pPrec"></select>
-      </div>
+      <span style="color:var(--muted);font-size:12px" id="ecoGateThresh"></span>
     </div>
 
     <details class="adv" id="pAdv">
-      <summary>Advanced · batch size &amp; context length (modelled, not measured)</summary>
+      <summary>Advanced options · GPU, precision, batch &amp; context</summary>
       <div class="advrow">
+        <div class="field">
+          <label for="pArch">GPU architecture</label>
+          <select id="pArch"></select>
+        </div>
+        <div class="field" style="flex:0 0 160px;min-width:140px">
+          <label for="pPrec">Precision</label>
+          <select id="pPrec"></select>
+        </div>
         <div class="field">
           <label for="pBatch">Batch size</label>
           <input id="pBatch" type="number" min="1" max="512" step="1" value="1" />
         </div>
         <div class="field">
-          <label for="pCtx">Context length (tokens)</label>
+          <label for="pCtx">Context length</label>
           <input id="pCtx" type="number" min="128" max="131072" step="128" value="2048" />
         </div>
       </div>
@@ -194,14 +207,21 @@
     </div>
 
     <div class="hint" id="estHint"></div>
+
+    <details class="schema-output" id="schemaOutput">
+      <summary>Report schema output (JSON)</summary>
+      <button class="copybtn" id="copySchema">Copy</button>
+      <pre id="schemaJson"></pre>
+    </details>
   </div><!-- /estimateView -->
 
   <footer>
-    Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">“Weight-Only Quantization Does Not Always Save Energy”</a>
+    Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">"Weight-Only Quantization Does Not Always Save Energy"</a>
     · real GPU measurements (NVML 10Hz, 256 tokens/run, 10 iterations) · dataset: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a>.
+    Unlike TDP-based estimators, our values come from <b>direct NVML power sampling</b> during inference.
     Energy shown per 1M tokens; ΔE% is relative to each model's FP16 baseline.
     INT8 was measured only on A800 in this dataset.
-    <br>Tip: switch GPU to <b>RTX 5090</b> or <b>T4</b> and step up to a 7B model to watch NF4 flip from penalty (red) to savings (green) — the crossover effect.
+    <br>Tip: try the <b>Your model</b> tab — drag the slider past the crossover to watch the energy change flip from penalty to savings.
     <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · under review at <i>Sustainable Computing: Informatics and Systems</i>.
   </footer>
 </div>
@@ -294,8 +314,14 @@ function renderBars(m, ms){
   // verdict (NF4)
   const dn=dPct(m,"NF4");
   const v=document.getElementById("verdict");
-  if(dn<0){ v.className="verdict down"; v.innerHTML=`<span class="big">↓</span> NF4 saves ${Math.abs(dn).toFixed(0)}% energy — quantization is worth it for this model.`; }
-  else{ v.className="verdict up"; v.innerHTML=`<span class="big">↑</span> NF4 adds ${dn.toFixed(0)}% energy — quantization actually costs more for this model.`; }
+  if(dn<0){
+    v.className="verdict down";
+    v.innerHTML=`<span class="big">↓</span> NF4 saves ${Math.abs(dn).toFixed(0)}% energy — quantization is worth it for this model.<br><span style="font-size:12px;font-family:monospace;color:var(--muted);margin-top:6px;display:block">Ready to quantize? <code style="background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px">BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')</code></span>`;
+  }
+  else{
+    v.className="verdict up";
+    v.innerHTML=`<span class="big">↑</span> NF4 adds ${dn.toFixed(0)}% energy — quantization actually costs more for this model.<br><span style="font-size:12px;color:var(--muted);margin-top:6px;display:block">Stick with FP16 — no quantization config needed.</span>`;
+  }
 
   document.getElementById("barMeta").textContent =
     "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null
@@ -392,7 +418,6 @@ gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2"; render();
 /* ----- estimator UI ----- */
 const pN=document.getElementById("pN"), pArch=document.getElementById("pArch"), pPrec=document.getElementById("pPrec");
 const pBatch=document.getElementById("pBatch"), pCtx=document.getElementById("pCtx"), pAdv=document.getElementById("pAdv");
-const pAsk=document.getElementById("pAsk"), pAskBtn=document.getElementById("pAskBtn");
 ["turing","ada","blackwell","ampere","hopper"].forEach(a=>{ const o=document.createElement("option"); o.value=a; o.textContent=CURVES.arch_label[a]||a; pArch.appendChild(o); });
 pArch.value="ampere"; // default: a 13B query lands as a high-confidence interpolation
 function fillPrec(){
@@ -413,7 +438,32 @@ function renderEstimate(){
   const batch=Math.max(1, parseInt(pBatch.value,10)||1), ctx=Math.max(128, parseInt(pCtx.value,10)||2048);
   const vramEl=document.getElementById("estVram");
   const r=estimate(N, pArch.value, pPrec.value, {batch, ctx});
-  if(r.error){ valEl.textContent="—"; ciEl.textContent=r.error; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; vramEl.textContent=""; document.getElementById("estCross").innerHTML=""; return; }
+  if(r.error){ valEl.textContent="—"; ciEl.textContent=r.error; bEl.textContent=""; cfEl.textContent=""; vEl.innerHTML=""; nEl.innerHTML=""; mEl.textContent=""; vramEl.textContent=""; document.getElementById("estCross").innerHTML=""; document.getElementById("ecoGate").style.display="none"; return; }
+  document.getElementById("ecoGate").style.display="";
+
+  // eco_gate logic
+  const GATE_THRESH = { ada:3.9, blackwell:5.2, turing:3.2, ampere:3.7 };
+  const arch = pArch.value;
+  const thresh = GATE_THRESH[arch] || 4.0;
+  const gateEl=document.getElementById("ecoGate"), gateLabel=document.getElementById("ecoGateLabel");
+  const gateFill=document.getElementById("ecoGateFill"), gateMarker=document.getElementById("ecoGateMarker");
+  const gateThresh=document.getElementById("ecoGateThresh");
+  const xMax=Math.max(thresh*2.5, N*1.5, 16);
+  gateThresh.textContent="threshold: "+thresh+"B";
+  if(N < thresh){
+    gateLabel.textContent="FP16 zone";
+    gateLabel.style.color="var(--bad)";
+    gateFill.className="ecogate-fill lock";
+    gateFill.style.width=(N/xMax*100)+"%";
+    gateFill.style.background="var(--bad)";
+  } else {
+    gateLabel.textContent="Quant OK";
+    gateLabel.style.color="var(--good)";
+    gateFill.className="ecogate-fill allow";
+    gateFill.style.width="100%";
+    gateFill.style.background="linear-gradient(to right, var(--bad) "+((thresh/xMax)*100).toFixed(1)+"%, var(--good) "+((thresh/xMax)*100).toFixed(1)+"%)";
+  }
+  gateMarker.style.left=Math.min(N/xMax*100,100)+"%";
   valEl.textContent=(r.delta_pct>0?"+":"")+r.delta_pct+"%";
   valEl.style.color=r.delta_pct<0?"var(--good)":(r.delta_pct>0?"var(--bad)":"var(--txt)");
   bEl.textContent=r.basis; bEl.className="tag "+r.basis;
@@ -421,10 +471,15 @@ function renderEstimate(){
   ciEl.innerHTML="95% range: <b>"+(r.ci[0]>0?"+":"")+r.ci[0]+"%</b> to <b>"+(r.ci[1]>0?"+":"")+r.ci[1]+"%</b>"+(r.crossover_b?(" · crossover ≈ <b>"+r.crossover_b+"B</b>"):"");
   vramEl.innerHTML="Est. weight memory: <b>"+r.weight_gb+" GB</b> ("+pPrec.value+") vs <b>"+r.weight_gb_fp16+" GB</b> (FP16) — weights only, approx.";
   const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
+  const quantizeNote=r.recommendation==="quantize"
+    ? `<span style="font-size:12px;font-family:monospace;color:var(--muted);margin-top:8px;display:block">Ready to quantize? <code style="background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px">BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')</code></span>`
+    : r.recommendation==="do_not_quantize"
+      ? `<span style="font-size:12px;color:var(--muted);margin-top:8px;display:block">Stick with FP16 — no quantization config needed.</span>`
+      : "";
   if(r.recommendation==="quantize"){ vEl.className="verdict down"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
   else if(r.recommendation==="do_not_quantize"){ vEl.className="verdict up"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
   else { vEl.className="verdict"; vEl.style.cssText="margin-top:14px;background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)"; }
-  vEl.innerHTML="<span class=\"big\">"+ico+"</span> "+r.verdict;
+  vEl.innerHTML="<span class=\"big\">"+ico+"</span> "+r.verdict+"<br>"+quantizeNote;
   nEl.innerHTML=r.notes.map(n=>"<li>"+n+"</li>").join("");
   mEl.textContent="Architecture used: "+(CURVES.arch_label[r.arch_used]||r.arch_used)+(r.arch_used!==pArch.value?" (borrowed)":"")+" · estimates are calibrated to measured anchors, not new measurements.";
   document.getElementById("estHint").innerHTML = r.recommendation==="quantize"
@@ -432,6 +487,28 @@ function renderEstimate(){
     : r.recommendation==="do_not_quantize"
       ? "This model is <b>below</b> the crossover — quantization likely <b>costs</b> energy here; keep FP16."
       : "You're <b>near the crossover</b> — the sign is uncertain. Measure on your own stack before deciding.";
+
+  // Generate schema-compliant JSON report
+  const gpuModelMap = { ada:"RTX 4090D", blackwell:"RTX 5090", turing:"T4", ampere:"A800", hopper:"H100" };
+  const schemaReport = {
+    gpu_arch: pArch.value,
+    gpu_model: gpuModelMap[pArch.value] || pArch.value.toUpperCase(),
+    model_name: "custom-model",
+    params_b: N,
+    precision: pPrec.value,
+    batch_size: batch,
+    context_length: ctx,
+    energy_per_1m_tokens_mj: null, // requires actual measurement
+    delta_percent: r.delta_pct,
+    crossover_threshold_b: r.crossover_b || null,
+    measurement_method: r.basis === "measured" ? "NVML 10Hz, n=10, CV<3%, 256 tokens/run" : "interpolated from measured anchors",
+    confidence_interval: r.ci,
+    recommendation: r.recommendation,
+    eco_gate: N < thresh ? "lock_fp16" : "allow_quant",
+    timestamp: new Date().toISOString(),
+    dataset_version: "v1.0"
+  };
+  document.getElementById("schemaJson").textContent = JSON.stringify(schemaReport, null, 2);
   renderEstCurve(pArch.value, pPrec.value, N, r);
   track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, batch, ctx, delta_pct:r.delta_pct, basis:r.basis });
 }
@@ -496,19 +573,15 @@ pN.addEventListener("input",renderEstimate);
 pBatch.addEventListener("input",renderEstimate);
 pCtx.addEventListener("input",renderEstimate);
 
-/* ----- plain-English query -> fills the form (rules-based, no LLM) ----- */
-function runAsk(){
-  const q=parseQuery(pAsk.value);
-  if(q.N!=null) pN.value=q.N;
-  if(q.arch){ pArch.value=q.arch; fillPrec(); }
-  if(q.precision && [...pPrec.options].some(o=>o.value===q.precision)) pPrec.value=q.precision;
-  if(q.batch!=null) pBatch.value=q.batch;
-  if(q.ctx!=null) pCtx.value=q.ctx;
-  if(q.batch!=null||q.ctx!=null) pAdv.open=true;
-  renderEstimate(); track("estimate_ask",{ q:pAsk.value });
-}
-pAskBtn.addEventListener("click",runAsk);
-pAsk.addEventListener("keydown",e=>{ if(e.key==="Enter") runAsk(); });
+/* ----- copy schema JSON ----- */
+document.getElementById("copySchema").addEventListener("click",()=>{
+  const txt=document.getElementById("schemaJson").textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById("copySchema");
+    btn.textContent="Copied!";
+    setTimeout(()=>btn.textContent="Copy",1500);
+  });
+});
 
 /* ===== Analytics + UTM (provider-agnostic) ===== */
 // Captures inbound utm_* (set on the email/social links pointing here), forwards them
