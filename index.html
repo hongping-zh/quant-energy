@@ -471,8 +471,11 @@ function renderEstimate(){
   ciEl.innerHTML="95% range: <b>"+(r.ci[0]>0?"+":"")+r.ci[0]+"%</b> to <b>"+(r.ci[1]>0?"+":"")+r.ci[1]+"%</b>"+(r.crossover_b?(" · crossover ≈ <b>"+r.crossover_b+"B</b>"):"");
   vramEl.innerHTML="Est. weight memory: <b>"+r.weight_gb+" GB</b> ("+pPrec.value+") vs <b>"+r.weight_gb_fp16+" GB</b> (FP16) — weights only, approx.";
   const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
+  const cfgSnippet=pPrec.value==="INT8"
+    ? "BitsAndBytesConfig(load_in_8bit=True)"
+    : "BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')";
   const quantizeNote=r.recommendation==="quantize"
-    ? `<span style="font-size:12px;font-family:monospace;color:var(--muted);margin-top:8px;display:block">Ready to quantize? <code style="background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px">BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')</code></span>`
+    ? `<span style="font-size:12px;font-family:monospace;color:var(--muted);margin-top:8px;display:block">Ready to quantize? <code style="background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px">${cfgSnippet}</code></span>`
     : r.recommendation==="do_not_quantize"
       ? `<span style="font-size:12px;color:var(--muted);margin-top:8px;display:block">Stick with FP16 — no quantization config needed.</span>`
       : "";
