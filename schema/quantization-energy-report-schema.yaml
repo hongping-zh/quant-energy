@@ -1,0 +1,129 @@
+# Quantization Energy Report Schema
+# Version: 1.0.0
+# Repository: https://github.com/hongping-zh/ecocompute-ai
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: QuantizationEnergyReport
+description: Standardized schema for reporting energy measurements of LLM quantization experiments
+
+type: object
+required:
+  - gpu_arch
+  - gpu_model
+  - model_name
+  - params_b
+  - precision
+  - batch_size
+  - energy_per_1m_tokens_mj
+  - delta_percent
+  - measurement_method
+
+properties:
+  gpu_arch:
+    type: string
+    description: GPU architecture family
+    enum:
+      - turing      # e.g. T4
+      - ada         # e.g. RTX 4090D, RTX 4090
+      - blackwell   # e.g. RTX 5090
+      - ampere      # e.g. A800, A100, RTX 3090
+      - hopper      # e.g. H100, H200
+    example: "ada"
+
+  gpu_model:
+    type: string
+    description: Specific GPU model identifier
+    example: "RTX 4090D"
+
+  model_name:
+    type: string
+    description: Name of the quantized model
+    example: "Qwen2-7B-Instruct"
+
+  params_b:
+    type: number
+    description: Model size in billions of parameters
+    minimum: 0.1
+    maximum: 1000
+    example: 7.6
+
+  precision:
+    type: string
+    description: Quantization precision format
+    enum:
+      - FP16    # Full precision baseline
+      - NF4     # 4-bit normalized float
+      - INT8    # 8-bit integer
+      - FP8     # 8-bit float (E4M3/E5M2)
+    example: "NF4"
+
+  batch_size:
+    type: integer
+    description: Inference batch size
+    minimum: 1
+    example: 1
+
+  context_length:
+    type: integer
+    description: Maximum context length in tokens
+    minimum: 128
+    example: 2048
+
+  energy_per_1m_tokens_mj:
+    type: number
+    description: Energy consumption per 1 million tokens in megajoules (MJ)
+    minimum: 0
+    example: 142.5
+
+  delta_percent:
+    type: number
+    description: Energy change percentage relative to FP16 baseline (negative = savings, positive = penalty)
+    example: -8.3
+
+  crossover_threshold_b:
+    type: number
+    description: Model size (in billions) where quantization effect flips from penalty to savings
+    minimum: 0
+    example: 5.2
+
+  measurement_method:
+    type: string
+    description: Description of measurement methodology
+    example: "NVML 10Hz, n=10 iterations, CV<3%, 256 tokens/run"
+
+  confidence_interval:
+    type: array
+    description: 95% confidence interval [lower_bound, upper_bound]
+    items:
+      type: number
+    minItems: 2
+    maxItems: 2
+    example: [-12.5, -4.1]
+
+  recommendation:
+    type: string
+    description: Quantization recommendation
+    enum:
+      - quantize        # Quantization saves energy
+      - do_not_quantize # Quantization costs energy
+      - uncertain       # Near crossover threshold
+    example: "quantize"
+
+  eco_gate:
+    type: string
+    description: eco_gate decision output
+    enum:
+      - lock_fp16      # Model too small for quantization benefits
+      - allow_quant    # Model large enough for quantization benefits
+    example: "allow_quant"
+
+  timestamp:
+    type: string
+    format: date-time
+    description: ISO 8601 timestamp of measurement
+    example: "2024-06-15T10:30:00Z"
+
+  dataset_version:
+    type: string
+    description: Version of the measurement dataset
+    example: "v1.0"
