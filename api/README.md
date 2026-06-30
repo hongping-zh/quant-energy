@@ -107,10 +107,21 @@ Rules-based (no LLM) parser that powers the demo's plain-English box. Recognises
 
 Helpers exposed for reuse (memory footprint and the batch/ctx factor above).
 
-## REST endpoint (Cloudflare Worker) — ready to deploy
+## REST endpoint (Cloudflare Worker) — live
+
+**Live base URL:** `https://ecocompute-estimator.zhanghongping1982.workers.dev`
+
+Try it:
+
+```bash
+curl "https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/estimate?params_b=7&arch=blackwell&precision=nf4"
+curl "https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/architectures"
+curl "https://ecocompute-estimator.zhanghongping1982.workers.dev/openapi.json"
+```
 
 A working Worker that wraps `estimate()` lives in this folder: [`worker.js`](worker.js) +
-[`wrangler.toml`](wrangler.toml). It is dependency-free and bundles to ~16 KiB.
+[`wrangler.toml`](wrangler.toml). It is dependency-free and bundles to ~16 KiB. CORS is
+open (`access-control-allow-origin: *`) so browsers and other agents can call it directly.
 
 Endpoints:
 
@@ -139,7 +150,7 @@ Deploy:
 ```bash
 cd api
 npx wrangler login            # one-time (or set CLOUDFLARE_API_TOKEN)
-npx wrangler deploy           # -> https://ecocompute-estimator.<subdomain>.workers.dev
+npx wrangler deploy           # -> https://ecocompute-estimator.zhanghongping1982.workers.dev
 npx wrangler deploy --dry-run --outdir /tmp/build   # build-only sanity check
 ```
 
