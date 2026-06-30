@@ -92,7 +92,7 @@ export default {
     const path = u.pathname.replace(/\/+$/, "") || "/";
 
     if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/architectures", "/openapi.json"] });
-    if (path === "/openapi.json") return json(OPENAPI);
+    if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] });
     if (path === "/v1/architectures") return json(architectures());
 
     if (path === "/v1/estimate") {
