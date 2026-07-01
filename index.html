@@ -84,6 +84,21 @@
   .ecogate-label{font-weight:600;white-space:nowrap}
   .adv .advrow .field{min-width:130px}
   .estvram{font-size:12px;color:var(--muted);margin-top:6px}
+  /* optimizer */
+  .ocfg{font-size:22px;font-weight:800;letter-spacing:.3px}
+  .ostats{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+  .ostat{flex:1 1 130px;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ostat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .ostat .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px}
+  .ostat .b{font-size:10px;color:var(--muted);margin-top:3px}
+  .obasis{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .otable{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  .otable th,.otable td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .otable th:first-child,.otable td:first-child{text-align:left}
+  .otable th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .otable tr.best td{color:var(--accent);font-weight:700}
+  .odelta.pos{color:#fb7185} .odelta.neg{color:#34d399}
+  .owarn{padding:12px 14px;border-radius:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);color:#fbbf24;font-weight:600;font-size:14px}
   .schema-output{margin-top:16px}
   .schema-output summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;padding:8px 0;list-style:none}
   .schema-output summary::-webkit-details-marker{display:none}
@@ -107,6 +122,7 @@
   <div class="modetabs" role="tablist">
     <button id="tabMeasured" class="active" type="button">Tested models</button>
     <button id="tabEstimate" type="button">Your model</button>
+    <button id="tabOptimize" type="button">Optimize (constraints)</button>
   </div>
 
   <div id="measuredView">
@@ -215,6 +231,68 @@
     </details>
   </div><!-- /estimateView -->
 
+  <div id="optimizeView" style="display:none">
+    <p class="meta" style="margin:2px 0 14px">
+      From <b>static query</b> to <b>constrained optimization</b>: give your GPU, model size, an objective and optional
+      budgets — the tool exhaustively searches <b>precision × batch × context</b>, filters by your constraints and returns
+      the objective-optimal config, alternatives and the energy↔latency Pareto frontier. Energy is measured-anchored;
+      latency/throughput are a roofline <b>model</b>; VRAM is computed — each field is labelled below.
+    </p>
+
+    <div class="controls">
+      <div class="field">
+        <label for="oArch">GPU architecture</label>
+        <select id="oArch"></select>
+      </div>
+      <div class="field" style="flex:0 0 200px;min-width:180px">
+        <label for="oN">Model size (parameters, B)</label>
+        <input id="oN" type="number" min="0.1" max="500" step="0.1" value="7" />
+      </div>
+      <div class="field" style="flex:0 0 200px;min-width:180px">
+        <label for="oObj">Objective</label>
+        <select id="oObj">
+          <option value="min_energy">Minimize energy</option>
+          <option value="min_latency">Minimize latency</option>
+          <option value="max_throughput">Maximize throughput</option>
+          <option value="min_vram">Minimize VRAM</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="field">
+        <label for="oLat">Max latency (ms/token) · optional</label>
+        <input id="oLat" type="number" min="0" step="1" placeholder="no limit" />
+      </div>
+      <div class="field">
+        <label for="oVram">Max VRAM (GB) · optional</label>
+        <input id="oVram" type="number" min="0" step="0.5" placeholder="no limit" />
+      </div>
+      <div class="field">
+        <label for="oTput">Min throughput (tok/s) · optional</label>
+        <input id="oTput" type="number" min="0" step="1" placeholder="no limit" />
+      </div>
+    </div>
+
+    <div class="card" id="oRecCard">
+      <h2>Recommended configuration</h2>
+      <div id="oRec"></div>
+    </div>
+
+    <div class="card" id="oAltCard">
+      <h2>Alternatives</h2>
+      <div id="oAlt"></div>
+    </div>
+
+    <div class="card" id="oParetoCard">
+      <h2>Energy ↔ latency Pareto frontier</h2>
+      <p class="meta" style="margin:0 0 10px">Non-dominated trade-offs: no other config is both lower-energy <i>and</i> lower-latency.</p>
+      <div id="oPareto"></div>
+    </div>
+
+    <ul id="oNotes" class="estnotes"></ul>
+  </div><!-- /optimizeView -->
+
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">"Weight-Only Quantization Does Not Always Save Energy"</a>
     · real GPU measurements (NVML 10Hz, 256 tokens/run, 10 iterations) · dataset: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a>.
@@ -227,6 +305,7 @@
 </div>
 
 <script src="estimate.js"></script>
+<script src="optimize.js"></script>
 <script>
 /* ===== Real measured data (J per 1k tokens) ===== */
 /* RTX 4090D: dataset.md (n=2 gradient); T4 / RTX 5090: *_benchmark_results.csv; A800: a800_summary.csv (int8_default) */
@@ -560,21 +639,103 @@ function renderEstCurve(arch, precision, N, r){
   </svg>`;
 }
 
-/* ----- mode toggle ----- */
-const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate");
-const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView");
-function setMode(est){
-  viewE.style.display=est?"":"none"; viewM.style.display=est?"none":"";
-  tabE.classList.toggle("active",est); tabM.classList.toggle("active",!est);
-  if(est){ fillPrec(); renderEstimate(); track("mode_estimate",{}); }
+/* ----- mode toggle (3-way) ----- */
+const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate"), tabO=document.getElementById("tabOptimize");
+const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView"), viewO=document.getElementById("optimizeView");
+function showView(which){ // "measured" | "estimate" | "optimize"
+  viewM.style.display=which==="measured"?"":"none";
+  viewE.style.display=which==="estimate"?"":"none";
+  viewO.style.display=which==="optimize"?"":"none";
+  tabM.classList.toggle("active",which==="measured");
+  tabE.classList.toggle("active",which==="estimate");
+  tabO.classList.toggle("active",which==="optimize");
+  if(which==="estimate"){ fillPrec(); renderEstimate(); track("mode_estimate",{}); }
+  if(which==="optimize"){ renderOptimize(); track("mode_optimize",{}); }
 }
-tabM.addEventListener("click",()=>setMode(false));
-tabE.addEventListener("click",()=>setMode(true));
+function setMode(est){ showView(est?"estimate":"measured"); } // back-compat
+tabM.addEventListener("click",()=>showView("measured"));
+tabE.addEventListener("click",()=>showView("estimate"));
+tabO.addEventListener("click",()=>showView("optimize"));
 pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
 pPrec.addEventListener("change",renderEstimate);
 pN.addEventListener("input",renderEstimate);
 pBatch.addEventListener("input",renderEstimate);
 pCtx.addEventListener("input",renderEstimate);
+
+/* ----- optimizer (reuses optimize.js: window.EcoOptimizer.optimize) ----- */
+const oArch=document.getElementById("oArch"), oN=document.getElementById("oN"), oObj=document.getElementById("oObj");
+const oLat=document.getElementById("oLat"), oVram=document.getElementById("oVram"), oTput=document.getElementById("oTput");
+["turing","ada","blackwell","ampere","hopper"].forEach(a=>{ const o=document.createElement("option"); o.value=a; o.textContent=CURVES.arch_label[a]||a; oArch.appendChild(o); });
+oArch.value="blackwell"; // default lands inside a measured range at 7B
+
+function oNum(el){ const v=parseFloat(el.value); return (el.value!==""&&!isNaN(v)&&v>0)?v:undefined; }
+function oFmt(x,unit){ return x==null?"—":(fmtNum(x)+(unit?(" "+unit):"")); }
+function oPct(p,invertGood){ // invertGood: for latency/vram, lower is better -> negative is good
+  if(p==null) return "";
+  const good = invertGood ? p<0 : p<0; const cls = p<0?"neg":"pos";
+  const sign = p>0?"+":""; return `<span class="odelta ${cls}">${sign}${p}%</span>`;
+}
+
+function statTile(k,v,b){ return `<div class="ostat"><div class="k">${k}</div><div class="v">${v}</div><div class="b">${b||""}</div></div>`; }
+
+function renderOptimize(){
+  const O=window.EcoOptimizer; const rec=document.getElementById("oRec"), alt=document.getElementById("oAlt"),
+    par=document.getElementById("oPareto"), notes=document.getElementById("oNotes"),
+    altCard=document.getElementById("oAltCard"), parCard=document.getElementById("oParetoCard");
+  const N=parseFloat(oN.value);
+  if(!O||!(N>0)){ rec.innerHTML="<p class='meta'>Enter a valid model size.</p>"; return; }
+  const req={ arch:oArch.value, params_b:N, objective:oObj.value,
+    max_latency_ms:oNum(oLat), max_vram_gb:oNum(oVram), min_throughput:oNum(oTput) };
+  const r=O.optimize(req);
+  if(r.error){ rec.innerHTML=`<div class="owarn">${r.error}</div>`; altCard.style.display="none"; parCard.style.display="none"; notes.innerHTML=""; return; }
+
+  const c=r.recommended||r.closest_infeasible;
+  const objLabel=oObj.options[oObj.selectedIndex].textContent;
+  let head="";
+  if(!r.recommended){
+    head=`<div class="owarn">No configuration satisfies all constraints (${r.feasible_count} feasible). Showing the closest — consider relaxing the binding budget.</div>`;
+  }
+  const basisTags=`<div class="obasis">`+
+    `<span class="tag ${c.basis.energy}">energy: ${c.basis.energy}</span>`+
+    `<span class="tag">latency: ${c.basis.latency}</span>`+
+    `<span class="tag">vram: ${c.basis.vram}</span>`+
+    `<span class="tag conf-${c.confidence}">confidence: ${c.confidence}</span></div>`;
+  const dsign=c.delta_pct_vs_fp16>0?"+":"";
+  rec.innerHTML = head +
+    `<div class="ocfg">${c.precision} · batch ${c.batch} · context ${c.context}</div>`+
+    `<p class="meta" style="margin-top:6px">Objective: <b>${objLabel}</b>${r.recommended?" · optimal under your constraints":""}</p>`+
+    `<div class="ostats">`+
+      statTile("Energy", oFmt(c.energy_j_per_1k_tokens,"J/1k"), `${dsign}${c.delta_pct_vs_fp16}% vs FP16 · measured-anchored`)+
+      statTile("Throughput", oFmt(c.throughput_tok_s,"tok/s"), "roofline model")+
+      statTile("Latency", oFmt(c.latency_ms_per_token,"ms/tok"), (c.bound?c.bound+"-bound · ":"")+"roofline model")+
+      statTile("VRAM", oFmt(c.vram_gb,"GB"), "computed")+
+    `</div>`+ basisTags;
+
+  // alternatives
+  const alts=r.alternatives||[];
+  if(alts.length){ altCard.style.display="";
+    let rows=`<table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Δ energy</th><th>tok/s</th><th>ms/tok</th><th>VRAM</th></tr></thead><tbody>`;
+    alts.forEach(a=>{ const d=a.vs_recommended||{};
+      rows+=`<tr><td>${a.precision} · b${a.batch} · ctx${a.context}</td><td>${oFmt(a.energy_j_per_1k_tokens)}</td>`+
+        `<td>${oPct(d.energy_pct)}</td><td>${oFmt(a.throughput_tok_s)}</td><td>${oFmt(a.latency_ms_per_token)}</td><td>${oFmt(a.vram_gb)}</td></tr>`; });
+    rows+=`</tbody></table>`; alt.innerHTML=rows;
+  } else { altCard.style.display="none"; }
+
+  // pareto frontier
+  const pf=r.pareto_energy_latency||[];
+  if(pf.length){ parCard.style.display="";
+    const best=r.recommended;
+    let rows=`<table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Latency (ms/tok)</th><th>tok/s</th><th>VRAM</th></tr></thead><tbody>`;
+    pf.forEach(p=>{ const isBest=best&&p.precision===best.precision&&p.batch===best.batch&&p.context===best.context;
+      rows+=`<tr class="${isBest?"best":""}"><td>${p.precision} · b${p.batch} · ctx${p.context}${isBest?" ★":""}</td>`+
+        `<td>${oFmt(p.energy_j_per_1k_tokens)}</td><td>${oFmt(p.latency_ms_per_token)}</td><td>${oFmt(p.throughput_tok_s)}</td><td>${oFmt(p.vram_gb)}</td></tr>`; });
+    rows+=`</tbody></table>`; par.innerHTML=rows;
+  } else { parCard.style.display="none"; }
+
+  notes.innerHTML=(r.notes||[]).map(n=>`<li>${n}</li>`).join("");
+  track("optimize",{ arch:req.arch, params_b:N, objective:req.objective, feasible:r.feasible_count });
+}
+[oArch,oN,oObj,oLat,oVram,oTput].forEach(el=>el.addEventListener("input",renderOptimize));
 
 /* ----- copy schema JSON ----- */
 document.getElementById("copySchema").addEventListener("click",()=>{
