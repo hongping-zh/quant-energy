@@ -119,9 +119,10 @@ curl "https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/architecture
 curl "https://ecocompute-estimator.zhanghongping1982.workers.dev/openapi.json"
 ```
 
-A working Worker that wraps `estimate()` lives in this folder: [`worker.js`](worker.js) +
-[`wrangler.toml`](wrangler.toml). It is dependency-free and bundles to ~16 KiB. CORS is
-open (`access-control-allow-origin: *`) so browsers and other agents can call it directly.
+A working Worker that wraps `estimate()` and `optimize()` lives in this folder:
+[`worker.js`](worker.js) + [`wrangler.toml`](wrangler.toml). It is dependency-free and
+bundles to ~36 KiB. CORS is open (`access-control-allow-origin: *`) so browsers and other
+agents can call it directly.
 
 Endpoints:
 
@@ -131,6 +132,8 @@ GET  /v1/estimate?q=13B%20on%20A100%20int8%20batch%2032   # plain-English query
 POST /v1/estimate   {"params_b":13,"arch":"ampere","precision":"NF4","batch":32}
 POST /v1/estimate   {"q":"13B on A100 int8 batch 32"}
 GET  /v1/architectures        # supported archs, precisions, measured ranges
+GET  /v1/optimize?params_b=7&arch=ada&objective=min_energy&max_latency_ms=50&max_vram_gb=16
+POST /v1/optimize   {"params_b":7,"arch":"ada","objective":"min_energy","max_vram_gb":16}
 GET  /openapi.json            # so other agents can auto-discover the tool
 ```
 
@@ -160,11 +163,48 @@ Local smoke test of the handler (no Cloudflare account needed):
 node api/test_worker.mjs
 ```
 
+## Config optimizer (`optimize.js`) — from static query to constrained optimization
+
+`estimate()` answers *"what happens if I pick this config?"*. `optimize()` answers the
+inverse: *"given my constraints, what config should I pick?"* — turning a point estimate
+into a **constrained optimization**.
+
+You give a GPU architecture, a model size, optional **budgets** (latency / VRAM /
+throughput) and an **objective** (`min_energy` · `min_latency` · `max_throughput` ·
+`min_vram`); it exhaustively searches the `precision × batch × context` grid, filters by
+the budgets, and returns the objective-optimal config, ranked alternatives, and the
+energy↔latency **Pareto frontier**. The grid is small, so the search is exact (global
+optimum), not heuristic.
+
+```js
+const { optimize } = require("./optimize.js");
+optimize({ arch: "ada", params_b: 7, objective: "min_energy",
+           max_latency_ms: 50, max_vram_gb: 16 });
+// -> { recommended: { precision:"NF4", batch:32, context:512, energy_j_per_1k_tokens,
+//        latency_ms_per_token, throughput_tok_s, vram_gb, basis:{...}, confidence },
+//      alternatives:[...], pareto_energy_latency:[...], feasible_count, notes:[...] }
+```
+
+**Honesty — every number carries its own `basis`:**
+
+| field | basis | source |
+|-------|-------|--------|
+| energy (`energy_j_per_1k_tokens`, `energy_rel_fp16`) | **measured-anchored** | fitted ΔE% × measured FP16 baseline (`curves.json:fp16_energy`) |
+| VRAM (`vram_gb`) | **computed** | weight bytes + KV-cache (standard formula) |
+| latency / throughput | **modelled (roofline)** | datasheet mem-bandwidth & compute (`curves.json:hardware`) — *not measured* |
+
+The roofline latency assumes memory-bound decode and ignores dequantization compute
+overhead, so quantized-format latency is a best case; energy is the measured signal. All
+of this is spelled out in the response `notes`. Reference implementation:
+[`../build/optimize.py`](../build/optimize.py); parity + invariants:
+`python3 build/test_optimize.py`.
+
 ## MCP server (for IDE / copilot agents)
 
-To let other agents (Claude Desktop, Cursor, internal copilots) call the estimator as a
-native tool, see [`../mcp`](../mcp) — a stdio MCP server exposing `should_i_quantize` and
-`list_architectures`, reusing the same `estimate.js`. No hosting required.
+To let other agents (Claude Desktop, Cursor, internal copilots) call the tools natively,
+see [`../mcp`](../mcp) — a stdio MCP server exposing `should_i_quantize`,
+`list_architectures` and `recommend_config` (the optimizer), reusing the same
+`estimate.js` / `optimize.js`. No hosting required.
 
 ## Validation
 
