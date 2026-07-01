@@ -39,6 +39,17 @@ ARCH_LABEL = {
 # classes with no measurements borrow the nearest datacenter class shape (flagged estimated)
 BORROW = {"hopper": "ampere"}
 
+# Public datasheet hardware specs per architecture, used ONLY by the (modelled)
+# roofline latency/throughput layer in optimize.py/optimize.js — NOT measured here.
+# mem_bw_gbps: HBM/GDDR memory bandwidth (GB/s). fp16_tflops: peak FP16 tensor TFLOPS.
+HARDWARE = {
+    "turing":    {"gpu": "T4",         "mem_bw_gbps": 320.0,  "fp16_tflops": 65.0,  "source": "NVIDIA T4 datasheet"},
+    "ada":       {"gpu": "RTX 4090D",  "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet"},
+    "blackwell": {"gpu": "RTX 5090",   "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet"},
+    "ampere":    {"gpu": "A800",       "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet"},
+    "hopper":    {"gpu": "H100",       "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet"},
+}
+
 
 def g(x):
     return x / (1.0 + x)
@@ -59,8 +70,31 @@ def load():
                 "gpu": r["gpu"], "model": r["model"],
                 "N": float(r["params_b"]),
                 "dE": (q - fp16) / fp16 * 100.0,
+                "e_fp16_j1k": fp16,
             })
     return rows
+
+
+def fp16_baseline(rows):
+    """Measured absolute FP16 decode energy (J per 1k tokens) per architecture.
+    Deduplicated by model size N (averaged if a size appears more than once).
+    This is the anchor the optimizer scales by (1 + dE%/100) to get absolute energy."""
+    by_arch = {}
+    for r in rows:
+        by_arch.setdefault(r["arch"], {}).setdefault(r["N"], []).append(r)
+    out = {}
+    for arch, byN in by_arch.items():
+        anchors = []
+        for N in sorted(byN):
+            grp = byN[N]
+            e = sum(x["e_fp16_j1k"] for x in grp) / len(grp)
+            anchors.append({"N": N, "e_j1k": round(e, 2),
+                            "model": grp[0]["model"], "gpu": grp[0]["gpu"]})
+        out[arch] = {
+            "n_min": anchors[0]["N"], "n_max": anchors[-1]["N"],
+            "anchors": anchors,
+        }
+    return out
 
 
 def fit_group(pts):
@@ -137,6 +171,8 @@ def main():
         "arch_label": ARCH_LABEL,
         "borrow": BORROW,
         "curves": curves,
+        "fp16_energy": fp16_baseline(rows),
+        "hardware": HARDWARE,
     }
     with open(OUT, "w") as f:
         json.dump(out, f, indent=2)
