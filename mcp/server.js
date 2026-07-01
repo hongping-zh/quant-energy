@@ -14,6 +14,7 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const { estimate, parseQuery, CURVES } = require("../estimate.js");
+const { optimize } = require("../optimize.js");
 
 const ARCHES = ["turing", "ada", "blackwell", "ampere", "hopper"];
 
@@ -84,6 +85,42 @@ server.registerTool(
   async () => {
     const a = architectures();
     return { content: [{ type: "text", text: JSON.stringify(a, null, 2) }], structuredContent: a };
+  }
+);
+
+server.registerTool(
+  "recommend_config",
+  {
+    title: "Recommend the optimal inference config under constraints",
+    description:
+      "Given a GPU architecture and model size plus optional latency/VRAM/throughput budgets and an objective, " +
+      "search the (precision x batch x context) space and return the objective-optimal config, alternatives, and the " +
+      "energy<->latency Pareto front. Energy is measured-anchored; latency & throughput are a roofline MODEL (not measured); " +
+      "VRAM is a standard calculation. Each config carries per-field basis + confidence.",
+    inputSchema: {
+      params_b: z.number().positive().describe("Model size in billions of parameters, e.g. 7"),
+      arch: z.enum(ARCHES).describe("GPU architecture class"),
+      objective: z.enum(["min_energy", "min_latency", "max_throughput", "min_vram"]).default("min_energy").describe("What to optimize"),
+      max_latency_ms: z.number().positive().optional().describe("Latency budget, ms per token"),
+      max_vram_gb: z.number().positive().optional().describe("VRAM budget, GB"),
+      min_throughput: z.number().positive().optional().describe("Throughput floor, tokens/s"),
+      batch: z.number().int().positive().optional().describe("Pin batch size (else searched over 1..32)"),
+      context: z.number().int().positive().optional().describe("Pin context length (else searched over 512..8192)"),
+    },
+  },
+  async (args) => {
+    if (!(args.params_b > 0)) return errOut("params_b (model size in billions) is required.");
+    if (!args.arch) return errOut("arch is required. Supported: " + ARCHES.join(", "));
+    const r = optimize(args);
+    if (r.error) return errOut(r.error);
+    const rec = r.recommended || r.closest_infeasible;
+    const head = r.recommended
+      ? `Recommended (${r.input.objective}): ${rec.summary} — energy basis ${rec.basis.energy}/${rec.confidence}.`
+      : `No config satisfies the constraints. Closest: ${rec.summary}.`;
+    return {
+      content: [{ type: "text", text: head + "\n\n" + JSON.stringify(r, null, 2) }],
+      structuredContent: r,
+    };
   }
 );
 
