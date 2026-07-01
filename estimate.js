@@ -37,6 +37,23 @@
         "anchors": [{ "N": 1.1, "dE": 26.49, "model": "TinyLlama-1.1B", "gpu": "RTX 5090" }, { "N": 1.5, "dE": 29.42, "model": "Qwen2-1.5B", "gpu": "RTX 5090" }, { "N": 3.0, "dE": 11.74, "model": "Qwen2.5-3B", "gpu": "RTX 5090" }, { "N": 7.0, "dE": -11.45, "model": "Qwen2-7B", "gpu": "RTX 5090" }] } },
       "turing": { "NF4": { "A": 7.925, "S": 79.5646, "Nstar": 19.2186, "resid_std": 1.316, "n_min": 1.1, "n_max": 7.0, "crossover_b": 2.126,
         "anchors": [{ "N": 1.1, "dE": 4.56, "model": "TinyLlama-1.1B", "gpu": "T4" }, { "N": 1.5, "dE": 0.22, "model": "Qwen2-1.5B", "gpu": "T4" }, { "N": 3.0, "dE": -1.38, "model": "Qwen2.5-3B", "gpu": "T4" }, { "N": 7.0, "dE": -13.75, "model": "Qwen2-7B", "gpu": "T4" }] } }
+    },
+    // Measured FP16 absolute decode energy (J / 1k tokens), per arch — anchors the
+    // optimizer's absolute-energy numbers. Mirror of curves.json:fp16_energy.
+    "fp16_energy": {
+      "ada":       { "n_min": 0.5, "n_max": 3.0, "anchors": [{ "N": 0.5, "e_j1k": 1474.16 }, { "N": 1.1, "e_j1k": 1600.58 }, { "N": 1.5, "e_j1k": 2238.87 }, { "N": 3.0, "e_j1k": 2989.22 }] },
+      "blackwell": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 1659.0 }, { "N": 1.5, "e_j1k": 2411.09 }, { "N": 3.0, "e_j1k": 3382.64 }, { "N": 7.0, "e_j1k": 5508.56 }] },
+      "turing":    { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 4251.21 }, { "N": 1.5, "e_j1k": 5731.8 }, { "N": 3.0, "e_j1k": 11267.69 }, { "N": 7.0, "e_j1k": 21722.65 }] },
+      "ampere":    { "n_min": 7.0, "n_max": 14.0, "anchors": [{ "N": 7.0, "e_j1k": 4402.43 }, { "N": 9.0, "e_j1k": 5445.12 }, { "N": 14.0, "e_j1k": 7359.98 }] }
+    },
+    // Public datasheet GPU specs — used ONLY by the (modelled) roofline latency
+    // layer in optimize.js. Mirror of curves.json:hardware.
+    "hardware": {
+      "turing":    { "gpu": "T4",        "mem_bw_gbps": 320.0,  "fp16_tflops": 65.0,  "source": "NVIDIA T4 datasheet" },
+      "ada":       { "gpu": "RTX 4090D",  "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet" },
+      "blackwell": { "gpu": "RTX 5090",   "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet" },
+      "ampere":    { "gpu": "A800",       "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet" },
+      "hopper":    { "gpu": "H100",       "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet" }
     }
   };
 
