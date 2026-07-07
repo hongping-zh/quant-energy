@@ -99,6 +99,11 @@
   .otable tr.best td{color:var(--accent);font-weight:700}
   .odelta.pos{color:#fb7185} .odelta.neg{color:#34d399}
   .owarn{padding:12px 14px;border-radius:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);color:#fbbf24;font-weight:600;font-size:14px}
+  .ochartwrap{overflow-x:auto;margin:2px 0 14px;-webkit-overflow-scrolling:touch}
+  .ochartwrap svg{min-width:520px;display:block}
+  .otablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ochart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:0 0 8px}
+  .ochart-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .schema-output{margin-top:16px}
   .schema-output summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;padding:8px 0;list-style:none}
   .schema-output summary::-webkit-details-marker{display:none}
@@ -259,20 +264,23 @@
       </div>
     </div>
 
-    <div class="controls">
-      <div class="field">
-        <label for="oLat">Max latency (ms/token) · optional</label>
-        <input id="oLat" type="number" min="0" step="1" placeholder="no limit" />
+    <details class="adv" id="oAdv">
+      <summary>Advanced constraints — latency / VRAM / throughput budgets (optional)</summary>
+      <div class="advrow">
+        <div class="field">
+          <label for="oLat">Max latency (ms/token)</label>
+          <input id="oLat" type="number" min="0" step="1" placeholder="no limit" />
+        </div>
+        <div class="field">
+          <label for="oVram">Max VRAM (GB)</label>
+          <input id="oVram" type="number" min="0" step="0.5" placeholder="no limit" />
+        </div>
+        <div class="field">
+          <label for="oTput">Min throughput (tok/s)</label>
+          <input id="oTput" type="number" min="0" step="1" placeholder="no limit" />
+        </div>
       </div>
-      <div class="field">
-        <label for="oVram">Max VRAM (GB) · optional</label>
-        <input id="oVram" type="number" min="0" step="0.5" placeholder="no limit" />
-      </div>
-      <div class="field">
-        <label for="oTput">Min throughput (tok/s) · optional</label>
-        <input id="oTput" type="number" min="0" step="1" placeholder="no limit" />
-      </div>
-    </div>
+    </details>
 
     <div class="card" id="oRecCard">
       <h2>Recommended configuration</h2>
@@ -286,7 +294,9 @@
 
     <div class="card" id="oParetoCard">
       <h2>Energy ↔ latency Pareto frontier</h2>
-      <p class="meta" style="margin:0 0 10px">Non-dominated trade-offs: no other config is both lower-energy <i>and</i> lower-latency.</p>
+      <p class="meta" style="margin:0 0 10px">Non-dominated trade-offs: no other config is both lower-energy <i>and</i> lower-latency. Down-left is better; ★ is the recommended config.</p>
+      <div class="ochart-legend"><span><i style="background:var(--accent)"></i>Recommended (★)</span><span><i style="background:var(--nf4)"></i>Frontier config</span></div>
+      <div id="oParetoChart" class="ochartwrap"></div>
       <div id="oPareto"></div>
     </div>
 
@@ -666,7 +676,7 @@ pCtx.addEventListener("input",renderEstimate);
 const oArch=document.getElementById("oArch"), oN=document.getElementById("oN"), oObj=document.getElementById("oObj");
 const oLat=document.getElementById("oLat"), oVram=document.getElementById("oVram"), oTput=document.getElementById("oTput");
 ["turing","ada","blackwell","ampere","hopper"].forEach(a=>{ const o=document.createElement("option"); o.value=a; o.textContent=CURVES.arch_label[a]||a; oArch.appendChild(o); });
-oArch.value="blackwell"; // default lands inside a measured range at 7B
+oArch.value="ada"; // most common consumer GPU (RTX 4090/4090D) — default scenario
 
 function oNum(el){ const v=parseFloat(el.value); return (el.value!==""&&!isNaN(v)&&v>0)?v:undefined; }
 function oFmt(x,unit){ return x==null?"—":(fmtNum(x)+(unit?(" "+unit):"")); }
@@ -677,6 +687,39 @@ function oPct(p,invertGood){ // invertGood: for latency/vram, lower is better ->
 }
 
 function statTile(k,v,b){ return `<div class="ostat"><div class="k">${k}</div><div class="v">${v}</div><div class="b">${b||""}</div></div>`; }
+
+function renderParetoChart(pf,best){
+  const el=document.getElementById("oParetoChart");
+  if(!pf||pf.length<2){ el.innerHTML=""; return; }
+  let pts=pf.slice().sort((a,b)=>a.energy_j_per_1k_tokens-b.energy_j_per_1k_tokens);
+  if(pts.length>10) pts=pts.slice(0,10); // avoid clutter: keep 10 lowest-energy non-dominated points
+  const W=700,H=320,pad={l:64,r:22,t:22,b:48}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const ex=pts.map(p=>p.energy_j_per_1k_tokens), ly=pts.map(p=>p.latency_ms_per_token);
+  let xmin=Math.min(...ex), xmax=Math.max(...ex), ymin=Math.min(...ly), ymax=Math.max(...ly);
+  const px=(xmax-xmin)*0.08||1, py=(ymax-ymin)*0.1||1;
+  xmin-=px; xmax+=px; ymin=Math.max(0,ymin-py); ymax+=py;
+  const X=e=>pad.l+(xmax===xmin?iw/2:(e-xmin)/(xmax-xmin)*iw);
+  const Y=l=>pad.t+(ymax===ymin?ih/2:(ymax-l)/(ymax-ymin)*ih);
+  const isBest=p=>best&&p.precision===best.precision&&p.batch===best.batch&&p.context===best.context;
+  const path=pts.map((p,i)=>(i?"L":"M")+X(p.energy_j_per_1k_tokens).toFixed(1)+" "+Y(p.latency_ms_per_token).toFixed(1)).join(" ");
+  const dots=pts.map(p=>{ const x=X(p.energy_j_per_1k_tokens).toFixed(1), y=Y(p.latency_ms_per_token).toFixed(1);
+    const lab=`${p.precision} b${p.batch} ctx${p.context} · ${fmtNum(p.energy_j_per_1k_tokens)} J/1k · ${fmtNum(p.latency_ms_per_token)} ms/tok`;
+    if(isBest(p)) return `<g><circle cx="${x}" cy="${y}" r="8" fill="none" stroke="var(--accent)" stroke-width="2.5"/><circle cx="${x}" cy="${y}" r="3.5" fill="var(--accent)"/><text x="${x}" y="${(+y-13).toFixed(1)}" fill="var(--accent)" font-size="11" font-weight="700" text-anchor="middle">★ ${p.precision} b${p.batch}</text><title>${lab}</title></g>`;
+    return `<circle cx="${x}" cy="${y}" r="4.5" fill="var(--nf4)" opacity="0.85"><title>${lab}</title></circle>`;
+  }).join("");
+  const tick=(min,max,n)=>{ const s=(max-min)/n,out=[]; for(let i=0;i<=n;i++)out.push(min+s*i); return out; };
+  const xt=tick(xmin,xmax,4).map(v=>`<text x="${X(v).toFixed(1)}" y="${H-pad.b+18}" fill="var(--muted)" font-size="10" text-anchor="middle">${Math.round(v)}</text>`).join("");
+  const yt=tick(ymin,ymax,4).map(v=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#1c2742" stroke-width="1"/><text x="${pad.l-8}" y="${(Y(v)+4).toFixed(1)}" fill="var(--muted)" font-size="10" text-anchor="end">${v.toFixed(1)}</text>`).join("");
+  const cy=(pad.t+ih/2).toFixed(1);
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Pareto frontier scatter: energy versus latency">
+    ${yt}
+    <path d="${path}" fill="none" stroke="var(--nf4)" stroke-width="2" stroke-dasharray="4 3" opacity="0.45"/>
+    ${dots}
+    ${xt}
+    <text x="${pad.l+iw/2}" y="${H-6}" fill="var(--muted)" font-size="11" text-anchor="middle">Energy (J / 1k tokens) → lower is better</text>
+    <text x="15" y="${cy}" fill="var(--muted)" font-size="11" text-anchor="middle" transform="rotate(-90 15 ${cy})">Latency (ms/token) → lower is better</text>
+  </svg>`;
+}
 
 function renderOptimize(){
   const O=window.EcoOptimizer; const rec=document.getElementById("oRec"), alt=document.getElementById("oAlt"),
@@ -705,32 +748,33 @@ function renderOptimize(){
     `<div class="ocfg">${c.precision} · batch ${c.batch} · context ${c.context}</div>`+
     `<p class="meta" style="margin-top:6px">Objective: <b>${objLabel}</b>${r.recommended?" · optimal under your constraints":""}</p>`+
     `<div class="ostats">`+
-      statTile("Energy", oFmt(c.energy_j_per_1k_tokens,"J/1k"), `${dsign}${c.delta_pct_vs_fp16}% vs FP16 · measured-anchored`)+
+      statTile("Energy", oFmt(c.energy_j_per_1k_tokens,"J/1k"), `${dsign}${c.delta_pct_vs_fp16}% vs FP16 · ${c.basis.energy==="measured"?"measured-anchored":"estimated (extrapolated)"}`)+
       statTile("Throughput", oFmt(c.throughput_tok_s,"tok/s"), "roofline model")+
       statTile("Latency", oFmt(c.latency_ms_per_token,"ms/tok"), (c.bound?c.bound+"-bound · ":"")+"roofline model")+
-      statTile("VRAM", oFmt(c.vram_gb,"GB"), "computed")+
+      statTile("VRAM", oFmt(c.vram_gb,"GB"), "computed · ±5%")+
     `</div>`+ basisTags;
 
   // alternatives
   const alts=r.alternatives||[];
   if(alts.length){ altCard.style.display="";
-    let rows=`<table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Δ energy</th><th>tok/s</th><th>ms/tok</th><th>VRAM</th></tr></thead><tbody>`;
+    let rows=`<div class="otablewrap"><table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Δ energy</th><th>tok/s</th><th>ms/tok</th><th>VRAM</th></tr></thead><tbody>`;
     alts.forEach(a=>{ const d=a.vs_recommended||{};
       rows+=`<tr><td>${a.precision} · b${a.batch} · ctx${a.context}</td><td>${oFmt(a.energy_j_per_1k_tokens)}</td>`+
         `<td>${oPct(d.energy_pct)}</td><td>${oFmt(a.throughput_tok_s)}</td><td>${oFmt(a.latency_ms_per_token)}</td><td>${oFmt(a.vram_gb)}</td></tr>`; });
-    rows+=`</tbody></table>`; alt.innerHTML=rows;
+    rows+=`</tbody></table></div>`; alt.innerHTML=rows;
   } else { altCard.style.display="none"; }
 
   // pareto frontier
   const pf=r.pareto_energy_latency||[];
   if(pf.length){ parCard.style.display="";
     const best=r.recommended;
-    let rows=`<table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Latency (ms/tok)</th><th>tok/s</th><th>VRAM</th></tr></thead><tbody>`;
+    renderParetoChart(pf,best);
+    let rows=`<div class="otablewrap"><table class="otable"><thead><tr><th>Config</th><th>Energy (J/1k)</th><th>Latency (ms/tok)</th><th>tok/s</th><th>VRAM</th></tr></thead><tbody>`;
     pf.forEach(p=>{ const isBest=best&&p.precision===best.precision&&p.batch===best.batch&&p.context===best.context;
       rows+=`<tr class="${isBest?"best":""}"><td>${p.precision} · b${p.batch} · ctx${p.context}${isBest?" ★":""}</td>`+
         `<td>${oFmt(p.energy_j_per_1k_tokens)}</td><td>${oFmt(p.latency_ms_per_token)}</td><td>${oFmt(p.throughput_tok_s)}</td><td>${oFmt(p.vram_gb)}</td></tr>`; });
-    rows+=`</tbody></table>`; par.innerHTML=rows;
-  } else { parCard.style.display="none"; }
+    rows+=`</tbody></table></div>`; par.innerHTML=rows;
+  } else { parCard.style.display="none"; document.getElementById("oParetoChart").innerHTML=""; }
 
   notes.innerHTML=(r.notes||[]).map(n=>`<li>${n}</li>`).join("");
   track("optimize",{ arch:req.arch, params_b:N, objective:req.objective, feasible:r.feasible_count });
