@@ -4,6 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>EcoCompute — Does quantization raise or lower energy?</title>
+<meta name="description" content="Interactive tool from 360+ real GPU power measurements: weight-only NF4/INT8 quantization can increase LLM inference energy on small models and only saves on larger ones. See whether it helps for your model and GPU." />
+<link rel="canonical" href="https://quantenergy.tech/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="EcoCompute" />
+<meta property="og:url" content="https://quantenergy.tech/" />
+<meta property="og:title" content="EcoCompute — Quantization Doesn't Always Save Energy" />
+<meta property="og:description" content="Interactive demo from 360+ real NVML GPU measurements: see whether NF4/INT8 quantization raises or lowers energy for your model and hardware." />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="EcoCompute — Quantization Doesn't Always Save Energy" />
+<meta name="twitter:description" content="Interactive demo from 360+ real NVML GPU measurements: see whether NF4/INT8 quantization raises or lowers energy for your model and hardware." />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
 <style>
   :root{
     --bg:#0b1020; --card:#121a30; --card2:#0f1730; --line:#243352;
@@ -811,12 +825,9 @@ function ctx(){ const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
 function decorate(a){ if(!a) return; try{ const u=new URL(a.href);
   Object.entries(UTM).forEach(([k,v])=>u.searchParams.set(k,v)); a.href=u.toString(); }catch(e){} }
 decorate(document.getElementById("ssrnCta"));
-decorate(document.getElementById("hubCta"));
 
 const ssrn=document.getElementById("ssrnCta");
 if(ssrn) ssrn.addEventListener("click",()=>track("cta_ssrn_click",ctx()));
-const hub=document.getElementById("hubCta");
-if(hub) hub.addEventListener("click",()=>track("cta_hub_click",ctx()));
 
 track("pageview_demo", {});
 </script>
