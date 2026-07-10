@@ -108,6 +108,11 @@
   .cta a.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(56,189,248,.35)}
   .cta a.ghost{color:var(--accent);text-decoration:none;font-size:13px;border:1px solid var(--line);padding:10px 14px;border-radius:10px}
   .cta a.ghost:hover{border-color:var(--accent)}
+  .cta button.ghost{background:transparent;font-family:inherit;color:var(--accent);font-size:13px;font-weight:600;border:1px solid var(--line);padding:10px 14px;border-radius:10px;cursor:pointer;transition:border-color .15s,color .15s}
+  .cta button.ghost:hover{border-color:var(--accent)}
+  .chartnote{font-size:11px;color:var(--muted);line-height:1.55;margin:10px 0 0}
+  .chartnote a{color:var(--accent);text-decoration:none}
+  .chartnote a:hover{text-decoration:underline}
   .badge{font-size:12px;color:var(--muted)}
   .badge b{color:#34d399}
   svg text{font-family:inherit}
@@ -224,6 +229,11 @@
     <div id="verdict" class="verdict"></div>
     <p class="meta" id="barMeta"></p>
     <p class="meta" id="barNote" style="display:none"></p>
+    <div class="cta" style="margin-top:14px">
+      <button id="copyBrief" class="ghost" type="button">Copy decision brief</button>
+      <button id="copyLink" class="ghost" type="button">Copy permalink</button>
+      <span class="badge">Paste the verdict + citation into your tech spec, or share this exact config.</span>
+    </div>
   </div>
 
   <div class="card">
@@ -235,6 +245,7 @@
       <span>Above zero = penalty (more energy) · below = savings</span>
     </div>
     <div id="cross"></div>
+    <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). INT8 was measured on A800 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
   </div>
 
   <div class="hint" id="hint"></div>
@@ -301,6 +312,7 @@
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
+      <p class="chartnote">The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
     </div>
 
     <div class="hint" id="estHint"></div>
@@ -613,7 +625,38 @@ modelSel.addEventListener("change",()=>{ render(); track("explore",ctx()); });
 
 // init: RTX 5090 + Qwen2.5-3B — a penalty case whose crossover visibly dips into
 // savings at 7B, so the red→green flip is one click away out of the box.
-gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2"; render();
+gpuSel.value="RTX 5090"; fillModels(); modelSel.value="2";
+// deep-link: ?gpu=<key>&m=<model name> restores a shared/permalinked config
+(function restoreFromURL(){ const q=new URLSearchParams(location.search);
+  const g=q.get("gpu"); if(g&&DATA[g]){ gpuSel.value=g; fillModels(); }
+  const mn=q.get("m"); if(mn){ const idx=DATA[gpuSel.value].models.findIndex(x=>x.name===mn); if(idx>=0) modelSel.value=String(idx); }
+})();
+render();
+
+/* ----- decision-maker path: permalink + copy-paste brief for a tech spec ----- */
+function permalink(){ const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
+  const u=new URL(location.origin+location.pathname);
+  u.searchParams.set("gpu",g); u.searchParams.set("m",m.name); return u.toString(); }
+function copyToClip(text,btn,label){ const done=()=>{ if(!btn) return; const t=btn.textContent; btn.textContent=label||"Copied!"; setTimeout(()=>btn.textContent=t,1500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); } else { done(); } }
+document.getElementById("copyLink").addEventListener("click",e=>{ const url=permalink();
+  copyToClip(url,e.currentTarget,"Link copied!"); try{ history.replaceState(null,"",url); }catch(_){}
+  track("copy_permalink",ctx()); });
+document.getElementById("copyBrief").addEventListener("click",e=>{ const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
+  const dn=dPct(m,"NF4");
+  const verdict = dn<0
+    ? `NF4 4-bit weight quantization SAVES ${Math.abs(dn).toFixed(0)}% inference energy vs FP16 — quantization is worth it for this model/GPU.`
+    : `NF4 4-bit weight quantization ADDS ${dn.toFixed(0)}% inference energy vs FP16 — keep FP16; do not quantize for this model/GPU.`;
+  const brief =
+`EcoCompute decision brief — ${DATA[g].label}, ${m.name} (${m.size}B)
+${verdict}
+
+Basis: direct NVML GPU power measurement (10 Hz, 256 tokens/run, 10 iterations) — not TDP estimates.
+Source: Hongping Zhang, "Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms" (under review, Sustainable Computing: Informatics and Systems).
+Preprint: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700
+Dataset DOI: 10.5281/zenodo.21066652
+Interactive: ${permalink()}`;
+  copyToClip(brief,e.currentTarget,"Brief copied!"); track("copy_brief",ctx()); });
 
 /* Estimator core lives in estimate.js (loaded above): window.estimate / CURVES / parseQuery / weightGB / modelCurve / fmtNum. */
 
@@ -934,7 +977,7 @@ if(ssrn) ssrn.addEventListener("click",()=>track("cta_ssrn_click",ctx()));
   if(!modal||!open) return;
   function show(e){ if(e) e.preventDefault(); modal.classList.add("open"); document.body.style.overflow="hidden"; track("about_open",{}); }
   function hide(){ modal.classList.remove("open"); document.body.style.overflow=""; }
-  open.addEventListener("click",show);
+  document.querySelectorAll('a[href="#about"]').forEach(a=>a.addEventListener("click",show));
   if(close) close.addEventListener("click",hide);
   modal.addEventListener("click",e=>{ if(e.target===modal) hide(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modal.classList.contains("open")) hide(); });
