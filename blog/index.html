@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EcoCompute — Notes &amp; blog</title>
+<meta name="description" content="Notes from EcoCompute: an evidence-based look at when weight-only LLM quantization saves energy — and when it costs more. Based on 360+ real GPU power measurements." />
+<link rel="canonical" href="https://quantenergy.tech/blog/" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="EcoCompute — Notes &amp; blog" />
+<meta property="og:description" content="When does quantization actually save energy? Evidence-based notes from 360+ real GPU measurements." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://quantenergy.tech/blog/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px;letter-spacing:.2px}
+  .brand span{color:var(--accent)}
+  h1{font-size:26px;margin:0 0 6px}
+  .lead{color:var(--muted);margin:0 0 28px}
+  .post{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:20px 22px;margin:0 0 16px}
+  .post h2{font-size:19px;margin:0 0 6px}
+  .post .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .post p{margin:8px 0 0;color:#c7d2f2}
+  footer{margin-top:36px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/">← Tool</a> &nbsp; <a href="/blog/rss.xml">RSS</a> &nbsp; <a href="https://github.com/hongping-zh" target="_blank" rel="noopener">GitHub</a></nav>
+    </div>
+
+    <h1>Notes &amp; blog</h1>
+    <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
+
+    <article class="post">
+      <div class="date">2026-06-25</div>
+      <h2><a href="/blog/when-not-to-quantize.html">When <em>not</em> to quantize: the small-model energy penalty</a></h2>
+      <p>Weight-only NF4/INT8 quantization shrinks memory, but for small models it can <em>raise</em> inference energy by 25–55%. Here's what the measurements say, and how to find your crossover point.</p>
+      <p><a href="/blog/when-not-to-quantize.html">Read →</a></p>
+    </article>
+
+    <footer>
+      EcoCompute is an independent research project by Hongping Zhang. Not affiliated with any energy-consulting company.
+    </footer>
+  </div>
+</body>
+</html>
