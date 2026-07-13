@@ -113,6 +113,9 @@
   .hint{font-size:15px;color:var(--txt);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);border-radius:10px;padding:13px 16px;margin-top:4px}
   footer{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.6}
   footer a{color:var(--accent);text-decoration:none}
+  .footlinks{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0 2px;font-weight:600}
+  .footlinks a{color:var(--accent);text-decoration:none}
+  .footlinks a:hover{text-decoration:underline}
   .meta{font-size:12px;color:var(--muted);margin-top:-6px}
   .cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:16px 0 4px}
   .cta a.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#06223a;font-weight:700;font-size:14px;text-decoration:none;padding:11px 18px;border-radius:10px;transition:transform .15s,box-shadow .15s}
@@ -309,6 +312,7 @@
       </div>
       <div id="estCi" class="estci"></div>
       <div id="estVram" class="estvram"></div>
+      <div id="estEnergy" class="estvram"></div>
       <div id="estVerdict" class="verdict" style="margin-top:14px"></div>
       <ul id="estNotes" class="estnotes"></ul>
       <p class="meta" id="estMeta" style="margin-top:10px"></p>
@@ -327,6 +331,11 @@
     </div>
 
     <div class="hint" id="estHint"></div>
+
+    <div class="cta" style="margin-top:2px">
+      <button id="copyLinkEst" class="ghost" type="button">Copy permalink to this estimate</button>
+      <span class="badge">Share your exact model size + GPU + precision.</span>
+    </div>
 
     <details class="schema-output" id="schemaOutput">
       <summary>Report schema output (JSON)</summary>
@@ -400,6 +409,11 @@
     </div>
 
     <ul id="oNotes" class="estnotes"></ul>
+
+    <div class="cta" style="margin-top:6px">
+      <button id="copyLinkOpt" class="ghost" type="button">Copy permalink to this optimization</button>
+      <span class="badge">Share this constrained scenario + result.</span>
+    </div>
   </div><!-- /optimizeView -->
 
   <div id="about" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
@@ -447,6 +461,25 @@
     INT8 was measured only on A800 in this dataset.
     <br>Tip: try the <b>Your model</b> tab — drag the slider past the crossover to watch the energy change flip from penalty to savings.
     <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · under review at <i>Sustainable Computing: Informatics and Systems</i>.
+    <div class="footlinks">
+      <a href="/blog/">Blog / notes</a>
+      <a href="/blog/rss.xml">RSS</a>
+      <a href="https://github.com/hongping-zh" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Dataset &amp; code</a>
+    </div>
+    <details class="schema-output" id="citeBox" style="margin-top:10px">
+      <summary>Cite this work (BibTeX) · SSRN #6854700 · Zenodo DOI 10.5281/zenodo.21066652</summary>
+      <button class="copybtn" id="copyBibtex">Copy</button>
+      <pre id="bibtex">@article{zhang_quantization_energy,
+  title   = {Weight-Only Quantization Does Not Always Save Energy: An Empirical
+             Study of LLM Inference Across NVIDIA GPU Platforms},
+  author  = {Zhang, Hongping},
+  year    = {2026},
+  note    = {Under review, Sustainable Computing: Informatics and Systems},
+  doi     = {10.5281/zenodo.21066652},
+  url     = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700}
+}</pre>
+    </details>
   </footer>
 </div>
 
@@ -726,6 +759,12 @@ function renderEstimate(){
   cfEl.textContent=r.confidence+" confidence"+(r.modelled?" · modelled":""); cfEl.className="tag conf-"+r.confidence;
   ciEl.innerHTML="95% range: <b>"+(r.ci[0]>0?"+":"")+r.ci[0]+"%</b> to <b>"+(r.ci[1]>0?"+":"")+r.ci[1]+"%</b>"+(r.crossover_b?(" · crossover ≈ <b>"+r.crossover_b+"B</b>"):"");
   vramEl.innerHTML="Est. weight memory: <b>"+r.weight_gb+" GB</b> ("+pPrec.value+") vs <b>"+r.weight_gb_fp16+" GB</b> (FP16) — weights only, approx.";
+  const enEl=document.getElementById("estEnergy");
+  const fb=window.fp16BaselineJ1k?window.fp16BaselineJ1k(N, pArch.value):null;
+  if(fb){ const q=fb.e_j1k*(1+r.delta_pct/100);
+    const eb=(fb.basis!=="estimated"&&(r.basis==="measured"||r.basis==="interpolated"))?"measured-anchored":"estimated";
+    enEl.innerHTML="Est. energy: <b>~"+fmtNum(q)+" mJ/token</b> ("+pPrec.value+") vs <b>~"+fmtNum(fb.e_j1k)+" mJ/token</b> (FP16) <span class=\"tag "+(eb==="measured-anchored"?"measured":"estimated")+"\">"+eb+"</span> <span style=\"color:var(--muted)\">· FP16 decode baseline from NVML, at batch 1 / 2k ctx</span>";
+  } else { enEl.innerHTML=""; }
   const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
   const cfgSnippet=pPrec.value==="INT8"
     ? "BitsAndBytesConfig(load_in_8bit=True)"
@@ -802,10 +841,19 @@ function renderEstCurve(arch, precision, N, r){
   const ylabels=yticks.map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c2742" stroke-width="1"/><text x="${pad.l-8}" y="${Y(t)+4}" fill="var(--muted)" font-size="11" text-anchor="end">${t>0?"+":""}${t}%</text>`).join("");
   const xt=[...new Set(anchorXs.concat([N]))].sort((a,b)=>a-b);
   const xlabels=xt.map(v=>`<text x="${X(v).toFixed(1)}" y="${H-pad.b+18}" fill="${Math.abs(v-N)<1e-9?'#fda4af':'var(--muted)'}" font-size="11" text-anchor="middle">${fmtNum(v)}B</text>`).join("");
+  // honesty: shade the region beyond the largest MEASURED anchor as extrapolated
+  const maxAnchorN=Math.max(...anchorXs);
+  let extrapZone="";
+  if(xmax>maxAnchorN){ const zx=X(maxAnchorN);
+    extrapZone=`<rect x="${zx.toFixed(1)}" y="${pad.t}" width="${(pad.l+iw-zx).toFixed(1)}" height="${ih}" fill="rgba(148,163,184,.10)"/>
+    <line x1="${zx.toFixed(1)}" x2="${zx.toFixed(1)}" y1="${pad.t}" y2="${(pad.t+ih).toFixed(1)}" stroke="#64748b" stroke-width="1" stroke-dasharray="2 3"/>
+    <text x="${(zx+6).toFixed(1)}" y="${(pad.t+13).toFixed(1)}" fill="#94a3b8" font-size="10" text-anchor="start">extrapolated (fitted) →</text>`;
+  }
   document.getElementById("estCross").innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="estimated crossover chart">
     <rect x="${pad.l}" y="${pad.t}" width="${iw}" height="${(y0-pad.t).toFixed(1)}" fill="rgba(244,63,94,.07)"/>
     <rect x="${pad.l}" y="${y0.toFixed(1)}" width="${iw}" height="${(pad.t+ih-y0).toFixed(1)}" fill="rgba(16,185,129,.07)"/>
+    ${extrapZone}
     ${ylabels}
     <line x1="${pad.l}" x2="${W-pad.r}" y1="${y0}" y2="${y0}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2 3"/>
     <text x="${W-pad.r}" y="${y0-6}" fill="#fb7185" font-size="10" text-anchor="end">↑ penalty</text>
@@ -993,6 +1041,52 @@ if(ssrn) ssrn.addEventListener("click",()=>track("cta_ssrn_click",ctx()));
   modal.addEventListener("click",e=>{ if(e.target===modal) hide(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modal.classList.contains("open")) hide(); });
   if(location.hash==="#about") show();
+})();
+
+/* ----- permalinks for Your model / Optimize tabs + BibTeX copy ----- */
+function estPermalink(){ const u=new URL(location.origin+location.pathname);
+  u.searchParams.set("tab","estimate"); u.searchParams.set("size",pN.value);
+  u.searchParams.set("arch",pArch.value); u.searchParams.set("prec",pPrec.value);
+  if(+pBatch.value>1) u.searchParams.set("batch",pBatch.value);
+  if(+pCtx.value!==2048) u.searchParams.set("ctx",pCtx.value); return u.toString(); }
+document.getElementById("copyLinkEst").addEventListener("click",e=>{ const url=estPermalink();
+  copyToClip(url,e.currentTarget,"Link copied!"); try{ history.replaceState(null,"",url); }catch(_){}
+  track("copy_permalink_estimate",{arch:pArch.value,precision:pPrec.value,params_b:pN.value}); });
+
+function optPermalink(){ const u=new URL(location.origin+location.pathname);
+  u.searchParams.set("tab","optimize"); u.searchParams.set("arch",oArch.value);
+  u.searchParams.set("size",oN.value); u.searchParams.set("obj",oObj.value);
+  if(oLat.value) u.searchParams.set("lat",oLat.value);
+  if(oVram.value) u.searchParams.set("vram",oVram.value);
+  if(oTput.value) u.searchParams.set("tput",oTput.value); return u.toString(); }
+document.getElementById("copyLinkOpt").addEventListener("click",e=>{ const url=optPermalink();
+  copyToClip(url,e.currentTarget,"Link copied!"); try{ history.replaceState(null,"",url); }catch(_){}
+  track("copy_permalink_optimize",{arch:oArch.value,objective:oObj.value,params_b:oN.value}); });
+
+document.getElementById("copyBibtex").addEventListener("click",e=>{
+  copyToClip(document.getElementById("bibtex").textContent,e.currentTarget,"Copied!"); track("copy_bibtex",{}); });
+
+/* ----- deep-link restore for estimate / optimize tabs ----- */
+(function restoreDeepState(){ const q=new URLSearchParams(location.search); const tab=q.get("tab");
+  const has=(sel,v)=>[...sel.options].some(o=>o.value===v);
+  if(tab==="estimate"){
+    if(q.get("arch")&&has(pArch,q.get("arch"))) pArch.value=q.get("arch");
+    fillPrec();
+    if(q.get("prec")&&has(pPrec,q.get("prec"))) pPrec.value=q.get("prec");
+    if(q.get("size")) pN.value=q.get("size");
+    if(q.get("batch")) pBatch.value=q.get("batch");
+    if(q.get("ctx")) pCtx.value=q.get("ctx");
+    showView("estimate");
+  } else if(tab==="optimize"){
+    if(q.get("arch")&&has(oArch,q.get("arch"))) oArch.value=q.get("arch");
+    if(q.get("size")) oN.value=q.get("size");
+    if(q.get("obj")&&has(oObj,q.get("obj"))) oObj.value=q.get("obj");
+    if(q.get("lat")) oLat.value=q.get("lat");
+    if(q.get("vram")) oVram.value=q.get("vram");
+    if(q.get("tput")) oTput.value=q.get("tput");
+    if(q.get("lat")||q.get("vram")||q.get("tput")){ const adv=document.getElementById("oAdv"); if(adv) adv.open=true; }
+    showView("optimize");
+  }
 })();
 
 track("pageview_demo", {});
