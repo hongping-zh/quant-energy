@@ -66,6 +66,28 @@
   function g(x) { return x / (1 + x); }
   function modelCurve(N, c) { return c.A - c.S * g(N / c.Nstar); }
 
+  // Measured FP16 absolute decode energy baseline (J / 1k tokens == mJ / token) for a
+  // given size+arch, from the NVML-measured fp16_energy anchors. Log-log interpolation
+  // inside the measured range ("measured"/"interpolated"), extrapolation outside ("estimated").
+  function fp16BaselineJ1k(N, arch) {
+    var t = CURVES.fp16_energy[arch];
+    if (!t || !t.anchors || !t.anchors.length) return null;
+    var a = t.anchors;
+    for (var i = 0; i < a.length; i++) { if (Math.abs(a[i].N - N) < 1e-6) return { e_j1k: a[i].e_j1k, basis: "measured" }; }
+    var lg = Math.log;
+    var sorted = a.slice().sort(function (x, y) { return x.N - y.N; });
+    var p0, p1;
+    var lo = null, hi = null;
+    for (var j = 0; j < sorted.length; j++) { if (sorted[j].N < N) lo = sorted[j]; if (sorted[j].N > N && hi === null) hi = sorted[j]; }
+    if (lo && hi) { p0 = lo; p1 = hi; }
+    else if (!lo) { p0 = sorted[0]; p1 = sorted[1]; }
+    else { p0 = sorted[sorted.length - 2]; p1 = sorted[sorted.length - 1]; }
+    var slope = (lg(p1.e_j1k) - lg(p0.e_j1k)) / (lg(p1.N) - lg(p0.N));
+    var e = Math.exp(lg(p0.e_j1k) + slope * (lg(N) - lg(p0.N)));
+    var basis = (N >= t.n_min && N <= t.n_max) ? "interpolated" : "estimated";
+    return { e_j1k: +e.toFixed(1), basis: basis };
+  }
+
   // Approx weight-only memory footprint in GB (not from the dataset; a standard calc).
   function weightGB(N, precision) {
     var bits = BITS[precision] || 16;
@@ -167,10 +189,10 @@
     return out;
   }
 
-  var API = { estimate: estimate, parseQuery: parseQuery, weightGB: weightGB, savingsFactor: savingsFactor, modelCurve: modelCurve, fmtNum: fmtNum, CURVES: CURVES };
+  var API = { estimate: estimate, parseQuery: parseQuery, weightGB: weightGB, savingsFactor: savingsFactor, modelCurve: modelCurve, fmtNum: fmtNum, fp16BaselineJ1k: fp16BaselineJ1k, CURVES: CURVES };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   root.EcoEstimator = API;
   // convenience globals for the demo page
   root.CURVES = CURVES; root.estimate = estimate; root.parseQuery = parseQuery; root.weightGB = weightGB;
-  root.modelCurve = modelCurve; root.fmtNum = fmtNum;
+  root.modelCurve = modelCurve; root.fmtNum = fmtNum; root.fp16BaselineJ1k = fp16BaselineJ1k;
 })(typeof globalThis !== "undefined" ? globalThis : this);
