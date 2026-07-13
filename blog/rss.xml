@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>EcoCompute — Notes</title>
+    <link>https://quantenergy.tech/blog/</link>
+    <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
+    <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
+    <language>en</language>
+    <lastBuildDate>Thu, 25 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>When not to quantize: the small-model energy penalty</title>
+      <link>https://quantenergy.tech/blog/when-not-to-quantize.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/when-not-to-quantize.html</guid>
+      <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
+      <description>Weight-only NF4/INT8 quantization shrinks memory but can raise LLM inference energy by 25–55% for small models. What 360+ real GPU measurements show about the crossover point, and when quantization is still the right call.</description>
+    </item>
+  </channel>
+</rss>
