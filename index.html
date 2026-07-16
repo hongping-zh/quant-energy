@@ -180,6 +180,19 @@
   .otablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .ochart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:0 0 8px}
   .ochart-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .dropzone{border:1.5px dashed var(--line);border-radius:12px;padding:26px 20px;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;transition:border-color .15s,background .15s;background:rgba(56,189,248,.03)}
+  .dropzone:hover{border-color:var(--accent);color:var(--txt)}
+  .dropzone.drag{border-color:var(--accent);background:rgba(56,189,248,.10);color:var(--txt)}
+  .dropzone b{color:var(--accent)}
+  .runjson{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:11.5px;line-height:1.55;overflow-x:auto;margin:10px 0 0;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre;color:var(--txt)}
+  .runjson .hl{background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.4);border-radius:4px;padding:0 3px;color:#fbbf24;font-weight:700}
+  .runjson .hl2{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);border-radius:4px;padding:0 3px;color:#34d399;font-weight:700}
+  .runrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;margin:4px 0}
+  .runrow .k{color:var(--muted)} .runrow .v{color:var(--txt);font-weight:700}
+  .runerr{color:var(--bad);font-size:13px;margin-top:8px}
+  .codeblock{position:relative;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--txt);white-space:pre}
+  .codeblock .copybtn{position:absolute;top:8px;right:8px;background:var(--line);color:var(--txt);border:0;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .codeblock .copybtn:hover{background:var(--accent);color:#06223a}
   .schema-output{margin-top:16px}
   .schema-output summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;padding:8px 0;list-style:none}
   .schema-output summary::-webkit-details-marker{display:none}
@@ -223,6 +236,7 @@
     <button id="tabMeasured" class="active" type="button">Tested models</button>
     <button id="tabEstimate" type="button">Your model</button>
     <button id="tabOptimize" type="button">Optimize (constraints)</button>
+    <button id="tabRun" type="button">Run it yourself</button>
   </div>
 
   <div id="measuredView">
@@ -415,6 +429,71 @@
       <span class="badge">Share this constrained scenario + result.</span>
     </div>
   </div><!-- /optimizeView -->
+
+  <div id="runView" style="display:none">
+    <p class="meta" style="margin:2px 0 14px">
+      Every number on this site is reproducible. The <b>EcoCompute energy MLCube</b> container runs the same
+      measurement on <b>your</b> GPU — direct NVML power sampling, no TDP guesses — and writes an
+      <code>energy.json</code> with the <b>exact same fields</b> the charts here use. Run it, then drop the result
+      below to overlay your measurement on the crossover curve.
+    </p>
+
+    <div class="card">
+      <h2>1 · Run the container</h2>
+      <p class="meta" style="margin:0 0 10px">Requires Docker + an NVIDIA GPU. No GPU? It still runs and returns dataset-derived reference values, clearly flagged (never faked).</p>
+      <div class="codeblock" id="runCmd"><button class="copybtn" id="copyRunCmd" type="button">Copy</button>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+# with the MLCommons MLCube CLI (task name: energy_estimate)
+pip install mlcube mlcube-docker
+mlcube run --mlcube=. --task=energy_estimate --platform=docker
+
+# ...or directly
+python3 entrypoint.py energy_estimate \
+    --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --precision NF4 --gpu_arch blackwell --params_b 1.1 \
+    --output_dir workspace/outputs
+
+cat workspace/outputs/energy.json</div>
+      <p class="chartnote" style="margin-top:12px">Repo &amp; full guide: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a>. This is a supplemental energy-methodology container (MLCube-compatible), <b>not</b> a certified benchmark.</p>
+    </div>
+
+    <div class="card">
+      <h2>2 · What you get — the same structure as this site</h2>
+      <p class="meta" style="margin:0 0 6px">Example <code>energy.json</code>. The two fields the charts read are highlighted: <span class="tag estimated">vs_fp16_energy_pct</span> (ΔE% vs FP16) and <span class="tag interpolated">basis</span> (measured / interpolated / extrapolated).</p>
+      <pre class="runjson" id="runExample"></pre>
+      <p class="chartnote" style="margin-top:10px">Shown here is the shipped example (<code>examples/energy.measured.illustrative.json</code>): its power/throughput numbers are synthetic <b>only to illustrate the output shape</b>. When you run on a real GPU, the same fields carry your actual NVML measurement (<code>basis: "measured"</code>).</p>
+    </div>
+
+    <div class="card">
+      <h2>3 · Overlay your result on the crossover curve</h2>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload energy.json">
+        Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
+        <input type="file" id="fileInput" accept="application/json,.json" style="display:none" />
+      </div>
+      <div id="runError" class="runerr" style="display:none"></div>
+      <div id="runResult" style="display:none">
+        <div class="runrow"><span class="k">Model</span><span class="v" id="rrModel"></span>
+          <span class="k">GPU</span><span class="v" id="rrArch"></span>
+          <span class="k">Precision</span><span class="v" id="rrPrec"></span></div>
+        <div class="runrow"><span class="k">ΔE vs FP16</span><span class="v" id="rrDelta"></span>
+          <span class="tag" id="rrBasis"></span>
+          <span class="k" id="rrSrcLabel" style="display:none">source</span><span class="v" id="rrSrc" style="font-weight:500;color:var(--muted)"></span></div>
+        <div id="rrVerdict" class="verdict" style="margin-top:12px"></div>
+        <div class="legend" style="margin-top:14px">
+          <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve (your GPU arch)</span>
+          <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors</span>
+          <span><i class="swatch" style="background:#fbbf24;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);display:inline-block"></i>Your energy.json</span>
+        </div>
+        <div id="runCross"></div>
+        <p class="chartnote">Your point is placed at (model size, ΔE%) from the uploaded report and coloured by its <code>basis</code>. The fitted curve is calibrated to measured anchors (dots) for the report's GPU architecture — beyond the largest anchor it is extrapolated. Nothing is uploaded to a server; parsing is 100% in your browser.</p>
+        <div class="cta" style="margin-top:8px">
+          <button id="runClear" class="ghost" type="button">Clear</button>
+          <span class="badge">Compare several runs — drop more files to stack points.</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /runView -->
 
   <div id="about" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
     <div class="modal-card">
@@ -865,22 +944,26 @@ function renderEstCurve(arch, precision, N, r){
 }
 
 /* ----- mode toggle (3-way) ----- */
-const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate"), tabO=document.getElementById("tabOptimize");
-const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView"), viewO=document.getElementById("optimizeView");
-function showView(which){ // "measured" | "estimate" | "optimize"
+const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate"), tabO=document.getElementById("tabOptimize"), tabR=document.getElementById("tabRun");
+const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView"), viewO=document.getElementById("optimizeView"), viewR=document.getElementById("runView");
+function showView(which){ // "measured" | "estimate" | "optimize" | "run"
   viewM.style.display=which==="measured"?"":"none";
   viewE.style.display=which==="estimate"?"":"none";
   viewO.style.display=which==="optimize"?"":"none";
+  viewR.style.display=which==="run"?"":"none";
   tabM.classList.toggle("active",which==="measured");
   tabE.classList.toggle("active",which==="estimate");
   tabO.classList.toggle("active",which==="optimize");
+  tabR.classList.toggle("active",which==="run");
   if(which==="estimate"){ fillPrec(); renderEstimate(); track("mode_estimate",{}); }
   if(which==="optimize"){ renderOptimize(); track("mode_optimize",{}); }
+  if(which==="run"){ renderRunExample(); track("mode_run",{}); }
 }
 function setMode(est){ showView(est?"estimate":"measured"); } // back-compat
 tabM.addEventListener("click",()=>showView("measured"));
 tabE.addEventListener("click",()=>showView("estimate"));
 tabO.addEventListener("click",()=>showView("optimize"));
+tabR.addEventListener("click",()=>showView("run"));
 pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
 pPrec.addEventListener("change",renderEstimate);
 pN.addEventListener("input",renderEstimate);
@@ -1066,9 +1149,158 @@ document.getElementById("copyLinkOpt").addEventListener("click",e=>{ const url=o
 document.getElementById("copyBibtex").addEventListener("click",e=>{
   copyToClip(document.getElementById("bibtex").textContent,e.currentTarget,"Copied!"); track("copy_bibtex",{}); });
 
+/* ----- "Run it yourself": parse a container energy.json + overlay on the curve ----- */
+const EXAMPLE_ENERGY_JSON = {
+  schema_version:"ecocompute-energy/1.0",
+  benchmark:"ecocompute-energy-methodology",
+  follows_mlcommons_energy_reporting_conventions:true,
+  certified_benchmark_result:false,
+  scenario:"SingleStream",
+  system_under_test:{ gpu:"RTX 5090", gpu_arch:"blackwell", accelerator_count:1 },
+  workload:{ model_name:"Qwen/Qwen2.5-3B-Instruct", params_b:3.0, precision:"NF4", batch_size:1, context_length:2048 },
+  measurement:{ method:"NVML on-device power sampling", sample_rate_hz:10, tokens_per_run:256, iterations:10 },
+  measurement_source:"ILLUSTRATIVE (synthetic) — shows the shape of the on-GPU measured output; NOT a real measurement",
+  results:{ total_energy_joules:9638.4, tokens_generated:2560, energy_per_token_mj:3765.0, fp16_energy_per_token_mj:3382.6, vs_fp16_energy_pct:11.3, avg_power_watts:421.0, throughput_tokens_per_s:111.8, basis:"measured" }
+};
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+let runExampleDone=false;
+function renderRunExample(){
+  if(runExampleDone) return; runExampleDone=true;
+  const lines=JSON.stringify(EXAMPLE_ENERGY_JSON,null,2).split("\n").map(ln=>{
+    const e=esc(ln);
+    if(/"vs_fp16_energy_pct"\s*:/.test(ln)) return '<span class="hl">'+e+'</span>';
+    if(/"basis"\s*:/.test(ln)) return '<span class="hl2">'+e+'</span>';
+    return e;
+  });
+  document.getElementById("runExample").innerHTML=lines.join("\n");
+}
+const ARCH_KEYS={turing:"turing",ada:"ada",blackwell:"blackwell",ampere:"ampere",hopper:"hopper"};
+function normArchKey(a){ if(!a) return null; const k=String(a).toLowerCase().trim();
+  if(ARCH_KEYS[k]) return k;
+  if(/t4|turing/.test(k)) return "turing";
+  if(/40\d0|ada/.test(k)) return "ada";
+  if(/50\d0|blackwell/.test(k)) return "blackwell";
+  if(/a100|a800|ampere/.test(k)) return "ampere";
+  if(/h100|h200|h800|hopper/.test(k)) return "hopper";
+  return null; }
+function parseEnergyReport(obj){
+  if(!obj||typeof obj!=="object") return {ok:false,error:"Not a JSON object."};
+  if(typeof obj.schema_version==="string" && obj.schema_version.indexOf("ecocompute-energy")!==0)
+    return {ok:false,error:"Unexpected schema_version — expected an ecocompute-energy report."};
+  const w=obj.workload||{}, sut=obj.system_under_test||{}, res=obj.results||{};
+  let N = (w.params_b!=null? +w.params_b : NaN);
+  if(!(N>0)){ const m=String(w.model_name||"").match(/(\d+(?:\.\d+)?)\s*[bB]\b/); if(m) N=parseFloat(m[1]); }
+  const dE = (res.vs_fp16_energy_pct!=null? +res.vs_fp16_energy_pct : NaN);
+  const arch = normArchKey(sut.gpu_arch);
+  const basis = res.basis || "unavailable";
+  if(!(N>0)) return {ok:false,error:"Could not find model size — set workload.params_b (or a size like \"7B\" in model_name)."};
+  if(!isFinite(dE)) return {ok:false,error:"Missing results.vs_fp16_energy_pct (the ΔE% vs FP16)."};
+  return {ok:true, N, dE, arch, precision:(w.precision||"NF4"), basis, model:(w.model_name||"your model"),
+          gpu:(sut.gpu||sut.gpu_arch||"—"), source:(obj.measurement_source||"") };
+}
+let uploadedPoints=[];
+function basisClass(b){ b=String(b||"").toLowerCase();
+  if(b==="measured") return "measured"; if(b==="interpolated") return "interpolated";
+  if(b==="extrapolated"||b==="estimated") return "estimated"; return ""; }
+function basisColor(b){ b=String(b||"").toLowerCase();
+  if(b==="measured") return "#34d399"; if(b==="interpolated") return "#38bdf8";
+  if(b==="extrapolated"||b==="estimated") return "#fbbf24"; return "#94a3b8"; }
+function showRunResult(pt){
+  document.getElementById("runError").style.display="none";
+  document.getElementById("runResult").style.display="";
+  document.getElementById("rrModel").textContent=pt.model;
+  document.getElementById("rrArch").textContent=(pt.arch?(CURVES.arch_label[pt.arch]||pt.arch):(pt.gpu||"unknown"));
+  document.getElementById("rrPrec").textContent=pt.precision;
+  const d=document.getElementById("rrDelta"); d.textContent=(pt.dE>0?"+":"")+(+pt.dE).toFixed(1)+"%";
+  d.style.color=pt.dE<0?"var(--good)":(pt.dE>0?"var(--bad)":"var(--txt)");
+  const b=document.getElementById("rrBasis"); b.textContent=pt.basis; b.className="tag "+basisClass(pt.basis);
+  if(pt.source){ document.getElementById("rrSrcLabel").style.display=""; document.getElementById("rrSrc").textContent=pt.source; }
+  const v=document.getElementById("rrVerdict");
+  if(pt.dE<-1){ v.className="verdict down"; v.style.marginTop="12px"; v.innerHTML="<span class=\"big\">↓</span> Quantization <b>saves</b> ~"+Math.abs(pt.dE).toFixed(0)+"% energy on this config — worth it."; }
+  else if(pt.dE>1){ v.className="verdict up"; v.style.marginTop="12px"; v.innerHTML="<span class=\"big\">↑</span> Quantization <b>costs</b> ~"+pt.dE.toFixed(0)+"% more energy here — keep FP16."; }
+  else { v.className="verdict"; v.style.cssText="margin-top:12px;background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)"; v.innerHTML="<span class=\"big\">≈</span> Right at the <b>crossover</b> — essentially energy-neutral."; }
+  drawRunCross();
+}
+function drawRunCross(){
+  if(!uploadedPoints.length){ document.getElementById("runCross").innerHTML=""; return; }
+  const ref=uploadedPoints[uploadedPoints.length-1];
+  const curves=CURVES.curves; let src=ref.arch, prec=ref.precision;
+  if(!src||!curves[src]||!curves[src][prec]){
+    if(src&&CURVES.borrow[src]&&curves[CURVES.borrow[src]]&&curves[CURVES.borrow[src]][prec]) src=CURVES.borrow[src];
+  }
+  const haveCurve = src && curves[src] && curves[src][prec];
+  const c = haveCurve ? curves[src][prec] : null;
+  const sCap=(CURVES.s_cap[prec]||75);
+  const W=700,H=300,pad={l:54,r:18,t:18,b:42}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const anchorXs=c?c.anchors.map(a=>a.N):[];
+  const allN=uploadedPoints.map(p=>p.N).concat(anchorXs);
+  const xmin=Math.min(0.4, Math.min(...allN)*0.8);
+  const xmax=Math.max(Math.max(...allN)*1.2, 16);
+  const lg=v=>Math.log(v);
+  const X=v=> pad.l + (lg(v)-lg(xmin))/(lg(xmax)-lg(xmin))*iw;
+  let samples=[]; if(c){ const steps=64; for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let dd=Math.max(modelCurve(v,c),-sCap); samples.push({x:v,d:dd}); } }
+  const yvals=samples.map(s=>s.d).concat(anchorXs.map((n,i)=>c.anchors[i].dE)).concat(uploadedPoints.map(p=>p.dE)).concat([0]);
+  let ymin=Math.min(...yvals), ymax=Math.max(...yvals); const padY=(ymax-ymin)*0.14||10; ymin-=padY; ymax+=padY;
+  const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih; const y0=Y(0);
+  const path=c?samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" "):"";
+  const dots=c?c.anchors.map(a=>`<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)"/>`).join(""):"";
+  const maxAnchorN=anchorXs.length?Math.max(...anchorXs):null;
+  let extrapZone=""; if(c&&maxAnchorN&&xmax>maxAnchorN){ const zx=X(maxAnchorN);
+    extrapZone=`<rect x="${zx.toFixed(1)}" y="${pad.t}" width="${(pad.l+iw-zx).toFixed(1)}" height="${ih}" fill="rgba(148,163,184,.10)"/>
+      <line x1="${zx.toFixed(1)}" x2="${zx.toFixed(1)}" y1="${pad.t}" y2="${(pad.t+ih).toFixed(1)}" stroke="#64748b" stroke-width="1" stroke-dasharray="2 3"/>
+      <text x="${(zx+6).toFixed(1)}" y="${(pad.t+13).toFixed(1)}" fill="#94a3b8" font-size="10">extrapolated (fitted) →</text>`; }
+  const marks=uploadedPoints.map(p=>{ const x=X(p.N), y=Y(p.dE), col=basisColor(p.basis), s=6;
+    const diamond=`M ${x.toFixed(1)} ${(y-s).toFixed(1)} L ${(x+s).toFixed(1)} ${y.toFixed(1)} L ${x.toFixed(1)} ${(y+s).toFixed(1)} L ${(x-s).toFixed(1)} ${y.toFixed(1)} Z`;
+    const mism=(p.arch&&src&&p.arch!==src)?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" fill="none" stroke="${col}" stroke-width="1" stroke-dasharray="2 2"/>`:"";
+    return mism+`<path d="${diamond}" fill="${col}" stroke="#0b1020" stroke-width="1.5"/>`; }).join("");
+  let yticks=[]; const step=niceStep((ymax-ymin)/5);
+  for(let t=Math.ceil(ymin/step)*step;t<=ymax;t+=step) yticks.push(Math.round(t));
+  const ylabels=yticks.map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c2742" stroke-width="1"/><text x="${pad.l-8}" y="${Y(t)+4}" fill="var(--muted)" font-size="11" text-anchor="end">${t>0?"+":""}${t}%</text>`).join("");
+  const xt=[...new Set(anchorXs.concat(uploadedPoints.map(p=>p.N)))].sort((a,b)=>a-b);
+  const xlabels=xt.map(v=>`<text x="${X(v).toFixed(1)}" y="${H-pad.b+18}" fill="var(--muted)" font-size="11" text-anchor="middle">${fmtNum(v)}B</text>`).join("");
+  const curveEls=c?`<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>${dots}`:`<text x="${pad.l+iw/2}" y="${pad.t+ih/2}" fill="var(--muted)" font-size="12" text-anchor="middle">No fitted curve for ${ref.arch||"this GPU arch"} · ${prec} — point(s) shown on the ΔE% axis</text>`;
+  document.getElementById("runCross").innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="your energy.json on the crossover chart">
+    <rect x="${pad.l}" y="${pad.t}" width="${iw}" height="${(y0-pad.t).toFixed(1)}" fill="rgba(244,63,94,.07)"/>
+    <rect x="${pad.l}" y="${y0.toFixed(1)}" width="${iw}" height="${(pad.t+ih-y0).toFixed(1)}" fill="rgba(16,185,129,.07)"/>
+    ${extrapZone}${ylabels}
+    <line x1="${pad.l}" x2="${W-pad.r}" y1="${y0}" y2="${y0}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2 3"/>
+    <text x="${W-pad.r}" y="${y0-6}" fill="#fb7185" font-size="10" text-anchor="end">↑ penalty</text>
+    <text x="${W-pad.r}" y="${y0+14}" fill="#34d399" font-size="10" text-anchor="end">↓ savings</text>
+    ${curveEls}${marks}${xlabels}
+    <text x="${pad.l+iw/2}" y="${H-4}" fill="var(--muted)" font-size="11" text-anchor="middle">Model size (parameters, B, log scale)</text>
+  </svg>`;
+}
+function ingestEnergyJson(text){
+  let obj; try{ obj=JSON.parse(text); }catch(_){ return runUploadError("That file isn't valid JSON."); }
+  const p=parseEnergyReport(obj);
+  if(!p.ok) return runUploadError(p.error);
+  uploadedPoints.push(p); showRunResult(p);
+  track("upload_energy_json",{arch:p.arch||"",precision:p.precision,basis:p.basis,params_b:p.N,delta_pct:p.dE});
+}
+function runUploadError(msg){ const e=document.getElementById("runError"); e.textContent=msg; e.style.display="";
+  document.getElementById("runResult").style.display=uploadedPoints.length?"":"none"; }
+function handleFiles(files){ [...files].forEach(f=>{ const r=new FileReader(); r.onload=()=>ingestEnergyJson(r.result); r.readAsText(f); }); }
+(function wireRunTab(){
+  const dz=document.getElementById("dropzone"), fi=document.getElementById("fileInput");
+  dz.addEventListener("click",()=>fi.click());
+  dz.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fi.click(); } });
+  fi.addEventListener("change",()=>{ if(fi.files.length){ handleFiles(fi.files); fi.value=""; } });
+  ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.add("drag"); }));
+  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.remove("drag"); }));
+  dz.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+  document.getElementById("runClear").addEventListener("click",()=>{ uploadedPoints=[];
+    document.getElementById("runResult").style.display="none"; document.getElementById("runError").style.display="none";
+    document.getElementById("runCross").innerHTML=""; });
+  document.getElementById("copyRunCmd").addEventListener("click",e=>{
+    const txt=document.getElementById("runCmd").textContent.replace(/^Copy/,"").trim();
+    copyToClip(txt,e.currentTarget,"Copied!"); track("copy_run_cmd",{}); });
+})();
+
 /* ----- deep-link restore for estimate / optimize tabs ----- */
 (function restoreDeepState(){ const q=new URLSearchParams(location.search); const tab=q.get("tab");
   const has=(sel,v)=>[...sel.options].some(o=>o.value===v);
+  if(tab==="run"){ showView("run"); return; }
   if(tab==="estimate"){
     if(q.get("arch")&&has(pArch,q.get("arch"))) pArch.value=q.get("arch");
     fillPrec();
