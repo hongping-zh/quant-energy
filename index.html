@@ -226,7 +226,7 @@
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>"Quantization doesn't always save energy. See for yourself."</p>
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. We tell you <em>whether</em> you should.</p>
-    <p class="badge" style="margin-top:8px">From the working paper <i>“Weight-Only Quantization Does Not Always Save Energy”</i> · <b>under review</b> at <i>Sustainable Computing: Informatics and Systems</i> (2 reviews received).</p>
+    <p class="badge" style="margin-top:8px">From the preprint <i>“Weight-Only Quantization Does Not Always Save Energy”</i> — direct NVML energy measurements across four NVIDIA GPU architectures.</p>
     <div class="cta">
       <a id="ssrnCta" class="btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Read the preprint on SSRN →</a>
     </div>
@@ -510,7 +510,7 @@ cat workspace/outputs/energy.json</div>
       <p>Every number on the "Tested models" tab comes from <b>direct NVML power sampling</b> during real inference (10&nbsp;Hz, 256 tokens/run, 10 iterations) across four NVIDIA architectures (Turing, Ada, Ampere, Blackwell) — not TDP estimates. Where we model rather than measure (latency/throughput via a roofline model, or sizes outside the measured range), we label it explicitly. We never present estimates as measurements.</p>
 
       <h3>The research</h3>
-      <p>Based on the working paper <i>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</i> by <b>Hongping Zhang</b> (Independent Researcher, Changsha, China; ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>), currently <b>under review</b> at <i>Sustainable Computing: Informatics and Systems</i>.</p>
+      <p>Based on the preprint <i>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</i> by <b>Hongping Zhang</b> (Independent Researcher, Changsha, China; ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>), openly available on <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN</a>. The measurement methodology — reproducible, direct NVML power sampling rather than TDP estimates — is the paper's core contribution, and the dataset is <b>actively being expanded</b> to cover more GPU architectures and model families.</p>
 
       <h3>Read · cite · build on it</h3>
       <ul>
@@ -539,7 +539,7 @@ cat workspace/outputs/energy.json</div>
     Energy shown per 1M tokens; ΔE% is relative to each model's FP16 baseline.
     INT8 was measured only on A800 in this dataset.
     <br>Tip: try the <b>Your model</b> tab — drag the slider past the crossover to watch the energy change flip from penalty to savings.
-    <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · under review at <i>Sustainable Computing: Informatics and Systems</i>.
+    <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · dataset actively expanding across more GPUs &amp; models.
     <div class="footlinks">
       <a href="/blog/">Blog / notes</a>
       <a href="/blog/rss.xml">RSS</a>
@@ -554,7 +554,7 @@ cat workspace/outputs/energy.json</div>
              Study of LLM Inference Across NVIDIA GPU Platforms},
   author  = {Zhang, Hongping},
   year    = {2026},
-  note    = {Under review, Sustainable Computing: Informatics and Systems},
+  note    = {Preprint, available on SSRN (abstract 6854700)},
   doi     = {10.5281/zenodo.21066652},
   url     = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700}
 }</pre>
@@ -775,7 +775,7 @@ document.getElementById("copyBrief").addEventListener("click",e=>{ const g=gpuSe
 ${verdict}
 
 Basis: direct NVML GPU power measurement (10 Hz, 256 tokens/run, 10 iterations) — not TDP estimates.
-Source: Hongping Zhang, "Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms" (under review, Sustainable Computing: Informatics and Systems).
+Source: Hongping Zhang, "Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms" (preprint, SSRN 6854700).
 Preprint: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700
 Dataset DOI: 10.5281/zenodo.21066652
 Interactive: ${permalink()}`;
