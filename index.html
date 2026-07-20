@@ -449,14 +449,15 @@ cd ecocompute-mlcube
 pip install mlcube mlcube-docker
 mlcube run --mlcube=. --task=energy_estimate --platform=docker
 
-# ...or directly
+# ...or directly — add --prefetch to see the site's prediction first,
+# and --share to get a ready-to-share overlay link when it finishes
 python3 entrypoint.py energy_estimate \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --precision NF4 --gpu_arch blackwell --params_b 1.1 \
-    --output_dir workspace/outputs
+    --output_dir workspace/outputs --prefetch --share
 
 cat workspace/outputs/energy.json</div>
-      <p class="chartnote" style="margin-top:12px">Repo &amp; full guide: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a>. This is a supplemental energy-methodology container (MLCube-compatible), <b>not</b> a certified benchmark.</p>
+      <p class="chartnote" style="margin-top:12px">Repo &amp; full guide: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a>. This is a supplemental energy-methodology container (MLCube-compatible), <b>not</b> a certified benchmark.<br><b>--share</b> prints a link like <code>quantenergy.tech/?tab=run&amp;overlay=…</code> — the point is encoded <b>in the URL</b>, so opening it restores your marker below with nothing uploaded.</p>
     </div>
 
     <div class="card">
@@ -1282,6 +1283,27 @@ function ingestEnergyJson(text){
 function runUploadError(msg){ const e=document.getElementById("runError"); e.textContent=msg; e.style.display="";
   document.getElementById("runResult").style.display=uploadedPoints.length?"":"none"; }
 function handleFiles(files){ [...files].forEach(f=>{ const r=new FileReader(); r.onload=()=>ingestEnergyJson(r.result); r.readAsText(f); }); }
+/* Decode a container-shared ?overlay=<base64url JSON> point (100% client-side, nothing uploaded). */
+function b64urlDecode(s){ s=String(s).replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
+  let bin; try{ bin=atob(s); }catch(_){ return null; }
+  try{ return decodeURIComponent(bin.split("").map(c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join("")); }
+  catch(_){ return bin; } }
+function overlayToPoint(o){
+  if(!o||typeof o!=="object") return null;
+  const N=+(o.N!=null?o.N:o.params_b);
+  const dE=+(o.e!=null?o.e:(o.dE!=null?o.dE:o.vs_fp16_energy_pct));
+  if(!(N>0)||!isFinite(dE)) return null;
+  return {ok:true, N, dE, arch:normArchKey(o.a||o.arch||o.gpu_arch),
+          precision:(o.p||o.precision||"NF4"), basis:(o.b||o.basis||"unavailable"),
+          model:(o.m||o.model||"shared config"), gpu:(o.g||o.gpu||o.a||"—"),
+          source:(o.s||o.source||"shared via link (?overlay=) — decoded in your browser")}; }
+function loadOverlayFromURL(q){
+  const blobs=q.getAll("overlay"); let n=0;
+  blobs.forEach(str=>{ const txt=b64urlDecode(str); if(!txt) return;
+    let o; try{ o=JSON.parse(txt); }catch(_){ return; }
+    const pt=overlayToPoint(o); if(pt){ uploadedPoints.push(pt); showRunResult(pt); n++;
+      track("overlay_link_open",{arch:pt.arch||"",precision:pt.precision,basis:pt.basis,params_b:pt.N,delta_pct:pt.dE}); } });
+  return n; }
 (function wireRunTab(){
   const dz=document.getElementById("dropzone"), fi=document.getElementById("fileInput");
   dz.addEventListener("click",()=>fi.click());
@@ -1301,7 +1323,7 @@ function handleFiles(files){ [...files].forEach(f=>{ const r=new FileReader(); r
 /* ----- deep-link restore for estimate / optimize tabs ----- */
 (function restoreDeepState(){ const q=new URLSearchParams(location.search); const tab=q.get("tab");
   const has=(sel,v)=>[...sel.options].some(o=>o.value===v);
-  if(tab==="run"){ showView("run"); return; }
+  if(tab==="run"){ showView("run"); loadOverlayFromURL(q); return; }
   if(tab==="estimate"){
     if(q.get("arch")&&has(pArch,q.get("arch"))) pArch.value=q.get("arch");
     fillPrec();
