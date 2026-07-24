@@ -569,6 +569,7 @@ cat workspace/outputs/energy.json</div>
 <script>
 /* ===== Real measured data (J per 1k tokens) ===== */
 /* RTX 4090D: dataset.md (n=2 gradient); T4 / RTX 5090: *_benchmark_results.csv; A800: a800_summary.csv (int8_default) */
+/* RTX 4090: ecocompute-mlcube AutoDL sweep, direct NVML @10Hz, 256 tok/run, 10 iters, batch 1 (n=1) */
 const DATA = {
   "RTX 4090D": {
     label: "RTX 4090D · Ada · 24GB",
@@ -577,6 +578,16 @@ const DATA = {
       { name:"TinyLlama-1.1B", size:1.1, e:{FP16:1600.58, NF4:2134.35} },
       { name:"Qwen2-1.5B",     size:1.5, e:{FP16:2238.87, NF4:3103.12} },
       { name:"Qwen2.5-3B",     size:3.0, e:{FP16:2989.22, NF4:3743.12} },
+    ]
+  },
+  "RTX 4090": {
+    label: "RTX 4090 · Ada · 24GB",
+    models: [
+      { name:"Qwen2-0.5B",     size:0.5, e:{FP16:1550.92, NF4:2103.59, INT8:5302.51} },
+      { name:"TinyLlama-1.1B", size:1.1, e:{FP16:1619.68, NF4:1883.91, INT8:3986.20} },
+      { name:"Qwen2-1.5B",     size:1.5, e:{FP16:2200.67, NF4:2533.25, INT8:6177.88} },
+      { name:"Qwen2.5-3B",     size:3.0, e:{FP16:3557.99, NF4:3584.88, INT8:8354.86} },
+      { name:"Qwen2-7B",       size:7.0, e:{FP16:5467.88, NF4:3911.75, INT8:8176.81} },
     ]
   },
   "RTX 5090": {
