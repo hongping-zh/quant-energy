@@ -69,6 +69,26 @@
         { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21066652" }
       ],
       "url": "https://quantenergy.tech/"
+    },
+    {
+      "@type": "Dataset",
+      "name": "EcoCompute — LLM Inference Energy on NVIDIA RTX 4090 (Ada)",
+      "description": "Decode-phase inference energy of five open LLMs (0.5B-7B) on a single NVIDIA GeForce RTX 4090 (Ada Lovelace, 24 GB) across FP16, NF4 (4-bit) and INT8 (8-bit), measured by direct on-device NVML power sampling at 10 Hz. Every value is a real hardware measurement (basis: measured), not an estimate.",
+      "creator": {
+        "@type": "Person",
+        "name": "Hongping Zhang",
+        "identifier": "https://orcid.org/0009-0000-2529-4613"
+      },
+      "datePublished": "2026-07-24",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "sameAs": "https://doi.org/10.5281/zenodo.21528102",
+      "identifier": [
+        { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21528102" },
+        { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21528103" }
+      ],
+      "measurementTechnique": "Direct NVML on-device GPU power sampling at 10 Hz, trapezoidal energy integration",
+      "isBasedOn": "https://github.com/hongping-zh/ecocompute-mlcube",
+      "url": "https://quantenergy.tech/"
     }
   ]
 }
@@ -230,6 +250,7 @@
     <p class="badge" style="margin-top:8px">From the preprint <i>“Weight-Only Quantization Does Not Always Save Energy”</i> — direct NVML energy measurements across four NVIDIA GPU architectures.</p>
     <div class="cta">
       <a id="ssrnCta" class="btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Read the preprint on SSRN →</a>
+      <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
     </div>
   </header>
 
@@ -274,7 +295,36 @@
       <span>Above zero = penalty (more energy) · below = savings</span>
     </div>
     <div id="cross"></div>
-    <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). INT8 was measured on A800 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
+    <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
+  </div>
+
+  <div class="card" id="evidence">
+    <h2>Latest run · RTX 4090 (Ada) · measured in our own open container</h2>
+    <p class="meta" style="margin:0 0 14px;line-height:1.6">
+      <b>15 of 15 configurations are real hardware measurements</b> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>)
+      — five models (0.5B–7B) × FP16 / NF4 / INT8, produced by the
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>
+      container on a rented NVIDIA GeForce RTX 4090, July 2026. It extends the Ada data in two ways the earlier
+      RTX 4090D anchor could not: <b>INT8 on Ada</b> and <b>7B models</b>.
+    </p>
+    <a href="assets/rtx4090-int8-throughput.png" target="_blank" rel="noopener" title="Open full size">
+      <img src="assets/rtx4090-int8-throughput.png" loading="lazy"
+           alt="RTX 4090: absolute decode energy and throughput for FP16, NF4 and INT8 across 0.5B-7B models. INT8 has the highest energy per token and the lowest throughput."
+           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
+    <p class="chartnote" style="margin-top:14px">
+      <b>NF4 crosses over between 3B and 7B</b>: +36% energy penalty at 0.5B → <b>−29% saving at 7B</b>.
+      <b>INT8 (bitsandbytes LLM.int8()) never saves energy here</b> (+47% … +256%): it does lower instantaneous power,
+      but decode throughput collapses to 9–19 tok/s (FP16: 39–62 tok/s), so every token ends up costing more.
+    </p>
+    <p class="chartnote">
+      All raw <code>energy.json</code> reports, the aggregated CSV, environment metadata and both figures are archived
+      under <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">DOI 10.5281/zenodo.21528103</a>
+      (v1 — the <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">concept DOI</a> always
+      resolves to the latest version), CC&nbsp;BY&nbsp;4.0. Honest scope: <b>n&nbsp;=&nbsp;1 per configuration</b>
+      (no std/CV yet) and NVML measures <b>GPU-package power</b>, not whole-system wall power — published as a
+      supplementary case study, not a certified benchmark. Reproduce it on your own card from the
+      <b>Run it yourself</b> tab.
+    </p>
   </div>
 
   <div class="hint" id="hint"></div>
@@ -511,6 +561,9 @@ cat workspace/outputs/energy.json</div>
       <h3>How we measure</h3>
       <p>Every number on the "Tested models" tab comes from <b>direct NVML power sampling</b> during real inference (10&nbsp;Hz, 256 tokens/run, 10 iterations) across four NVIDIA architectures (Turing, Ada, Ampere, Blackwell) — not TDP estimates. Where we model rather than measure (latency/throughput via a roofline model, or sizes outside the measured range), we label it explicitly. We never present estimates as measurements.</p>
 
+      <h3>Our own measurement container — and the newest run</h3>
+      <p>The measurement is open, not just the numbers. We develop the <b>EcoCompute energy MLCube</b>, an MLCube-compatible container that runs the same direct NVML power sampling on <em>your</em> GPU and writes an <code>energy.json</code> with the exact fields these charts read (see the <b>Run it yourself</b> tab). The newest column on this site — <b>RTX 4090 (Ada), July 2026</b> — was produced with it: all 15 configurations (five models, 0.5B–7B × FP16/NF4/INT8) are real hardware measurements, and they extend our Ada coverage to <b>INT8</b> and <b>7B</b> for the first time. The complete run — raw per-configuration reports, aggregated CSV, environment metadata and figures — is archived on Zenodo under <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a> (CC BY 4.0). We publish it as a <b>supplementary case study</b>, not a certified benchmark: n&nbsp;=&nbsp;1 per configuration, and NVML reports GPU-package power rather than whole-system draw.</p>
+
       <h3>The research</h3>
       <p>Based on the preprint <i>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</i> by <b>Hongping Zhang</b> (Independent Researcher, Changsha, China; ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>), openly available on <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN</a>. The measurement methodology — reproducible, direct NVML power sampling rather than TDP estimates — is the paper's core contribution, and the dataset is <b>actively being expanded</b> to cover more GPU architectures and model families.</p>
 
@@ -518,6 +571,8 @@ cat workspace/outputs/energy.json</div>
       <ul>
         <li>Preprint (SSRN): <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">abstract #6854700</a></li>
         <li>Archived version (Zenodo DOI): <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a></li>
+        <li>Measured RTX 4090 (Ada) dataset — direct NVML, 15/15 measured, incl. INT8 and 7B: <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a> (CC BY 4.0)</li>
+        <li>Measurement container: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the same code that produced that dataset runs on your GPU</li>
         <li>Dataset &amp; code: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a></li>
         <li>Also contributed as an energy-efficiency FAQ to the <a href="https://github.com/bitsandbytes-foundation/bitsandbytes/pull/1882" target="_blank" rel="noopener">bitsandbytes</a> docs.</li>
       </ul>
@@ -539,9 +594,9 @@ cat workspace/outputs/energy.json</div>
     · real GPU measurements (NVML 10Hz, 256 tokens/run, 10 iterations) · dataset: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a>.
     Unlike TDP-based estimators, our values come from <b>direct NVML power sampling</b> during inference.
     Energy shown per 1M tokens; ΔE% is relative to each model's FP16 baseline.
-    INT8 was measured only on A800 in this dataset.
+    INT8 was measured on A800 and RTX 4090.
     <br>Tip: try the <b>Your model</b> tab — drag the slider past the crossover to watch the energy change flip from penalty to savings.
-    <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · dataset actively expanding across more GPUs &amp; models.
+    <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · measured RTX 4090 dataset: <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">Zenodo DOI 10.5281/zenodo.21528102</a> · dataset actively expanding across more GPUs &amp; models.
     <div class="footlinks">
       <a href="/blog/">Blog / notes</a>
       <a href="/blog/rss.xml">RSS</a>
@@ -549,7 +604,7 @@ cat workspace/outputs/energy.json</div>
       <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Dataset &amp; code</a>
     </div>
     <details class="schema-output" id="citeBox" style="margin-top:10px">
-      <summary>Cite this work (BibTeX) · SSRN #6854700 · Zenodo DOI 10.5281/zenodo.21066652</summary>
+      <summary>Cite this work (BibTeX) · SSRN #6854700 · Zenodo DOIs 10.5281/zenodo.21066652 &amp; 10.5281/zenodo.21528102</summary>
       <button class="copybtn" id="copyBibtex">Copy</button>
       <pre id="bibtex">@article{zhang_quantization_energy,
   title   = {Weight-Only Quantization Does Not Always Save Energy: An Empirical
@@ -559,6 +614,16 @@ cat workspace/outputs/energy.json</div>
   note    = {Preprint, available on SSRN (abstract 6854700)},
   doi     = {10.5281/zenodo.21066652},
   url     = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700}
+}
+
+@dataset{zhang_ecocompute_rtx4090_2026,
+  title     = {EcoCompute --- LLM Inference Energy on NVIDIA RTX 4090 (Ada)},
+  author    = {Zhang, Hongping},
+  year      = {2026},
+  publisher = {Zenodo},
+  note      = {Direct NVML measurements, FP16/NF4/INT8, 0.5B--7B},
+  doi       = {10.5281/zenodo.21528102},
+  url       = {https://doi.org/10.5281/zenodo.21528102}
 }</pre>
     </details>
   </footer>
@@ -676,7 +741,7 @@ function renderBars(m, ms){
   document.getElementById("barMeta").textContent =
     "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null
       ? " · INT8 = 8-bit (throughput collapse spikes per-token energy)"
-      : " · INT8 not measured on this GPU (only A800 has INT8 runs)");
+      : " · INT8 not measured on this GPU (only A800 and RTX 4090 have INT8 runs)");
 
   // rebound footnote: a larger model swings back to a penalty after a smaller one already saved
   const note=document.getElementById("barNote");
@@ -790,7 +855,7 @@ ${verdict}
 Basis: direct NVML GPU power measurement (10 Hz, 256 tokens/run, 10 iterations) — not TDP estimates.
 Source: Hongping Zhang, "Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms" (preprint, SSRN 6854700).
 Preprint: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700
-Dataset DOI: 10.5281/zenodo.21066652
+Dataset DOI: 10.5281/zenodo.21066652${g==="RTX 4090"?"\nMeasured RTX 4090 dataset (direct NVML, raw reports): https://doi.org/10.5281/zenodo.21528102":""}
 Interactive: ${permalink()}`;
   copyToClip(brief,e.currentTarget,"Brief copied!"); track("copy_brief",ctx()); });
 
@@ -1125,6 +1190,9 @@ decorate(document.getElementById("ssrnCta"));
 
 const ssrn=document.getElementById("ssrnCta");
 if(ssrn) ssrn.addEventListener("click",()=>track("cta_ssrn_click",ctx()));
+
+const zen=document.getElementById("zenodoCta");
+if(zen) zen.addEventListener("click",()=>track("cta_zenodo_click",ctx()));
 
 // About modal
 (function(){
