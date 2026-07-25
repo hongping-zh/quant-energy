@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins — EcoCompute</title>
+<meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a −29% saving at 7B; INT8 costs more energy at every size because throughput collapses." />
+<link rel="canonical" href="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins" />
+<meta property="og:description" content="15/15 real NVML measurements from our open MLCube container. NF4: +36% at 0.5B → −29% at 7B. INT8: a penalty everywhere, because decode throughput collapses to 9–19 tok/s." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
+<meta property="og:image" content="https://quantenergy.tech/assets/rtx4090-int8-throughput.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins",
+  "datePublished":"2026-07-25",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html",
+  "image":"https://quantenergy.tech/assets/rtx4090-int8-throughput.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.21528102"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13px;color:#d3dcf6}
+  pre code{background:none;padding:0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  figure{margin:22px 0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+  figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins</h1>
+    <div class="date">2026-07-25 · Hongping Zhang</div>
+
+    <p>Publishing a measurement methodology is cheap; running it is not. So we rented a single <strong>NVIDIA GeForce RTX 4090</strong> (Ada Lovelace, 24&nbsp;GB) for an afternoon and pointed our own container at it — the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>, the same MLCube-compatible container anyone can run on their own card. Five models from 0.5B to 7B, three precisions each: <strong>15 of 15 configurations came back as real hardware measurements</strong> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>), not estimates.</p>
+
+    <p>Two things came out of it that our earlier Ada data could not show: <strong>INT8 on Ada</strong> (previously we only had INT8 on A800) and <strong>7B models</strong> (the earlier Ada anchor stopped at 3B).</p>
+
+    <h2>What we measured</h2>
+    <p>Decode-phase energy, integrated from direct NVML power samples at 10&nbsp;Hz over the generation loop: 256 tokens per run, 10 iterations after 2 warmups, batch&nbsp;1, greedy decoding from one fixed prompt.</p>
+    <table>
+      <tr><th>Model</th><th>FP16 (mJ/token)</th><th>NF4 vs FP16</th><th>INT8 vs FP16</th></tr>
+      <tr><td>Qwen2-0.5B</td><td>1550.9</td><td class="pos">+36.5%</td><td class="pos">+255.8%</td></tr>
+      <tr><td>TinyLlama-1.1B</td><td>1619.7</td><td class="pos">+15.3%</td><td class="pos">+143.9%</td></tr>
+      <tr><td>Qwen2-1.5B</td><td>2200.7</td><td class="pos">+15.7%</td><td class="pos">+186.3%</td></tr>
+      <tr><td>Qwen2.5-3B</td><td>3558.0</td><td class="pos">+10.1%</td><td class="pos">+138.5%</td></tr>
+      <tr><td>Qwen2-7B</td><td>5467.9</td><td class="neg">−29.4%</td><td class="pos">+47.4%</td></tr>
+    </table>
+    <p class="meta">Positive = quantization costs more energy than FP16. Every cell is a measurement on the same card in the same session.</p>
+
+    <h2>NF4: the crossover is real, and it sits between 3B and 7B</h2>
+    <p>The NF4 penalty shrinks monotonically with model size — +36.5% at 0.5B, +15% around 1–1.5B, +10.1% at 3B — and then flips to a <strong>−29.4% saving at 7B</strong>. That is the crossover this project keeps arguing about, measured end-to-end on one GPU with one methodology, which is exactly the comparison that is usually missing when numbers are stitched together from different papers.</p>
+
+    <h2>INT8: lower power, more energy</h2>
+    <p>INT8 (bitsandbytes <code>LLM.int8()</code>) was a penalty at <em>every</em> size we measured, from +47% at 7B to +256% at 0.5B. The mechanism is visible in the throughput panel below: INT8 genuinely draws less instantaneous power (73–95&nbsp;W vs 88–269&nbsp;W for FP16), but decode throughput collapses to <strong>9–19 tok/s</strong> against FP16's 39–62 tok/s. Energy is power × time, so a run that takes 3–5× longer loses even when it draws less power.</p>
+
+    <figure>
+      <a href="/assets/rtx4090-int8-throughput.png" target="_blank" rel="noopener"><img src="/assets/rtx4090-int8-throughput.png" alt="Two panels for RTX 4090: absolute decode energy per token, where INT8 is highest at every model size, and decode throughput, where INT8 collapses to 9–19 tokens per second." loading="lazy" /></a>
+      <figcaption>Left: energy per token. Right: decode throughput. INT8 loses on energy precisely because it loses on time.</figcaption>
+    </figure>
+
+    <div class="callout">
+      <strong>Practical read:</strong> on a 24&nbsp;GB Ada card, use NF4 when the model is large enough (≈7B and up) or when it simply would not fit otherwise — but do not reach for weight-only INT8 at batch&nbsp;1 expecting an energy win. On this hardware there wasn't one.
+    </div>
+
+    <h2>What this run is not</h2>
+    <p>Being explicit about scope is the point of the project, so: each configuration was run <strong>once</strong> (n&nbsp;=&nbsp;1), with the 10 decode iterations integrated into a single energy total — there is no standard deviation or CV to report yet. NVML gives <strong>GPU-package power</strong>, not whole-system wall power. The workload is one short prompt at a fixed 256-token length and batch&nbsp;1, so it speaks to single-stream decode, not to batched serving. And the card is an <strong>RTX 4090, not an RTX 4090D</strong> — both are Ada, but they are different SKUs, which is why the site now lists them as separate columns instead of overwriting the older one. We publish this as a supplementary case study, not as a certified benchmark.</p>
+
+    <h2>Run it yourself, or take the data</h2>
+    <p>The container does the same thing on your GPU and writes an <code>energy.json</code> with the exact fields the charts on this site read:</p>
+<pre><code>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+python3 entrypoint.py energy_estimate \
+    --model Qwen/Qwen2-7B --precision NF4 \
+    --gpu_arch ada --params_b 7 \
+    --output_dir workspace/outputs --share
+
+cat workspace/outputs/energy.json</code></pre>
+    <p>No GPU? It still runs and returns dataset-derived reference values, clearly flagged — we never dress an estimate up as a measurement. The complete run above (raw per-configuration reports, aggregated CSV, environment metadata, figures) is archived on Zenodo under <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a>, CC&nbsp;BY&nbsp;4.0, and the numbers are live in the tool under <a href="/?gpu=RTX%204090">GPU → RTX 4090 · Ada · 24GB</a>.</p>
+
+    <footer>
+      Method: direct NVML power sampling (10&nbsp;Hz, 256 tokens/run, 10 iterations, batch 1) with the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>. Related preprint: <em>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</em> (Hongping Zhang).
+      <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · Dataset DOI: <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a> · <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Data &amp; code</a>
+    </footer>
+  </div>
+</body>
+</html>

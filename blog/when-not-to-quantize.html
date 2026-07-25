@@ -61,6 +61,8 @@
     <h1>When <em>not</em> to quantize: the small-model energy penalty</h1>
     <div class="date">2026-06-25 · Hongping Zhang</div>
 
+    <div class="callout"><strong>Update, 2026-07-25:</strong> Ada now has INT8 and 7B measurements. On an RTX 4090 the NF4 crossover lands between 3B and 7B (−29% at 7B), and INT8 turned out to be an energy penalty at every size — see <a href="/blog/we-ran-our-own-container-rtx4090.html">the newer note</a>. The "INT8 on A800 only" caveat below applied to the data available when this was written.</div>
+
     <p>Quantization is usually sold as a free win: cast your weights to 4-bit (NF4) or 8-bit (INT8), use a fraction of the VRAM, ship. And for memory, that story holds. For <em>energy</em>, it does not — at least not for small models.</p>
 
     <p>Across 360+ direct GPU power measurements (NVML, 10&nbsp;Hz, 256 tokens/run, 10 iterations) on four NVIDIA architectures, weight-only quantization <strong>increases</strong> decode energy for small models and only starts saving above a model-size threshold that depends on the GPU. Below that threshold, you pay more joules per token to save memory you may not have needed.</p>
