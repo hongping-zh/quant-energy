@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-07-25</div>
+      <h2><a href="/blog/we-ran-our-own-container-rtx4090.html">We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins</a></h2>
+      <p>15 of 15 configurations measured with direct NVML on one Ada card, using the open MLCube container anyone can run. NF4 goes from a +36% penalty at 0.5B to a <em>−29% saving</em> at 7B; INT8 costs more energy at every size, because throughput collapses.</p>
+      <p><a href="/blog/we-ran-our-own-container-rtx4090.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-06-25</div>
       <h2><a href="/blog/when-not-to-quantize.html">When <em>not</em> to quantize: the small-model energy penalty</a></h2>
       <p>Weight-only NF4/INT8 quantization shrinks memory, but for small models it can <em>raise</em> inference energy by 25–55%. Here's what the measurements say, and how to find your crossover point.</p>
