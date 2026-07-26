@@ -412,7 +412,7 @@
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
-      <p class="chartnote">The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
+      <p class="chartnote">The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 is measured on A800 and RTX 4090 (Ada) only — elsewhere it is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
     </div>
 
     <div class="hint" id="estHint"></div>
@@ -997,7 +997,7 @@ function renderEstimate(){
       : "You're <b>near the crossover</b> — the sign is uncertain. Measure on your own stack before deciding.";
 
   // Generate schema-compliant JSON report
-  const gpuModelMap = { ada:"RTX 4090D", blackwell:"RTX 5090", turing:"T4", ampere:"A800", hopper:"H100" };
+  const gpuModelMap = { ada:"RTX 4090 / 4090D", blackwell:"RTX 5090", turing:"T4", ampere:"A800", hopper:"H100" };
   const schemaReport = {
     gpu_arch: pArch.value,
     gpu_model: gpuModelMap[pArch.value] || pArch.value.toUpperCase(),

@@ -44,7 +44,7 @@ BORROW = {"hopper": "ampere"}
 # mem_bw_gbps: HBM/GDDR memory bandwidth (GB/s). fp16_tflops: peak FP16 tensor TFLOPS.
 HARDWARE = {
     "turing":    {"gpu": "T4",         "mem_bw_gbps": 320.0,  "fp16_tflops": 65.0,  "source": "NVIDIA T4 datasheet"},
-    "ada":       {"gpu": "RTX 4090D",  "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet"},
+    "ada":       {"gpu": "RTX 4090 / 4090D", "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet"},
     "blackwell": {"gpu": "RTX 5090",   "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet"},
     "ampere":    {"gpu": "A800",       "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet"},
     "hopper":    {"gpu": "H100",       "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet"},
@@ -150,6 +150,10 @@ def main():
         A, S, Nstar = popt
         # crossover where dE%=0  ->  A = S*g(N/Nstar)  ->  N = Nstar * A/(S-A)
         xover = (Nstar * A / (S - A)) if (S > A > 0) else None
+        # only report a crossover the data can support: one that sits inside (or just
+        # outside) the measured range. Far extrapolations are dropped, not published.
+        if xover is not None and not (0.5 * min(N) <= xover <= 1.5 * max(N)):
+            xover = None
         anchors = [{"N": p["N"], "dE": round(p["dE"], 2), "model": p["model"], "gpu": p["gpu"]} for p in pts]
         loo_mae = loo(pts)
         curves.setdefault(arch, {})[prec] = {

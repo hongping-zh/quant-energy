@@ -74,16 +74,14 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     delta = _model(N, c)
     delta = max(delta, -s_cap)  # never promise more savings than the weight-byte bound
 
-    # basis
-    exact = None
-    if borrowed_from is None:
-        for a in c["anchors"]:
-            if abs(a["N"] - N) < 1e-6:
-                exact = a
-                break
-    if exact is not None:
+    # basis. A size can carry more than one measured anchor (several cards share an
+    # architecture class); report their mean and keep the spread for the band.
+    hits = [a for a in c["anchors"] if abs(a["N"] - N) < 1e-6] if borrowed_from is None else []
+    spread = 0.0
+    if hits:
         basis = "measured"
-        delta = exact["dE"]  # return the measured value, not the smoothed curve
+        delta = sum(a["dE"] for a in hits) / len(hits)  # measured value, not the smoothed curve
+        spread = max(a["dE"] for a in hits) - min(a["dE"] for a in hits)
     elif borrowed_from is not None:
         basis = "estimated"
     elif c["n_min"] <= N <= c["n_max"]:
@@ -111,7 +109,7 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     modelled_term = abs(delta_base) * (1.0 - factor) * 0.5 if modelled else 0.0
     sigma = math.sqrt(base**2 + extrap**2 + borrowed_term**2 + modelled_term**2)
     if basis == "measured" and not modelled:
-        sigma = base * 0.5
+        sigma = max(base * 0.5, spread / 2.0)
 
     lo = max(delta - Z * sigma, -s_cap)
     hi = delta + Z * sigma
@@ -144,6 +142,10 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
                    f"near the crossover; verify on your stack.")
 
     notes = []
+    if len(hits) > 1:
+        detail = ", ".join(f"{a['gpu']} {a['dE']:+.0f}%" for a in hits)
+        notes.append(f"{len(hits)} cards in this class were measured at {N:g}B ({detail}); "
+                     f"the value shown is their mean and the band covers the spread.")
     if borrowed_from is not None:
         notes.append(f"No measurements for this architecture; shape borrowed from "
                      f"'{borrowed_from}' — treat as a rough estimate.")
