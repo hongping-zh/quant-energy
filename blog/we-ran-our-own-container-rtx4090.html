@@ -23,7 +23,7 @@
   "mainEntityOfPage":"https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html",
   "image":"https://quantenergy.tech/assets/rtx4090-int8-throughput.png",
   "publisher":{"@type":"Person","name":"Hongping Zhang"},
-  "citation":"https://doi.org/10.5281/zenodo.21528102"
+  "citation":"https://doi.org/10.5281/zenodo.21528103"
 }
 </script>
 <style>
@@ -112,11 +112,11 @@ python3 entrypoint.py energy_estimate \
     --output_dir workspace/outputs --share
 
 cat workspace/outputs/energy.json</code></pre>
-    <p>No GPU? It still runs and returns dataset-derived reference values, clearly flagged — we never dress an estimate up as a measurement. The complete run above (raw per-configuration reports, aggregated CSV, environment metadata, figures) is archived on Zenodo under <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a>, CC&nbsp;BY&nbsp;4.0, and the numbers are live in the tool under <a href="/?gpu=RTX%204090">GPU → RTX 4090 · Ada · 24GB</a>.</p>
+    <p>No GPU? It still runs and returns dataset-derived reference values, clearly flagged — we never dress an estimate up as a measurement. The complete run above (raw per-configuration reports, aggregated CSV, environment metadata, figures) is archived on Zenodo under <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>, CC&nbsp;BY&nbsp;4.0, and the numbers are live in the tool under <a href="/?gpu=RTX%204090">GPU → RTX 4090 · Ada · 24GB</a>. Cite that DOI for this run specifically; for the broader benchmark behind the rest of the site, cite the main dataset <b>v1.1.0</b>, <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (360+ configurations, four architectures).</p>
 
     <footer>
       Method: direct NVML power sampling (10&nbsp;Hz, 256 tokens/run, 10 iterations, batch 1) with the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>. Related preprint: <em>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</em> (Hongping Zhang).
-      <br>Preprint: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · Dataset DOI: <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a> · <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Data &amp; code</a>
+      <br>Paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · main dataset v1.1.0: <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · this run: <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> · <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Data &amp; code</a>
     </footer>
   </div>
 </body>
