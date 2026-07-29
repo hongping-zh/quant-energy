@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Methodology — how EcoCompute measures LLM inference energy</title>
+<meta name="description" content="EcoCompute's measurement protocol: direct NVML GPU power sampling at 10 Hz, 256 tokens per run, repeated iterations across four NVIDIA architectures — plus how estimates, interpolation and extrapolation are labelled." />
+<link rel="canonical" href="https://quantenergy.tech/method/" />
+<meta property="og:title" content="Methodology — how EcoCompute measures LLM inference energy" />
+<meta property="og:description" content="Direct NVML power sampling rather than TDP estimates: the full measurement protocol, the model behind estimated values, and the known limitations." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/method/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"TechArticle",
+  "headline":"Methodology — how EcoCompute measures LLM inference energy",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/method/",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+  h2{font-size:20px;margin:32px 0 6px}
+  h3{font-size:16px;margin:22px 0 4px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Methodology</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
+    </div>
+
+    <h1>How EcoCompute measures LLM inference energy</h1>
+    <p class="sub">Direct on-device power sampling, not TDP arithmetic. This page is the citable description of the protocol behind every number on <a href="/">quantenergy.tech</a>.</p>
+
+    <div class="callout">
+      <b>In one paragraph.</b> Energy per configuration (model × precision × GPU) is obtained by sampling GPU
+      package power with <b>NVML at 10&nbsp;Hz</b> while the model generates <b>256 tokens per run</b>, repeating the
+      run and integrating power over wall-clock time. Nothing is derived from thermal design power. Values that are
+      <em>not</em> measured — sizes between or beyond our measured anchors, and latency/throughput — are modelled and
+      labelled as <code>interpolated</code>, <code>extrapolated</code> or <code>estimated</code> in the UI and in the
+      API response. Measurements and estimates are never mixed silently.
+    </div>
+
+    <h2>1 · Measurement protocol</h2>
+    <table>
+      <tr><th>Quantity</th><th>How it is obtained</th></tr>
+      <tr><td>GPU power</td><td>NVML (<code>nvmlDeviceGetPowerUsage</code>) polled at 10&nbsp;Hz for the duration of generation; GPU-package power, board-level</td></tr>
+      <tr><td>Workload</td><td>Single-stream text generation, 256 output tokens per run, fixed prompt and sampling settings</td></tr>
+      <tr><td>Repeats</td><td>Main dataset (v1.1.0): n&nbsp;=&nbsp;2 with CV&nbsp;&lt;&nbsp;2%. Container runs reported on the site: 10 iterations, CV&nbsp;&lt;&nbsp;3%</td></tr>
+      <tr><td>Energy</td><td>Time-integral of sampled power over the generation window, normalised to <b>joules per 1M output tokens</b></td></tr>
+      <tr><td>Baseline</td><td>Each model's own FP16 run on the same GPU; ΔE% is relative to that baseline</td></tr>
+      <tr><td>Precisions</td><td>FP16, NF4, INT8 (FP8 where the hardware supports it) — weight-only quantization</td></tr>
+      <tr><td>Architectures</td><td>Turing (T4), Ampere (A800), Ada (RTX 4090 / 4090D), Blackwell (RTX 5090)</td></tr>
+    </table>
+
+    <h2>2 · What is measured vs modelled</h2>
+    <p>Every result carries a <code>basis</code> field, and the site renders it as a tag next to the number:</p>
+    <ul>
+      <li><b><code>measured</code></b> — a real NVML run exists for exactly this configuration.</li>
+      <li><b><code>interpolated</code></b> — the model size falls between two measured anchors on the same architecture and precision; the value comes from the fitted crossover curve (<a href="/curves.json">curves.json</a>).</li>
+      <li><b><code>extrapolated</code></b> — the size lies outside the measured range; treat the value as directional only.</li>
+      <li><b><code>estimated</code></b> — latency, throughput and VRAM figures from a roofline-style model, not from a power measurement.</li>
+    </ul>
+    <p class="meta">The fitted curves and the estimator are open: see <a href="/estimate.js">estimate.js</a>, <a href="/optimize.js">optimize.js</a> and the <code>build/</code> scripts in <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">the site repository</a>.</p>
+
+    <h2>3 · The finding this protocol produced</h2>
+    <p>Weight-only quantization (NF4/INT8) reliably reduces memory footprint, but it does <b>not</b> always reduce
+    energy. On small models the dequantization overhead outweighs the memory-bandwidth savings, so quantization
+    <em>increases</em> energy per token; above a <b>crossover point</b> that depends on both model size and GPU
+    architecture, it starts to save. Explore your own case on the
+    <a href="/estimate/">Your model</a> tab.</p>
+
+    <h2>4 · Reproduce it on your GPU</h2>
+    <p>The measurement code is a container, not a description. The <b>EcoCompute energy MLCube</b> runs the same NVML
+    sampling on your hardware and writes an <code>energy.json</code> with the exact fields these charts read:</p>
+<pre>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+pip install mlcube mlcube-docker
+mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
+    <p>Then drop the resulting <code>energy.json</code> on the <a href="/run/">Run it yourself</a> tab to overlay your
+    point on the crossover curve — the overlay is encoded in the URL, nothing is uploaded.</p>
+
+    <h2>5 · Limitations</h2>
+    <ul>
+      <li>NVML reports <b>GPU-package power</b>, not whole-system draw: CPU, DRAM, PSU losses and cooling are excluded.</li>
+      <li>Single-stream generation only; batched serving with continuous batching has a different energy profile.</li>
+      <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset.</li>
+      <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
+    </ul>
+
+    <h2>6 · How to cite</h2>
+    <ul>
+      <li><b>The methodology and argument</b> — preprint “Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms”, <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN&nbsp;#6854700</a> (archived: <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a>).</li>
+      <li><b>The numbers on this site</b> — main dataset v1.1.0, <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0).</li>
+      <li><b>The RTX 4090 (Ada) deep dive</b> — <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> (CC BY 4.0).</li>
+    </ul>
+
+    <footer>
+      EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
+      <br><a href="/">← Back to the tool</a> · <a href="/about/">About</a> · <a href="/blog/">Notes</a>
+    </footer>
+  </div>
+</body>
+</html>
