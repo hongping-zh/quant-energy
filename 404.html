@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Page not found — EcoCompute</title>
+<meta name="robots" content="noindex, follow" />
+<script>
+/* Known aliases for the single-page tool: send legacy / guessed paths to the real view
+   instead of showing a dead end. */
+(function(){
+  var map = {
+    "estimate":"/?tab=estimate", "estimator":"/?tab=estimate", "your-model":"/?tab=estimate",
+    "run":"/?tab=run", "reproduce":"/?tab=run", "container":"/?tab=run",
+    "optimize":"/?tab=optimize", "optimise":"/?tab=optimize", "constraints":"/?tab=optimize",
+    "measured":"/?tab=measured", "tested-models":"/?tab=measured", "data":"/?tab=measured",
+    "about":"/#about", "cite":"/#about", "citation":"/#about",
+    "method":"/method/", "methods":"/method/", "methodology":"/method/",
+    "blog":"/blog/", "notes":"/blog/", "rss":"/blog/rss.xml",
+    "api":"/api/", "mcp":"/mcp/", "schema":"/schema/"
+  };
+  var slug = location.pathname.replace(/^\/+|\/+$/g,"").replace(/\.html?$/,"").toLowerCase();
+  if (map[slug]) location.replace(map[slug] + location.search.replace(/^\?/, map[slug].indexOf("?")>-1 ? "&" : "?"));
+})();
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:640px;margin:0 auto;padding:72px 20px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1{font-size:26px;margin:0 0 8px}
+  .code{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  ul{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 18px 34px;margin-top:24px}
+  li{margin:6px 0;color:#d3dcf6}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="code">404 · page not found</p>
+    <h1>That page doesn&rsquo;t exist</h1>
+    <p>EcoCompute is a single-page tool. Here is everything there is:</p>
+    <ul>
+      <li><a href="/">The tool</a> — tested models, your model, optimize, run it yourself</li>
+      <li><a href="/method/">Methodology</a> — how the energy numbers are measured</li>
+      <li><a href="/about/">About &amp; how to cite</a></li>
+      <li><a href="/blog/">Notes</a> · <a href="/blog/rss.xml">RSS</a></li>
+      <li><a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Dataset &amp; code</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Measurement container</a></li>
+    </ul>
+  </div>
+</body>
+</html>
