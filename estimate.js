@@ -14,8 +14,13 @@
 (function (root) {
   "use strict";
 
+  // Mirror of curves.json (calibrated by build/fit_curves.py from
+  // build/measured.csv). Regenerate with build/sync_curves_js.py.
   var CURVES = {
-    "s_cap": { "NF4": 75.0, "INT8": 50.0 },
+    "s_cap": {
+      "NF4": 75.0,
+      "INT8": 50.0
+    },
     "arch_label": {
       "turing": "Turing (T4)",
       "ada": "Ada (RTX 4090/4090D)",
@@ -23,37 +28,412 @@
       "ampere": "Ampere (A100/A800)",
       "hopper": "Hopper (H100/H200)"
     },
-    "borrow": { "hopper": "ampere" },
+    "borrow": {
+      "hopper": "ampere"
+    },
     "curves": {
-      "ada": { "NF4": { "A": 106.0936, "S": 90.55, "Nstar": 0.381, "resid_std": 3.6947, "n_min": 0.5, "n_max": 3.0, "crossover_b": null,
-        "anchors": [{ "N": 0.5, "dE": 56.09, "model": "Qwen2-0.5B", "gpu": "RTX 4090D" }, { "N": 1.1, "dE": 33.35, "model": "TinyLlama-1.1B", "gpu": "RTX 4090D" }, { "N": 1.5, "dE": 38.6, "model": "Qwen2-1.5B", "gpu": "RTX 4090D" }, { "N": 3.0, "dE": 25.22, "model": "Qwen2.5-3B", "gpu": "RTX 4090D" }] } },
-      "ampere": {
-        "INT8": { "A": 180.8252, "S": 127.9389, "Nstar": 10.082, "resid_std": 2.4297, "n_min": 7.0, "n_max": 14.0, "crossover_b": null,
-          "anchors": [{ "N": 7.0, "dE": 130.83, "model": "Mistral-7B", "gpu": "A800" }, { "N": 9.0, "dE": 117.18, "model": "Yi-1.5-9B", "gpu": "A800" }, { "N": 14.0, "dE": 107.41, "model": "Qwen2.5-14B", "gpu": "A800" }] },
-        "NF4": { "A": -1.0293, "S": 0.0, "Nstar": 200.0, "resid_std": 2.7146, "n_min": 7.0, "n_max": 14.0, "crossover_b": null,
-          "anchors": [{ "N": 7.0, "dE": -4.09, "model": "Mistral-7B", "gpu": "A800" }, { "N": 9.0, "dE": -1.51, "model": "Yi-1.5-9B", "gpu": "A800" }, { "N": 14.0, "dE": 2.51, "model": "Qwen2.5-14B", "gpu": "A800" }] }
+      "ada": {
+        "INT8": {
+          "A": 296.113,
+          "S": 305.7776,
+          "Nstar": 2.0849,
+          "resid_std": 26.6196,
+          "n_min": 0.5,
+          "n_max": 7.0,
+          "crossover_b": null,
+          "anchors": [
+            {
+              "N": 0.5,
+              "dE": 255.78,
+              "model": "Qwen2-0.5B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 1.1,
+              "dE": 143.91,
+              "model": "TinyLlama-1.1B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 1.5,
+              "dE": 186.29,
+              "model": "Qwen2-1.5B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 3.0,
+              "dE": 138.47,
+              "model": "Qwen2.5-3B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 7.0,
+              "dE": 47.4,
+              "model": "Qwen2-7B",
+              "gpu": "RTX 4090"
+            }
+          ],
+          "loo_mae": 48.481
+        },
+        "NF4": {
+          "A": 53.088,
+          "S": 131.0936,
+          "Nstar": 5.8387,
+          "resid_std": 11.4012,
+          "n_min": 0.5,
+          "n_max": 7.0,
+          "crossover_b": 3.974,
+          "anchors": [
+            {
+              "N": 0.5,
+              "dE": 56.09,
+              "model": "Qwen2-0.5B",
+              "gpu": "RTX 4090D"
+            },
+            {
+              "N": 1.1,
+              "dE": 33.35,
+              "model": "TinyLlama-1.1B",
+              "gpu": "RTX 4090D"
+            },
+            {
+              "N": 1.5,
+              "dE": 38.6,
+              "model": "Qwen2-1.5B",
+              "gpu": "RTX 4090D"
+            },
+            {
+              "N": 3.0,
+              "dE": 25.22,
+              "model": "Qwen2.5-3B",
+              "gpu": "RTX 4090D"
+            },
+            {
+              "N": 0.5,
+              "dE": 36.5,
+              "model": "Qwen2-0.5B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 1.1,
+              "dE": 15.34,
+              "model": "TinyLlama-1.1B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 1.5,
+              "dE": 15.73,
+              "model": "Qwen2-1.5B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 3.0,
+              "dE": 10.09,
+              "model": "Qwen2.5-3B",
+              "gpu": "RTX 4090"
+            },
+            {
+              "N": 7.0,
+              "dE": -29.43,
+              "model": "Qwen2-7B",
+              "gpu": "RTX 4090"
+            }
+          ],
+          "loo_mae": 15.543
+        }
       },
-      "blackwell": { "NF4": { "A": 45.8272, "S": 104.4224, "Nstar": 6.0749, "resid_std": 2.8022, "n_min": 1.1, "n_max": 7.0, "crossover_b": 4.751,
-        "anchors": [{ "N": 1.1, "dE": 26.49, "model": "TinyLlama-1.1B", "gpu": "RTX 5090" }, { "N": 1.5, "dE": 29.42, "model": "Qwen2-1.5B", "gpu": "RTX 5090" }, { "N": 3.0, "dE": 11.74, "model": "Qwen2.5-3B", "gpu": "RTX 5090" }, { "N": 7.0, "dE": -11.45, "model": "Qwen2-7B", "gpu": "RTX 5090" }] } },
-      "turing": { "NF4": { "A": 7.925, "S": 79.5646, "Nstar": 19.2186, "resid_std": 1.316, "n_min": 1.1, "n_max": 7.0, "crossover_b": 2.126,
-        "anchors": [{ "N": 1.1, "dE": 4.56, "model": "TinyLlama-1.1B", "gpu": "T4" }, { "N": 1.5, "dE": 0.22, "model": "Qwen2-1.5B", "gpu": "T4" }, { "N": 3.0, "dE": -1.38, "model": "Qwen2.5-3B", "gpu": "T4" }, { "N": 7.0, "dE": -13.75, "model": "Qwen2-7B", "gpu": "T4" }] } }
+      "ampere": {
+        "INT8": {
+          "A": 180.8252,
+          "S": 127.9389,
+          "Nstar": 10.082,
+          "resid_std": 2.4297,
+          "n_min": 7.0,
+          "n_max": 14.0,
+          "crossover_b": null,
+          "anchors": [
+            {
+              "N": 7.0,
+              "dE": 130.83,
+              "model": "Mistral-7B",
+              "gpu": "A800"
+            },
+            {
+              "N": 9.0,
+              "dE": 117.18,
+              "model": "Yi-1.5-9B",
+              "gpu": "A800"
+            },
+            {
+              "N": 14.0,
+              "dE": 107.41,
+              "model": "Qwen2.5-14B",
+              "gpu": "A800"
+            }
+          ],
+          "loo_mae": null
+        },
+        "NF4": {
+          "A": -1.0293,
+          "S": 0.0,
+          "Nstar": 89.9821,
+          "resid_std": 2.7146,
+          "n_min": 7.0,
+          "n_max": 14.0,
+          "crossover_b": null,
+          "anchors": [
+            {
+              "N": 7.0,
+              "dE": -4.09,
+              "model": "Mistral-7B",
+              "gpu": "A800"
+            },
+            {
+              "N": 9.0,
+              "dE": -1.51,
+              "model": "Yi-1.5-9B",
+              "gpu": "A800"
+            },
+            {
+              "N": 14.0,
+              "dE": 2.51,
+              "model": "Qwen2.5-14B",
+              "gpu": "A800"
+            }
+          ],
+          "loo_mae": null
+        }
+      },
+      "blackwell": {
+        "NF4": {
+          "A": 45.8272,
+          "S": 104.4224,
+          "Nstar": 6.0749,
+          "resid_std": 2.8022,
+          "n_min": 1.1,
+          "n_max": 7.0,
+          "crossover_b": 4.751,
+          "anchors": [
+            {
+              "N": 1.1,
+              "dE": 26.49,
+              "model": "TinyLlama-1.1B",
+              "gpu": "RTX 5090"
+            },
+            {
+              "N": 1.5,
+              "dE": 29.42,
+              "model": "Qwen2-1.5B",
+              "gpu": "RTX 5090"
+            },
+            {
+              "N": 3.0,
+              "dE": 11.74,
+              "model": "Qwen2.5-3B",
+              "gpu": "RTX 5090"
+            },
+            {
+              "N": 7.0,
+              "dE": -11.45,
+              "model": "Qwen2-7B",
+              "gpu": "RTX 5090"
+            }
+          ],
+          "loo_mae": 4.846
+        }
+      },
+      "turing": {
+        "NF4": {
+          "A": 7.925,
+          "S": 79.5646,
+          "Nstar": 19.2186,
+          "resid_std": 1.316,
+          "n_min": 1.1,
+          "n_max": 7.0,
+          "crossover_b": 2.126,
+          "anchors": [
+            {
+              "N": 1.1,
+              "dE": 4.56,
+              "model": "TinyLlama-1.1B",
+              "gpu": "T4"
+            },
+            {
+              "N": 1.5,
+              "dE": 0.22,
+              "model": "Qwen2-1.5B",
+              "gpu": "T4"
+            },
+            {
+              "N": 3.0,
+              "dE": -1.38,
+              "model": "Qwen2.5-3B",
+              "gpu": "T4"
+            },
+            {
+              "N": 7.0,
+              "dE": -13.75,
+              "model": "Qwen2-7B",
+              "gpu": "T4"
+            }
+          ],
+          "loo_mae": 5.262
+        }
+      }
     },
-    // Measured FP16 absolute decode energy (J / 1k tokens), per arch — anchors the
-    // optimizer's absolute-energy numbers. Mirror of curves.json:fp16_energy.
     "fp16_energy": {
-      "ada":       { "n_min": 0.5, "n_max": 3.0, "anchors": [{ "N": 0.5, "e_j1k": 1474.16 }, { "N": 1.1, "e_j1k": 1600.58 }, { "N": 1.5, "e_j1k": 2238.87 }, { "N": 3.0, "e_j1k": 2989.22 }] },
-      "blackwell": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 1659.0 }, { "N": 1.5, "e_j1k": 2411.09 }, { "N": 3.0, "e_j1k": 3382.64 }, { "N": 7.0, "e_j1k": 5508.56 }] },
-      "turing":    { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 4251.21 }, { "N": 1.5, "e_j1k": 5731.8 }, { "N": 3.0, "e_j1k": 11267.69 }, { "N": 7.0, "e_j1k": 21722.65 }] },
-      "ampere":    { "n_min": 7.0, "n_max": 14.0, "anchors": [{ "N": 7.0, "e_j1k": 4402.43 }, { "N": 9.0, "e_j1k": 5445.12 }, { "N": 14.0, "e_j1k": 7359.98 }] }
+      "ada": {
+        "n_min": 0.5,
+        "n_max": 7.0,
+        "anchors": [
+          {
+            "N": 0.5,
+            "e_j1k": 1501.87,
+            "model": "Qwen2-0.5B",
+            "gpu": "RTX 4090D"
+          },
+          {
+            "N": 1.1,
+            "e_j1k": 1622.76,
+            "model": "TinyLlama-1.1B",
+            "gpu": "RTX 4090D"
+          },
+          {
+            "N": 1.5,
+            "e_j1k": 2195.2,
+            "model": "Qwen2-1.5B",
+            "gpu": "RTX 4090D"
+          },
+          {
+            "N": 3.0,
+            "e_j1k": 3249.72,
+            "model": "Qwen2.5-3B",
+            "gpu": "RTX 4090D"
+          },
+          {
+            "N": 7.0,
+            "e_j1k": 5545.3,
+            "model": "Qwen2-7B",
+            "gpu": "RTX 4090"
+          }
+        ]
+      },
+      "blackwell": {
+        "n_min": 1.1,
+        "n_max": 7.0,
+        "anchors": [
+          {
+            "N": 1.1,
+            "e_j1k": 1659.0,
+            "model": "TinyLlama-1.1B",
+            "gpu": "RTX 5090"
+          },
+          {
+            "N": 1.5,
+            "e_j1k": 2411.09,
+            "model": "Qwen2-1.5B",
+            "gpu": "RTX 5090"
+          },
+          {
+            "N": 3.0,
+            "e_j1k": 3382.64,
+            "model": "Qwen2.5-3B",
+            "gpu": "RTX 5090"
+          },
+          {
+            "N": 7.0,
+            "e_j1k": 5508.56,
+            "model": "Qwen2-7B",
+            "gpu": "RTX 5090"
+          }
+        ]
+      },
+      "turing": {
+        "n_min": 1.1,
+        "n_max": 7.0,
+        "anchors": [
+          {
+            "N": 1.1,
+            "e_j1k": 4251.21,
+            "model": "TinyLlama-1.1B",
+            "gpu": "T4"
+          },
+          {
+            "N": 1.5,
+            "e_j1k": 5731.8,
+            "model": "Qwen2-1.5B",
+            "gpu": "T4"
+          },
+          {
+            "N": 3.0,
+            "e_j1k": 11267.69,
+            "model": "Qwen2.5-3B",
+            "gpu": "T4"
+          },
+          {
+            "N": 7.0,
+            "e_j1k": 21722.65,
+            "model": "Qwen2-7B",
+            "gpu": "T4"
+          }
+        ]
+      },
+      "ampere": {
+        "n_min": 7.0,
+        "n_max": 14.0,
+        "anchors": [
+          {
+            "N": 7.0,
+            "e_j1k": 4402.43,
+            "model": "Mistral-7B",
+            "gpu": "A800"
+          },
+          {
+            "N": 9.0,
+            "e_j1k": 5445.12,
+            "model": "Yi-1.5-9B",
+            "gpu": "A800"
+          },
+          {
+            "N": 14.0,
+            "e_j1k": 7359.98,
+            "model": "Qwen2.5-14B",
+            "gpu": "A800"
+          }
+        ]
+      }
     },
-    // Public datasheet GPU specs — used ONLY by the (modelled) roofline latency
-    // layer in optimize.js. Mirror of curves.json:hardware.
     "hardware": {
-      "turing":    { "gpu": "T4",        "mem_bw_gbps": 320.0,  "fp16_tflops": 65.0,  "source": "NVIDIA T4 datasheet" },
-      "ada":       { "gpu": "RTX 4090D",  "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet" },
-      "blackwell": { "gpu": "RTX 5090",   "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet" },
-      "ampere":    { "gpu": "A800",       "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet" },
-      "hopper":    { "gpu": "H100",       "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet" }
+      "turing": {
+        "gpu": "T4",
+        "mem_bw_gbps": 320.0,
+        "fp16_tflops": 65.0,
+        "source": "NVIDIA T4 datasheet"
+      },
+      "ada": {
+        "gpu": "RTX 4090 / 4090D",
+        "mem_bw_gbps": 1008.0,
+        "fp16_tflops": 330.0,
+        "source": "NVIDIA Ada / RTX 4090 datasheet"
+      },
+      "blackwell": {
+        "gpu": "RTX 5090",
+        "mem_bw_gbps": 1792.0,
+        "fp16_tflops": 419.0,
+        "source": "NVIDIA RTX 5090 datasheet"
+      },
+      "ampere": {
+        "gpu": "A800",
+        "mem_bw_gbps": 2039.0,
+        "fp16_tflops": 312.0,
+        "source": "NVIDIA A100/A800 80GB datasheet"
+      },
+      "hopper": {
+        "gpu": "H100",
+        "mem_bw_gbps": 3350.0,
+        "fp16_tflops": 990.0,
+        "source": "NVIDIA H100 SXM datasheet"
+      }
     }
   };
 
@@ -118,10 +498,18 @@
     var c = curves[srcArch][precision];
 
     var delta = Math.max(modelCurve(N, c), -sCap);
-    var exact = null;
-    if (!borrowedFrom) { for (var i = 0; i < c.anchors.length; i++) { if (Math.abs(c.anchors[i].N - N) < 1e-6) { exact = c.anchors[i]; break; } } }
+    // a size can carry more than one measured anchor (several cards share an architecture
+    // class); report their mean and keep the spread for the band.
+    var hits = [];
+    if (!borrowedFrom) { for (var i = 0; i < c.anchors.length; i++) { if (Math.abs(c.anchors[i].N - N) < 1e-6) hits.push(c.anchors[i]); } }
+    var spread = 0;
     var basis;
-    if (exact) { basis = "measured"; delta = exact.dE; }
+    if (hits.length) {
+      basis = "measured";
+      var sum = 0, mn = Infinity, mx = -Infinity;
+      for (var h = 0; h < hits.length; h++) { sum += hits[h].dE; mn = Math.min(mn, hits[h].dE); mx = Math.max(mx, hits[h].dE); }
+      delta = sum / hits.length; spread = mx - mn;
+    }
     else if (borrowedFrom) { basis = "estimated"; }
     else if (N >= c.n_min && N <= c.n_max) { basis = "interpolated"; }
     else { basis = "estimated"; }
@@ -137,7 +525,7 @@
     var extrap = (base + 4) * dd * 1.2, bterm = borrowedFrom ? 10 : 0;
     var mterm = modelled ? Math.abs(deltaBase) * (1 - factor) * 0.5 : 0;
     var sigma = Math.sqrt(base * base + extrap * extrap + bterm * bterm + mterm * mterm);
-    if (basis === "measured" && !modelled) sigma = base * 0.5;
+    if (basis === "measured" && !modelled) sigma = Math.max(base * 0.5, spread / 2);
 
     var lo = Math.max(delta - Z * sigma, -sCap), hi = delta + Z * sigma, width = hi - lo;
 
@@ -155,6 +543,10 @@
     else { rec = "depends"; verdict = precision + " ≈ " + (delta >= 0 ? "+" : "") + delta.toFixed(0) + "% energy, but the range crosses zero — near the crossover; verify on your stack."; }
 
     var notes = [];
+    if (hits.length > 1) {
+      var detail = hits.map(function (a) { return a.gpu + " " + (a.dE >= 0 ? "+" : "") + a.dE.toFixed(0) + "%"; }).join(", ");
+      notes.push(hits.length + " cards in this class were measured at " + fmtNum(N) + "B (" + detail + "); the value shown is their mean and the band covers the spread.");
+    }
     if (borrowedFrom) notes.push("No measurements for this architecture; curve shape borrowed from " + (CURVES.arch_label[borrowedFrom] || borrowedFrom) + " — treat as a rough estimate.");
     if (basis === "estimated" && !borrowedFrom) notes.push("Extrapolated beyond the measured range (" + fmtNum(c.n_min) + "–" + fmtNum(c.n_max) + "B); uncertainty is wider.");
     if (modelled) notes.push("Batch/context effect is modelled (batch=" + (opts.batch || 1) + ", context=" + (opts.ctx || CTX_BASE) + ") — not yet measured; treated as savings shrinking toward zero.");
