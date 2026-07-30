@@ -75,11 +75,12 @@
     <table>
       <tr><th>GPU</th><th>~1–3B (small)</th><th>7B</th><th>Crossover</th></tr>
       <tr><td>RTX 4090D (Ada)</td><td class="pos">+25% to +56%</td><td>not measured</td><td>none in measured range</td></tr>
+      <tr><td>RTX 4090 (Ada, July 2026)</td><td class="pos">+1% to +16%</td><td class="neg">−28%</td><td>between 3B and 7B (pooled Ada fit: ≈ 3.7B)</td></tr>
       <tr><td>RTX 5090 (Blackwell)</td><td class="pos">+12% to +29%</td><td class="neg">−11%</td><td>≈ 4.8B</td></tr>
       <tr><td>T4 (Turing)</td><td class="pos">+0% to +5%</td><td class="neg">−14%</td><td>≈ 2.1B</td></tr>
       <tr><td>A800 (Ampere)</td><td>not measured</td><td class="neg">−4%</td><td>&lt; 7B</td></tr>
     </table>
-    <p class="meta">Small models measured on consumer cards (Ada/Blackwell/Turing); 7–14B measured on A800. Values outside a GPU's measured range are fitted extrapolations, not measurements — the tool marks these explicitly. INT8 was measured on A800 only.</p>
+    <p class="meta">Small models measured on consumer cards (Ada/Blackwell/Turing); 7–14B measured on A800. Values outside a GPU's measured range are fitted extrapolations, not measurements — the tool marks these explicitly. INT8 was measured on A800 and RTX 4090. The two Ada cards were measured on different stacks and disagree by roughly 20 points at the same model size, so the fitted Ada band is the widest of the four classes.</p>
 
     <div class="callout">
       <strong>Rule of thumb:</strong> on consumer GPUs, below roughly 3–5B parameters, weight-only quantization is more likely to <em>cost</em> energy than save it. Above ~7B it generally saves. But the exact crossover is architecture-specific — measure, don't assume.
