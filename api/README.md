@@ -109,7 +109,18 @@ Helpers exposed for reuse (memory footprint and the batch/ctx factor above).
 
 ## REST endpoint (Cloudflare Worker) — live
 
+**Status: deployed and serving; optional.** The website never calls it — `index.html` computes
+every number locally with `estimate.js` + `curves.json`, so the tool works with no network
+beyond the page itself. The Worker exists for programmatic callers (agents, CI checks).
+
 **Live base URL:** `https://ecocompute-estimator.zhanghongping1982.workers.dev`
+
+> **Reachability.** `*.workers.dev` is blocked at the TLS layer on some networks — most
+> notably mainland China, where a request fails with `SSL_ERROR_SYSCALL` during the
+> handshake even though DNS resolves to a Cloudflare IP. That is a transit block, not an
+> outage: verify from another network (or a Cloudflare-proxied custom domain) before
+> concluding the API is down. From a blocked network, call `estimate.js` directly — same
+> engine, same numbers, no network.
 
 Try it:
 

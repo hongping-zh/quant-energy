@@ -66,7 +66,8 @@
       ],
       "identifier": [
         { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.2139/ssrn.6854700" },
-        { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21066652" }
+        { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21066652" },
+        { "@type": "PropertyValue", "propertyID": "DOI", "value": "10.5281/zenodo.21066654" }
       ],
       "url": "https://quantenergy.tech/"
     },
@@ -263,6 +264,7 @@
 <div class="wrap">
   <header>
     <a class="aboutlink" href="/method/">Methodology</a>
+    <a class="aboutlink" href="/cite/">Cite</a>
     <a id="aboutLink" class="aboutlink" href="#about" aria-haspopup="dialog">About</a>
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>"Quantization doesn't always save energy. See for yourself."</p>
@@ -589,7 +591,7 @@ cat workspace/outputs/energy.json</div>
       <p>Based on the preprint <i>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</i> by <b>Hongping Zhang</b> (Independent Researcher, Changsha, China; ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>), openly available on <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN</a>. The measurement methodology — reproducible, direct NVML power sampling rather than TDP estimates — is the paper's core contribution, and the dataset is <b>actively being expanded</b> to cover more GPU architectures and model families.</p>
 
       <h3>Which artifact should I cite?</h3>
-      <p>Three artifacts, three jobs — cite the one that matches your claim.</p>
+      <p>Three artifacts, three jobs — cite the one that matches your claim. The full map, with concept vs version DOIs and BibTeX for each, lives on <a href="/cite/">Artifacts &amp; citation</a>.</p>
       <ul>
         <li>
           <b>The paper</b> — the argument and the methodology:
@@ -618,12 +620,13 @@ cat workspace/outputs/energy.json</div>
       </ul>
 
       <h3>For developers</h3>
-      <p class="sub">The same engine that powers this page is available programmatically — build EcoCompute checks into your own tooling or agents.</p>
+      <p class="sub">The same engine that powers this page is available programmatically — build EcoCompute checks into your own tooling or agents. <b>The API is optional</b>: this page computes every number locally from the fitted curves, so nothing here depends on the API being reachable.</p>
       <ul class="dev">
-        <li><b>REST API</b> — <code>GET /v1/estimate</code> · <code>GET|POST /v1/optimize</code> at <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/architectures" target="_blank" rel="noopener">ecocompute-estimator…workers.dev</a> (CORS open)</li>
+        <li><b>REST API</b> — <code>GET /v1/estimate</code> · <code>GET|POST /v1/optimize</code> at <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/architectures" target="_blank" rel="noopener">ecocompute-estimator…workers.dev</a> (CORS open) <span class="tag" id="apiStatus">checking…</span></li>
         <li><b>OpenAPI</b> — self-describing schema at <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/openapi.json" target="_blank" rel="noopener">/openapi.json</a> for auto tool discovery</li>
         <li><b>MCP tool</b> — <code>recommend_config</code> for Claude Desktop / Cursor</li>
       </ul>
+      <p class="sub" id="apiNote" style="display:none"></p>
 
       <p class="modal-foot">EcoCompute is an independent research project. Our goal is honesty over hype: we show what the measurements say — including when quantization is the wrong choice.</p>
     </div>
@@ -636,16 +639,17 @@ cat workspace/outputs/energy.json</div>
     Energy shown per 1M tokens; ΔE% is relative to each model's FP16 baseline.
     INT8 was measured on A800 and RTX 4090.
     <br>Tip: try the <b>Your model</b> tab — drag the slider past the crossover to watch the energy change flip from penalty to savings.
-    <br>Cite: paper — <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · main dataset v1.1.0 — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 (Ada) deep dive — <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>.
+    <br>Cite: paper — <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · main dataset v1.1.0 — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 (Ada) deep dive — <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>. These are <b>version DOIs</b>; the matching concept DOIs (<a href="https://doi.org/10.5281/zenodo.19647289" target="_blank" rel="noopener">…19647289</a>, <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">…21528102</a>) always resolve to the newest version — see <a href="/cite/">all artifacts and how they relate</a>.
     <div class="footlinks">
       <a href="/method/">Methodology</a>
+      <a href="/cite/">Artifacts &amp; citation</a>
       <a href="/blog/">Blog / notes</a>
       <a href="/blog/rss.xml">RSS</a>
       <a href="https://github.com/hongping-zh" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">Dataset &amp; code</a>
     </div>
     <details class="schema-output" id="citeBox" style="margin-top:10px">
-      <summary>Cite this work (BibTeX) · paper SSRN #6854700 · dataset v1.1.0 10.5281/zenodo.19647290 · RTX 4090 run 10.5281/zenodo.21528103</summary>
+      <summary>Cite this work (BibTeX) · paper SSRN #6854700 · dataset v1.1.0 10.5281/zenodo.19647290 · RTX 4090 run 10.5281/zenodo.21528103 · full artifact map at /cite/</summary>
       <button class="copybtn" id="copyBibtex">Copy</button>
       <pre id="bibtex">@article{zhang_quantization_energy,
   title   = {Weight-Only Quantization Does Not Always Save Energy: An Empirical
@@ -653,7 +657,7 @@ cat workspace/outputs/energy.json</div>
   author  = {Zhang, Hongping},
   year    = {2026},
   note    = {Preprint, available on SSRN (abstract 6854700)},
-  doi     = {10.5281/zenodo.21066652},
+  doi     = {10.5281/zenodo.21066654},
   url     = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700}
 }
 
@@ -1253,7 +1257,30 @@ if(zen) zen.addEventListener("click",()=>track("cta_zenodo_click",ctx()));
 (function(){
   const modal=document.getElementById("about"), open=document.getElementById("aboutLink"), close=document.getElementById("aboutClose");
   if(!modal||!open) return;
-  function show(e){ if(e) e.preventDefault(); modal.classList.add("open"); document.body.style.overflow="hidden"; track("about_open",{}); }
+  const API="https://ecocompute-estimator.zhanghongping1982.workers.dev";
+  let probed=false;
+  /* Probe the optional REST API the first time the modal is opened, so a reader
+     never sees an advertised endpoint without knowing whether it answers. */
+  function probeApi(){
+    if(probed) return; probed=true;
+    const badge=document.getElementById("apiStatus"), note=document.getElementById("apiNote");
+    if(!badge) return;
+    const ctl=typeof AbortController!=="undefined" ? new AbortController() : null;
+    const timer=setTimeout(()=>{ if(ctl) ctl.abort(); },6000);
+    fetch(API+"/v1/architectures",{cache:"no-store",signal:ctl?ctl.signal:undefined})
+      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(()=>{ badge.textContent="live"; badge.classList.add("measured"); })
+      .catch(()=>{
+        badge.textContent="not reachable from your network";
+        badge.classList.add("estimated");
+        if(note){
+          note.style.display="";
+          note.innerHTML="The API is hosted on <code>*.workers.dev</code>, which some networks (notably mainland China) block at the TLS layer — a failed handshake there means <b>blocked in transit, not retired</b>. Every number on this page is computed locally, so the tool is unaffected; for programmatic access from such a network, use <a href=\"https://github.com/hongping-zh/quant-energy/blob/main/estimate.js\" target=\"_blank\" rel=\"noopener\">estimate.js</a> directly (same engine, no network).";
+        }
+      })
+      .finally(()=>clearTimeout(timer));
+  }
+  function show(e){ if(e) e.preventDefault(); modal.classList.add("open"); document.body.style.overflow="hidden"; probeApi(); track("about_open",{}); }
   function hide(){ modal.classList.remove("open"); document.body.style.overflow=""; }
   document.querySelectorAll('a[href="#about"]').forEach(a=>a.addEventListener("click",show));
   if(close) close.addEventListener("click",hide);
