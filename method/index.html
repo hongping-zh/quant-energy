@@ -115,6 +115,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
     <ul>
       <li>NVML reports <b>GPU-package power</b>, not whole-system draw: CPU, DRAM, PSU losses and cooling are excluded.</li>
       <li>Single-stream generation only; batched serving with continuous batching has a different energy profile.</li>
+      <li>Curves are fitted per <b>architecture class</b>, not per card: the Ada class pools RTX 4090D and RTX 4090 measurements, which differ by roughly 20 percentage points at the same model size, so Ada bands are the widest of the four classes.</li>
       <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset.</li>
       <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
     </ul>
