@@ -31,6 +31,11 @@ Small N → `ΔE% ≈ A` (penalty); large N → `ΔE% ≈ A − S` (savings). Th
 data of its own (borrowed shape, e.g. Hopper ← Ampere), is labelled `estimated` with a
 wider band and lower confidence. Nothing is fabricated.
 
+Every anchor also carries `n`, its number of independent trials (`n_trials` in
+`build/measured.csv`). A `measured` value whose anchors are all `n = 1` — the RTX 4090
+deep dive — is capped at `confidence: "medium"` and says so in `notes`, and the site draws
+those points hollow so a single trial is never read as a replicated (n = 2, CV < 2%) one.
+
 ## Usage — browser
 
 ```html

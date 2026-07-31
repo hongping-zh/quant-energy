@@ -68,6 +68,7 @@ def load():
             rows.append({
                 "arch": r["arch"], "precision": r["precision"],
                 "gpu": r["gpu"], "model": r["model"],
+                "n": int(r.get("n_trials") or 1),
                 "N": float(r["params_b"]),
                 "dE": (q - fp16) / fp16 * 100.0,
                 "e_fp16_j1k": fp16,
@@ -155,7 +156,10 @@ def main():
         # largest measured model is an extrapolation, not a finding.
         if xover is not None and xover > float(max(N)):
             xover = None
-        anchors = [{"N": p["N"], "dE": round(p["dE"], 2), "model": p["model"], "gpu": p["gpu"]}
+        # n = independent repeated trials behind the point; n=1 points are drawn
+        # hollow on the site so they are not read as v1.1.0-grade replicated data.
+        anchors = [{"N": p["N"], "dE": round(p["dE"], 2), "model": p["model"],
+                    "gpu": p["gpu"], "n": p["n"]}
                    for p in sorted(pts, key=lambda p: (p["N"], p["gpu"]))]
         loo_mae = loo(pts)
         curves.setdefault(arch, {})[prec] = {

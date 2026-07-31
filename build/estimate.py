@@ -79,6 +79,9 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     if borrowed_from is None:
         exact = [a for a in c["anchors"] if abs(a["N"] - N) < 1e-6]
     spread = 0.0
+    # a size measured only once (n=1) is an observation, not a distribution: it stays
+    # "measured", but it never earns "high" confidence and says so in the notes
+    single_trial = bool(exact) and all(int(a.get("n", 2)) < 2 for a in exact)
     if exact:
         basis = "measured"
         # a class can pool several cards; a size measured on more than one of them gets
@@ -121,7 +124,7 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     # confidence
     if basis == "measured" and not modelled:
         # cards inside a class that disagree by more than 10 pts are not a "high" answer
-        confidence = "medium" if spread > 10.0 else "high"
+        confidence = "medium" if (spread > 10.0 or single_trial) else "high"
     elif borrowed_from is not None:
         confidence = "low"
     elif basis == "interpolated":
@@ -146,6 +149,10 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
                    f"near the crossover; verify on your stack.")
 
     notes = []
+    if single_trial:
+        n_str = ", ".join(sorted({a["gpu"] for a in exact}))
+        notes.append(f"Measured once (n=1) on {n_str}: a single trial with no measured "
+                     f"spread, so this is one observation rather than a replicated result.")
     if len(exact) > 1:
         per_card = ", ".join(f"{a['gpu']} {a['dE']:+.0f}%" for a in exact)
         notes.append(f"{len(exact)} cards in this architecture class measured this size and "
