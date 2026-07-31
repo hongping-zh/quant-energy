@@ -154,6 +154,15 @@
   .bar-row .name{width:54px;font-size:14px;font-weight:700;letter-spacing:.5px}
   .bar-track{flex:1;height:26px;background:#0a1124;border-radius:6px;overflow:hidden;position:relative}
   .bar-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.2,.7,.2,1)}
+  /* n=1 (single-trial) values are drawn hollow/hatched so they never read as
+     replicated v1.1.0 data; n>=2 stays solid. Same convention in the charts. */
+  .bar-fill.single{opacity:.55;background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.42) 0 4px,transparent 4px 8px)}
+  .provenance{font-size:11.5px;color:var(--muted);line-height:1.6;margin:10px 0 0;display:flex;gap:8px;align-items:flex-start}
+  .ntag{flex:none;font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .ntag.single{border-color:#fbbf24;color:#fbbf24}
+  .ntag.repl{border-color:#34d399;color:#34d399}
+  .provenance a{color:var(--accent);text-decoration:none}
+  .provenance a:hover{text-decoration:underline}
   .bar-val{width:150px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
   .bar-val b{color:var(--txt);font-size:14px}
   .delta{display:inline-block;min-width:62px;text-align:right;font-weight:700}
@@ -326,6 +335,7 @@
     <div id="bars"></div>
     <div id="verdict" class="verdict"></div>
     <p class="meta" id="barMeta"></p>
+    <p class="provenance" id="barProv"></p>
     <p class="meta" id="barNote" style="display:none"></p>
     <div class="cta" style="margin-top:14px">
       <button id="copyBrief" class="ghost" type="button">Copy decision brief</button>
@@ -340,10 +350,12 @@
       <span><i class="swatch" style="background:var(--nf4)"></i>NF4</span>
       <span><i class="swatch" style="background:var(--int8)"></i>INT8</span>
       <span><i class="swatch" style="background:#ef4444;width:10px;height:10px;border-radius:50%"></i>Your model</span>
+      <span><i class="swatch" style="background:var(--muted);width:9px;height:9px;border-radius:50%"></i>Filled = n&nbsp;≥&nbsp;2 repeated trials</span>
+      <span><i class="swatch" style="background:transparent;border:2px solid var(--muted);width:9px;height:9px;border-radius:50%"></i>Hollow = n&nbsp;=&nbsp;1 single trial</span>
       <span>Above zero = penalty (more energy) · below = savings</span>
     </div>
     <div id="cross"></div>
-    <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
+    <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). <b>Marker fill encodes replication, not accuracy:</b> filled dots are points repeated at least twice in the main dataset (<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a>, n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); hollow dots on a faded line were measured <b>once</b> (n&nbsp;=&nbsp;1) — the July&nbsp;2026 <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">RTX 4090 deep dive</a> and one early RTX 4090D point — so they carry no measured spread and should be read as a single observation, not as a distribution. INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
   </div>
 
   <div class="card" id="stack">
@@ -397,6 +409,12 @@
       These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b>.
       <b>INT8 (bitsandbytes LLM.int8()) never saves energy here</b> (+50% … +242%): it does lower instantaneous power,
       but decode throughput collapses to 9–19 tok/s (FP16: 39–62 tok/s), so every token ends up costing more.
+    </p>
+    <p class="chartnote">
+      <b>Confidence tier:</b> each of these 15 configurations was run <b>once</b> (n&nbsp;=&nbsp;1, ten decode iterations
+      integrated into one energy total), so unlike the main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%) they carry no
+      measured spread. That is why they appear as <b>hollow markers on a faded line</b> in the charts above and as hatched
+      bars — same axes, deliberately different weight.
     </p>
     <p class="chartnote">
       All raw <code>energy.json</code> reports, the aggregated CSV, environment metadata and both figures are archived
@@ -470,12 +488,13 @@
       <h2>Fitted crossover curve · your model marked with its uncertainty</h2>
       <div class="legend">
         <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve</span>
-        <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors</span>
+        <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors (n&nbsp;≥&nbsp;2)</span>
+        <span><i class="swatch" style="background:transparent;border:2px solid var(--nf4);width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1)</span>
         <span><i class="swatch" style="background:#ef4444;width:10px;height:10px;border-radius:50%"></i>Your model ± CI</span>
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
-      <p class="chartnote">The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
+      <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
     </div>
 
     <div class="hint" id="estHint"></div>
@@ -618,11 +637,12 @@ cat workspace/outputs/energy.json</div>
         <div id="rrVerdict" class="verdict" style="margin-top:12px"></div>
         <div class="legend" style="margin-top:14px">
           <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve (your GPU arch)</span>
-          <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors</span>
+          <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors (n&nbsp;≥&nbsp;2)</span>
+          <span><i class="swatch" style="background:transparent;border:2px solid var(--nf4);width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1)</span>
           <span><i class="swatch" style="background:#fbbf24;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);display:inline-block"></i>Your energy.json</span>
         </div>
         <div id="runCross"></div>
-        <p class="chartnote">Your point is placed at (model size, ΔE%) from the uploaded report and coloured by its <code>basis</code>. The fitted curve is calibrated to measured anchors (dots) for the report's GPU architecture — beyond the largest anchor it is extrapolated. Nothing is uploaded to a server; parsing is 100% in your browser.</p>
+        <p class="chartnote">Your point is placed at (model size, ΔE%) from the uploaded report and coloured by its <code>basis</code>. The fitted curve is calibrated to measured anchors for the report's GPU architecture — filled dots are replicated (n&nbsp;=&nbsp;2), hollow dots were measured once (n&nbsp;=&nbsp;1) — and beyond the largest anchor it is extrapolated. Nothing is uploaded to a server; parsing is 100% in your browser.</p>
         <div class="cta" style="margin-top:8px">
           <button id="runClear" class="ghost" type="button">Clear</button>
           <span class="badge">Compare several runs — drop more files to stack points.</span>
@@ -772,47 +792,52 @@ cat workspace/outputs/energy.json</div>
 const DATA = {
   "RTX 4090D": {
     label: "RTX 4090D · Ada · 24GB",
+    layer: "main",
     models: [
-      { name:"Qwen2-0.5B",     size:0.5, e:{FP16:1474.16, NF4:2301.07} },
-      { name:"TinyLlama-1.1B", size:1.1, e:{FP16:1600.58, NF4:2134.35} },
-      { name:"Qwen2-1.5B",     size:1.5, e:{FP16:2238.87, NF4:3103.12} },
-      { name:"Qwen2.5-3B",     size:3.0, e:{FP16:2989.22, NF4:3743.12} },
+      { name:"Qwen2-0.5B",     size:0.5, n:1, e:{FP16:1474.16, NF4:2301.07} },
+      { name:"TinyLlama-1.1B", size:1.1, n:2, e:{FP16:1600.58, NF4:2134.35} },
+      { name:"Qwen2-1.5B",     size:1.5, n:2, e:{FP16:2238.87, NF4:3103.12} },
+      { name:"Qwen2.5-3B",     size:3.0, n:2, e:{FP16:2989.22, NF4:3743.12} },
     ]
   },
   "RTX 4090": {
-    label: "RTX 4090 · Ada · 24GB",
+    label: "RTX 4090 · Ada · 24GB · n=1 supplement",
+    layer: "supplement",
     models: [
-      { name:"Qwen2-0.5B",     size:0.5, e:{FP16:1550.92, NF4:2103.59, INT8:5302.51} },
-      { name:"TinyLlama-1.1B", size:1.1, e:{FP16:1619.68, NF4:1883.91, INT8:3986.20} },
-      { name:"Qwen2-1.5B",     size:1.5, e:{FP16:2200.67, NF4:2533.25, INT8:6177.88} },
-      { name:"Qwen2.5-3B",     size:3.0, e:{FP16:3557.99, NF4:3584.88, INT8:8354.86} },
-      { name:"Qwen2-7B",       size:7.0, e:{FP16:5467.88, NF4:3911.75, INT8:8176.81} },
+      { name:"Qwen2-0.5B",     size:0.5, n:1, e:{FP16:1550.92, NF4:2103.59, INT8:5302.51} },
+      { name:"TinyLlama-1.1B", size:1.1, n:1, e:{FP16:1619.68, NF4:1883.91, INT8:3986.20} },
+      { name:"Qwen2-1.5B",     size:1.5, n:1, e:{FP16:2200.67, NF4:2533.25, INT8:6177.88} },
+      { name:"Qwen2.5-3B",     size:3.0, n:1, e:{FP16:3557.99, NF4:3584.88, INT8:8354.86} },
+      { name:"Qwen2-7B",       size:7.0, n:1, e:{FP16:5467.88, NF4:3911.75, INT8:8176.81} },
     ]
   },
   "RTX 5090": {
     label: "RTX 5090 · Blackwell · 32GB",
+    layer: "main",
     models: [
-      { name:"TinyLlama-1.1B", size:1.1, e:{FP16:1659.00, NF4:2098.44} },
-      { name:"Qwen2-1.5B",     size:1.5, e:{FP16:2411.09, NF4:3120.49} },
-      { name:"Qwen2.5-3B",     size:3.0, e:{FP16:3382.64, NF4:3779.60} },
-      { name:"Qwen2-7B",       size:7.0, e:{FP16:5508.56, NF4:4877.88} },
+      { name:"TinyLlama-1.1B", size:1.1, n:2, e:{FP16:1659.00, NF4:2098.44} },
+      { name:"Qwen2-1.5B",     size:1.5, n:2, e:{FP16:2411.09, NF4:3120.49} },
+      { name:"Qwen2.5-3B",     size:3.0, n:2, e:{FP16:3382.64, NF4:3779.60} },
+      { name:"Qwen2-7B",       size:7.0, n:2, e:{FP16:5508.56, NF4:4877.88} },
     ]
   },
   "T4": {
     label: "Tesla T4 · Turing · 16GB",
+    layer: "main",
     models: [
-      { name:"TinyLlama-1.1B", size:1.1, e:{FP16:4251.21, NF4:4445.26} },
-      { name:"Qwen2-1.5B",     size:1.5, e:{FP16:5731.80, NF4:5744.39} },
-      { name:"Qwen2.5-3B",     size:3.0, e:{FP16:11267.69, NF4:11111.78} },
-      { name:"Qwen2-7B",       size:7.0, e:{FP16:21722.65, NF4:18734.94} },
+      { name:"TinyLlama-1.1B", size:1.1, n:2, e:{FP16:4251.21, NF4:4445.26} },
+      { name:"Qwen2-1.5B",     size:1.5, n:2, e:{FP16:5731.80, NF4:5744.39} },
+      { name:"Qwen2.5-3B",     size:3.0, n:2, e:{FP16:11267.69, NF4:11111.78} },
+      { name:"Qwen2-7B",       size:7.0, n:2, e:{FP16:21722.65, NF4:18734.94} },
     ]
   },
   "A800": {
     label: "A800-SXM4 · Ampere · 80GB",
+    layer: "main",
     models: [
-      { name:"Mistral-7B",   size:7.0,  e:{FP16:4402.43, NF4:4222.40, INT8:10161.92} },
-      { name:"Yi-1.5-9B",    size:9.0,  e:{FP16:5445.12, NF4:5363.07, INT8:11825.92} },
-      { name:"Qwen2.5-14B",  size:14.0, e:{FP16:7359.98, NF4:7544.60, INT8:15265.58} },
+      { name:"Mistral-7B",   size:7.0,  n:2, e:{FP16:4402.43, NF4:4222.40, INT8:10161.92} },
+      { name:"Yi-1.5-9B",    size:9.0,  n:2, e:{FP16:5445.12, NF4:5363.07, INT8:11825.92} },
+      { name:"Qwen2.5-14B",  size:14.0, n:2, e:{FP16:7359.98, NF4:7544.60, INT8:15265.58} },
     ]
   },
 };
@@ -841,8 +866,11 @@ function fmtE(v){ const vM=v*1000;
   if(vM>=1e3) return (vM/1e3).toFixed(0)+" kJ";
   return Math.round(vM)+" J"; }
 
+function trials(m){ return m.n==null?2:m.n; }
+
 function renderBars(m, ms){
   const bars=document.getElementById("bars");
+  const single=trials(m)<2;
   const precs=PREC.filter(p=>m.e[p]!=null);
   const max=Math.max(...precs.map(p=>m.e[p]));
   bars.innerHTML = precs.map(p=>{
@@ -855,7 +883,7 @@ function renderBars(m, ms){
     }else{ dh=`<span class="delta" style="color:var(--muted)">baseline</span>`; }
     return `<div class="bar-row">
       <div class="name" style="color:${COL[p]}">${p}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${COL[p]}"></div></div>
+      <div class="bar-track"><div class="bar-fill${single?" single":""}" style="width:${w}%;background-color:${COL[p]}"></div></div>
       <div class="bar-val"><b>${fmtE(v)}</b> &nbsp; ${dh}</div>
     </div>`;
   }).join("");
@@ -876,6 +904,12 @@ function renderBars(m, ms){
     "FP16 = half-precision baseline · NF4 = 4-bit weight quantization" + (m.e.INT8!=null
       ? " · INT8 = 8-bit (throughput collapse spikes per-token energy)"
       : " · INT8 not measured on this GPU (only A800 and RTX 4090 have INT8 runs)");
+
+  // replication tier: hatched bars + an explicit tag whenever a value rests on a single trial
+  const prov=document.getElementById("barProv");
+  prov.innerHTML = single
+    ? `<span class="ntag single">n = 1</span><span><b>Single trial · no measured spread.</b> This configuration was measured once (10 decode iterations integrated into one energy total), so it has no standard deviation or CV. Treat it as one observation, not as a distribution — hatched bars and hollow chart markers mean n&nbsp;=&nbsp;1 throughout the site. Raw reports: <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">RTX 4090 deep dive (Zenodo)</a>.</span>`
+    : `<span class="ntag repl">n = 2</span><span>Repeated trials from the main dataset <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a> (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%). Solid bars and filled chart markers mean the point was reproduced at least once.</span>`;
 
   // rebound footnote: a larger model swings back to a penalty after a smaller one already saved
   const note=document.getElementById("barNote");
@@ -904,12 +938,20 @@ function renderCross(gpuKey, selIdx){
   let yticks=[]; const step=niceStep((ymax-ymin)/5);
   for(let t=Math.ceil(ymin/step)*step; t<=ymax; t+=step) yticks.push(Math.round(t));
 
+  // n = 1 points are drawn hollow on a faded line so a single-trial supplement is
+  // never read as carrying the same confidence as a replicated v1.1.0 point.
   function line(p,col,dash){
-    const pts=ms.map(m=>({x:m.size,d:dPct(m,p)})).filter(o=>o.d!=null);
+    const pts=ms.map(m=>({x:m.size,d:dPct(m,p),n:trials(m),name:m.name})).filter(o=>o.d!=null);
     if(pts.length<1) return "";
     const path=pts.map((o,i)=>(i?"L":"M")+X(o.x).toFixed(1)+" "+Y(o.d).toFixed(1)).join(" ");
-    const dots=pts.map(o=>`<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="3.5" fill="${col}"/>`).join("");
-    return `<path d="${path}" fill="none" stroke="${col}" stroke-width="2.5" ${dash?'stroke-dasharray="5 4"':''}/>${dots}`;
+    const allSingle=pts.every(o=>o.n<2);
+    const dots=pts.map(o=>{
+      const t=`<title>${o.name} · ${p} · ${o.d>0?"+":""}${o.d.toFixed(1)}% · n = ${o.n}${o.n<2?" (single trial, no measured spread)":" repeated trials, CV < 2%"}</title>`;
+      return o.n<2
+        ? `<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="4" fill="var(--bg)" fill-opacity=".9" stroke="${col}" stroke-width="2">${t}</circle>`
+        : `<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="3.5" fill="${col}">${t}</circle>`;
+    }).join("");
+    return `<path d="${path}" fill="none" stroke="${col}" stroke-width="2.5" stroke-opacity="${allSingle?.55:1}" ${dash?'stroke-dasharray="5 4"':''}/>${dots}`;
   }
 
   const sel=ms[selIdx];
@@ -1102,6 +1144,16 @@ function renderEstimate(){
   track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, batch, ctx, delta_pct:r.delta_pct, basis:r.basis });
 }
 
+/* Anchor markers carry their replication tier: filled = n >= 2 repeated trials
+   (main dataset v1.1.0, CV < 2%), hollow = n = 1 single trial (RTX 4090 deep dive). */
+function anchorDot(a, X, Y){
+  const n=(a.n==null?2:a.n);
+  const t=`<title>${a.model||""} · ${a.gpu||""} · ${a.dE>0?"+":""}${a.dE}% · n = ${n}${n<2?" (single trial)":" repeated trials"}</title>`;
+  return n<2
+    ? `<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4.5" fill="var(--bg)" fill-opacity=".9" stroke="var(--nf4)" stroke-width="2">${t}</circle>`
+    : `<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)">${t}</circle>`;
+}
+
 function renderEstCurve(arch, precision, N, r){
   const curves=CURVES.curves; let src=arch;
   if(!curves[arch]||!curves[arch][precision]){ if(CURVES.borrow[arch]) src=CURVES.borrow[arch]; }
@@ -1121,7 +1173,7 @@ function renderEstCurve(arch, precision, N, r){
   const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih;
   const y0=Y(0);
   const path=samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" ");
-  const dots=c.anchors.map(a=>`<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)"/>`).join("");
+  const dots=c.anchors.map(a=>anchorDot(a,X,Y)).join("");
   const qx=X(N);
   const qbar=`<line x1="${qx.toFixed(1)}" x2="${qx.toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[0]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
     <line x1="${(qx-5).toFixed(1)}" x2="${(qx+5).toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[1]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
@@ -1487,7 +1539,7 @@ function drawRunCross(){
   let ymin=Math.min(...yvals), ymax=Math.max(...yvals); const padY=(ymax-ymin)*0.14||10; ymin-=padY; ymax+=padY;
   const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih; const y0=Y(0);
   const path=c?samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" "):"";
-  const dots=c?c.anchors.map(a=>`<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)"/>`).join(""):"";
+  const dots=c?c.anchors.map(a=>anchorDot(a,X,Y)).join(""):"";
   const maxAnchorN=anchorXs.length?Math.max(...anchorXs):null;
   let extrapZone=""; if(c&&maxAnchorN&&xmax>maxAnchorN){ const zx=X(maxAnchorN);
     extrapZone=`<rect x="${zx.toFixed(1)}" y="${pad.t}" width="${(pad.l+iw-zx).toFixed(1)}" height="${ih}" fill="rgba(148,163,184,.10)"/>
