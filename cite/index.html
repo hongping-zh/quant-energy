@@ -51,7 +51,7 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">Eco<span>Compute</span> · Artifacts &amp; citation</div>
-      <nav class="nav"><a href="/">Tool</a><a href="/method/">Methodology</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
+      <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/method/">Methodology</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
     </div>
 
     <h1>Which EcoCompute artifact should I cite?</h1>
@@ -166,11 +166,40 @@
 
     <h2>Software, not data</h2>
     <ul>
-      <li><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the measurement container that produced the RTX 4090 run</li>
+      <li><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the measurement container that produced the RTX 4090 run (<a href="/container/">what it does and how to run it</a>)</li>
       <li><a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a> — dataset processing and analysis code</li>
       <li><a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">quant-energy</a> — this site, the estimator (<code>estimate.js</code>) and the optional REST API</li>
     </ul>
     <p class="meta">Cite software by repository URL and commit; the DOIs above cover the paper and the data only.</p>
+<pre>@software{zhang_ecocompute_mlcube,
+  title   = {EcoCompute energy MLCube: reproducible LLM inference energy measurement},
+  author  = {Zhang, Hongping},
+  year    = {2026},
+  note    = {MLCube-compatible measurement container; cite the commit you ran},
+  url     = {https://github.com/hongping-zh/ecocompute-mlcube}
+}</pre>
+
+    <h2>Press &amp; media kit</h2>
+    <p><b>One sentence:</b> EcoCompute is an open reproducibility project measuring how LLM quantization affects
+    inference energy per token across GPUs and model sizes.</p>
+    <p><b>One paragraph:</b> Weight-only quantization (NF4, INT8) is widely assumed to save energy because it saves
+    memory. Direct NVML power measurements across four NVIDIA GPU architectures show that below a model-size crossover
+    point it often <em>costs</em> energy instead. EcoCompute publishes those measurements, the fitted crossover curves,
+    an interactive estimator, and — crucially — the <a href="/container/">MLCube-compatible container</a> that produced
+    them, so anyone with an NVIDIA GPU can reproduce or contradict the result. It is independent research, not a
+    certified benchmark.</p>
+    <table>
+      <tr><th>Item</th><th>Link</th></tr>
+      <tr><td>Site</td><td><a href="https://quantenergy.tech/">quantenergy.tech</a></td></tr>
+      <tr><td>Measurement container</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a> (Apache-2.0)</td></tr>
+      <tr><td>Main dataset (v1.1.0)</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0)</td></tr>
+      <tr><td>RTX 4090 (Ada) deep dive</td><td><a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> (CC BY 4.0)</td></tr>
+      <tr><td>Preprint</td><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a></td></tr>
+      <tr><td>Preview image</td><td><a href="/preview.png">quantenergy.tech/preview.png</a> (1200×630)</td></tr>
+      <tr><td>Maintainer / contact</td><td>Hongping Zhang — <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">hongping-zh.github.io</a> · ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">open an issue</a></td></tr>
+    </table>
+    <p class="meta">Please describe EcoCompute as independent research. It is not a certified benchmark result, and it
+    carries no endorsement from any standards body.</p>
 
     <footer>
       EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
