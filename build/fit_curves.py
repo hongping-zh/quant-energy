@@ -88,8 +88,9 @@ def fp16_baseline(rows):
         for N in sorted(byN):
             grp = byN[N]
             e = sum(x["e_fp16_j1k"] for x in grp) / len(grp)
+            gpus = sorted({x["gpu"] for x in grp})
             anchors.append({"N": N, "e_j1k": round(e, 2),
-                            "model": grp[0]["model"], "gpu": grp[0]["gpu"]})
+                            "model": grp[0]["model"], "gpu": " + ".join(gpus)})
         out[arch] = {
             "n_min": anchors[0]["N"], "n_max": anchors[-1]["N"],
             "anchors": anchors,
@@ -150,7 +151,12 @@ def main():
         A, S, Nstar = popt
         # crossover where dE%=0  ->  A = S*g(N/Nstar)  ->  N = Nstar * A/(S-A)
         xover = (Nstar * A / (S - A)) if (S > A > 0) else None
-        anchors = [{"N": p["N"], "dE": round(p["dE"], 2), "model": p["model"], "gpu": p["gpu"]} for p in pts]
+        # Only report a crossover the data actually brackets: one sitting beyond the
+        # largest measured model is an extrapolation, not a finding.
+        if xover is not None and xover > float(max(N)):
+            xover = None
+        anchors = [{"N": p["N"], "dE": round(p["dE"], 2), "model": p["model"], "gpu": p["gpu"]}
+                   for p in sorted(pts, key=lambda p: (p["N"], p["gpu"]))]
         loo_mae = loo(pts)
         curves.setdefault(arch, {})[prec] = {
             "A": round(A, 4), "S": round(S, 4), "Nstar": round(Nstar, 4),

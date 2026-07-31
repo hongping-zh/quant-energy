@@ -15,7 +15,7 @@
   "use strict";
 
   var CURVES = {
-    "s_cap": { "NF4": 75.0, "INT8": 50.0 },
+    "s_cap": {"NF4": 75.0, "INT8": 50.0},
     "arch_label": {
       "turing": "Turing (T4)",
       "ada": "Ada (RTX 4090/4090D)",
@@ -23,37 +23,45 @@
       "ampere": "Ampere (A100/A800)",
       "hopper": "Hopper (H100/H200)"
     },
-    "borrow": { "hopper": "ampere" },
+    "borrow": {"hopper": "ampere"},
     "curves": {
-      "ada": { "NF4": { "A": 106.0936, "S": 90.55, "Nstar": 0.381, "resid_std": 3.6947, "n_min": 0.5, "n_max": 3.0, "crossover_b": null,
-        "anchors": [{ "N": 0.5, "dE": 56.09, "model": "Qwen2-0.5B", "gpu": "RTX 4090D" }, { "N": 1.1, "dE": 33.35, "model": "TinyLlama-1.1B", "gpu": "RTX 4090D" }, { "N": 1.5, "dE": 38.6, "model": "Qwen2-1.5B", "gpu": "RTX 4090D" }, { "N": 3.0, "dE": 25.22, "model": "Qwen2.5-3B", "gpu": "RTX 4090D" }] } },
-      "ampere": {
-        "INT8": { "A": 180.8252, "S": 127.9389, "Nstar": 10.082, "resid_std": 2.4297, "n_min": 7.0, "n_max": 14.0, "crossover_b": null,
-          "anchors": [{ "N": 7.0, "dE": 130.83, "model": "Mistral-7B", "gpu": "A800" }, { "N": 9.0, "dE": 117.18, "model": "Yi-1.5-9B", "gpu": "A800" }, { "N": 14.0, "dE": 107.41, "model": "Qwen2.5-14B", "gpu": "A800" }] },
-        "NF4": { "A": -1.0293, "S": 0.0, "Nstar": 200.0, "resid_std": 2.7146, "n_min": 7.0, "n_max": 14.0, "crossover_b": null,
-          "anchors": [{ "N": 7.0, "dE": -4.09, "model": "Mistral-7B", "gpu": "A800" }, { "N": 9.0, "dE": -1.51, "model": "Yi-1.5-9B", "gpu": "A800" }, { "N": 14.0, "dE": 2.51, "model": "Qwen2.5-14B", "gpu": "A800" }] }
+      "ada": {
+        "INT8": { "A": 272.7331, "S": 291.8945, "Nstar": 2.5938, "resid_std": 22.4393, "n_min": 0.5, "n_max": 7.0, "crossover_b": null, "loo_mae": 42.656,
+          "anchors": [{"N": 0.5, "dE": 241.89, "model": "Qwen2-0.5B", "gpu": "RTX 4090"}, {"N": 1.1, "dE": 146.11, "model": "TinyLlama-1.1B", "gpu": "RTX 4090"}, {"N": 1.5, "dE": 180.73, "model": "Qwen2-1.5B", "gpu": "RTX 4090"}, {"N": 3.0, "dE": 134.82, "model": "Qwen2.5-3B", "gpu": "RTX 4090"}, {"N": 7.0, "dE": 49.54, "model": "Qwen2-7B", "gpu": "RTX 4090"}] },
+        "NF4": { "A": 54.2295, "S": 131.0936, "Nstar": 5.2846, "resid_std": 11.4822, "n_min": 0.5, "n_max": 7.0, "crossover_b": 3.728, "loo_mae": 16.123,
+          "anchors": [{"N": 0.5, "dE": 35.63, "model": "Qwen2-0.5B", "gpu": "RTX 4090"}, {"N": 0.5, "dE": 56.09, "model": "Qwen2-0.5B", "gpu": "RTX 4090D"}, {"N": 1.1, "dE": 16.31, "model": "TinyLlama-1.1B", "gpu": "RTX 4090"}, {"N": 1.1, "dE": 33.35, "model": "TinyLlama-1.1B", "gpu": "RTX 4090D"}, {"N": 1.5, "dE": 15.11, "model": "Qwen2-1.5B", "gpu": "RTX 4090"}, {"N": 1.5, "dE": 38.6, "model": "Qwen2-1.5B", "gpu": "RTX 4090D"}, {"N": 3.0, "dE": 0.76, "model": "Qwen2.5-3B", "gpu": "RTX 4090"}, {"N": 3.0, "dE": 25.22, "model": "Qwen2.5-3B", "gpu": "RTX 4090D"}, {"N": 7.0, "dE": -28.46, "model": "Qwen2-7B", "gpu": "RTX 4090"}] }
       },
-      "blackwell": { "NF4": { "A": 45.8272, "S": 104.4224, "Nstar": 6.0749, "resid_std": 2.8022, "n_min": 1.1, "n_max": 7.0, "crossover_b": 4.751,
-        "anchors": [{ "N": 1.1, "dE": 26.49, "model": "TinyLlama-1.1B", "gpu": "RTX 5090" }, { "N": 1.5, "dE": 29.42, "model": "Qwen2-1.5B", "gpu": "RTX 5090" }, { "N": 3.0, "dE": 11.74, "model": "Qwen2.5-3B", "gpu": "RTX 5090" }, { "N": 7.0, "dE": -11.45, "model": "Qwen2-7B", "gpu": "RTX 5090" }] } },
-      "turing": { "NF4": { "A": 7.925, "S": 79.5646, "Nstar": 19.2186, "resid_std": 1.316, "n_min": 1.1, "n_max": 7.0, "crossover_b": 2.126,
-        "anchors": [{ "N": 1.1, "dE": 4.56, "model": "TinyLlama-1.1B", "gpu": "T4" }, { "N": 1.5, "dE": 0.22, "model": "Qwen2-1.5B", "gpu": "T4" }, { "N": 3.0, "dE": -1.38, "model": "Qwen2.5-3B", "gpu": "T4" }, { "N": 7.0, "dE": -13.75, "model": "Qwen2-7B", "gpu": "T4" }] } }
+      "ampere": {
+        "INT8": { "A": 180.8252, "S": 127.9389, "Nstar": 10.082, "resid_std": 2.4297, "n_min": 7.0, "n_max": 14.0, "crossover_b": null, "loo_mae": null,
+          "anchors": [{"N": 7.0, "dE": 130.83, "model": "Mistral-7B", "gpu": "A800"}, {"N": 9.0, "dE": 117.18, "model": "Yi-1.5-9B", "gpu": "A800"}, {"N": 14.0, "dE": 107.41, "model": "Qwen2.5-14B", "gpu": "A800"}] },
+        "NF4": { "A": -1.0293, "S": 0.0, "Nstar": 89.9821, "resid_std": 2.7146, "n_min": 7.0, "n_max": 14.0, "crossover_b": null, "loo_mae": null,
+          "anchors": [{"N": 7.0, "dE": -4.09, "model": "Mistral-7B", "gpu": "A800"}, {"N": 9.0, "dE": -1.51, "model": "Yi-1.5-9B", "gpu": "A800"}, {"N": 14.0, "dE": 2.51, "model": "Qwen2.5-14B", "gpu": "A800"}] }
+      },
+      "blackwell": {
+        "NF4": { "A": 45.8272, "S": 104.4224, "Nstar": 6.0749, "resid_std": 2.8022, "n_min": 1.1, "n_max": 7.0, "crossover_b": 4.751, "loo_mae": 4.846,
+          "anchors": [{"N": 1.1, "dE": 26.49, "model": "TinyLlama-1.1B", "gpu": "RTX 5090"}, {"N": 1.5, "dE": 29.42, "model": "Qwen2-1.5B", "gpu": "RTX 5090"}, {"N": 3.0, "dE": 11.74, "model": "Qwen2.5-3B", "gpu": "RTX 5090"}, {"N": 7.0, "dE": -11.45, "model": "Qwen2-7B", "gpu": "RTX 5090"}] }
+      },
+      "turing": {
+        "NF4": { "A": 7.925, "S": 79.5646, "Nstar": 19.2186, "resid_std": 1.316, "n_min": 1.1, "n_max": 7.0, "crossover_b": 2.126, "loo_mae": 5.262,
+          "anchors": [{"N": 1.1, "dE": 4.56, "model": "TinyLlama-1.1B", "gpu": "T4"}, {"N": 1.5, "dE": 0.22, "model": "Qwen2-1.5B", "gpu": "T4"}, {"N": 3.0, "dE": -1.38, "model": "Qwen2.5-3B", "gpu": "T4"}, {"N": 7.0, "dE": -13.75, "model": "Qwen2-7B", "gpu": "T4"}] }
+      }
     },
     // Measured FP16 absolute decode energy (J / 1k tokens), per arch — anchors the
     // optimizer's absolute-energy numbers. Mirror of curves.json:fp16_energy.
     "fp16_energy": {
-      "ada":       { "n_min": 0.5, "n_max": 3.0, "anchors": [{ "N": 0.5, "e_j1k": 1474.16 }, { "N": 1.1, "e_j1k": 1600.58 }, { "N": 1.5, "e_j1k": 2238.87 }, { "N": 3.0, "e_j1k": 2989.22 }] },
+      "ada": { "n_min": 0.5, "n_max": 7.0, "anchors": [{ "N": 0.5, "e_j1k": 1525.33 }, { "N": 1.1, "e_j1k": 1613.31 }, { "N": 1.5, "e_j1k": 2213.4 }, { "N": 3.0, "e_j1k": 3368.4 }, { "N": 7.0, "e_j1k": 5467.88 }] },
       "blackwell": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 1659.0 }, { "N": 1.5, "e_j1k": 2411.09 }, { "N": 3.0, "e_j1k": 3382.64 }, { "N": 7.0, "e_j1k": 5508.56 }] },
-      "turing":    { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 4251.21 }, { "N": 1.5, "e_j1k": 5731.8 }, { "N": 3.0, "e_j1k": 11267.69 }, { "N": 7.0, "e_j1k": 21722.65 }] },
-      "ampere":    { "n_min": 7.0, "n_max": 14.0, "anchors": [{ "N": 7.0, "e_j1k": 4402.43 }, { "N": 9.0, "e_j1k": 5445.12 }, { "N": 14.0, "e_j1k": 7359.98 }] }
+      "turing": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 4251.21 }, { "N": 1.5, "e_j1k": 5731.8 }, { "N": 3.0, "e_j1k": 11267.69 }, { "N": 7.0, "e_j1k": 21722.65 }] },
+      "ampere": { "n_min": 7.0, "n_max": 14.0, "anchors": [{ "N": 7.0, "e_j1k": 4402.43 }, { "N": 9.0, "e_j1k": 5445.12 }, { "N": 14.0, "e_j1k": 7359.98 }] }
     },
     // Public datasheet GPU specs — used ONLY by the (modelled) roofline latency
     // layer in optimize.js. Mirror of curves.json:hardware.
     "hardware": {
-      "turing":    { "gpu": "T4",        "mem_bw_gbps": 320.0,  "fp16_tflops": 65.0,  "source": "NVIDIA T4 datasheet" },
-      "ada":       { "gpu": "RTX 4090D",  "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet" },
-      "blackwell": { "gpu": "RTX 5090",   "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet" },
-      "ampere":    { "gpu": "A800",       "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet" },
-      "hopper":    { "gpu": "H100",       "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet" }
+      "turing": {"gpu": "T4", "mem_bw_gbps": 320.0, "fp16_tflops": 65.0, "source": "NVIDIA T4 datasheet"},
+      "ada": {"gpu": "RTX 4090D", "mem_bw_gbps": 1008.0, "fp16_tflops": 330.0, "source": "NVIDIA Ada / RTX 4090 datasheet"},
+      "blackwell": {"gpu": "RTX 5090", "mem_bw_gbps": 1792.0, "fp16_tflops": 419.0, "source": "NVIDIA RTX 5090 datasheet"},
+      "ampere": {"gpu": "A800", "mem_bw_gbps": 2039.0, "fp16_tflops": 312.0, "source": "NVIDIA A100/A800 80GB datasheet"},
+      "hopper": {"gpu": "H100", "mem_bw_gbps": 3350.0, "fp16_tflops": 990.0, "source": "NVIDIA H100 SXM datasheet"}
     }
   };
 
@@ -118,10 +126,17 @@
     var c = curves[srcArch][precision];
 
     var delta = Math.max(modelCurve(N, c), -sCap);
-    var exact = null;
-    if (!borrowedFrom) { for (var i = 0; i < c.anchors.length; i++) { if (Math.abs(c.anchors[i].N - N) < 1e-6) { exact = c.anchors[i]; break; } } }
-    var basis;
-    if (exact) { basis = "measured"; delta = exact.dE; }
+    var exact = [];
+    if (!borrowedFrom) { for (var i = 0; i < c.anchors.length; i++) { if (Math.abs(c.anchors[i].N - N) < 1e-6) exact.push(c.anchors[i]); } }
+    var spread = 0, basis;
+    if (exact.length) {
+      // a class can pool several cards; a size measured on more than one of them gets
+      // their mean, and the disagreement is carried into the band instead of hidden
+      basis = "measured";
+      var sum = 0, mn = exact[0].dE, mx = exact[0].dE;
+      for (var k = 0; k < exact.length; k++) { sum += exact[k].dE; mn = Math.min(mn, exact[k].dE); mx = Math.max(mx, exact[k].dE); }
+      delta = sum / exact.length; spread = mx - mn;
+    }
     else if (borrowedFrom) { basis = "estimated"; }
     else if (N >= c.n_min && N <= c.n_max) { basis = "interpolated"; }
     else { basis = "estimated"; }
@@ -137,12 +152,13 @@
     var extrap = (base + 4) * dd * 1.2, bterm = borrowedFrom ? 10 : 0;
     var mterm = modelled ? Math.abs(deltaBase) * (1 - factor) * 0.5 : 0;
     var sigma = Math.sqrt(base * base + extrap * extrap + bterm * bterm + mterm * mterm);
-    if (basis === "measured" && !modelled) sigma = base * 0.5;
+    if (basis === "measured" && !modelled) sigma = Math.max(base * 0.5, spread / 2);
 
     var lo = Math.max(delta - Z * sigma, -sCap), hi = delta + Z * sigma, width = hi - lo;
 
     var confidence;
-    if (basis === "measured" && !modelled) confidence = "high";
+    // cards inside a class that disagree by more than 10 pts are not a "high" answer
+    if (basis === "measured" && !modelled) confidence = spread > 10 ? "medium" : "high";
     else if (borrowedFrom) confidence = "low";
     else if (basis === "interpolated") confidence = width < 12 ? "high" : (width < 22 ? "medium" : "low");
     else confidence = (dd < 0.5 && width < 25) ? "medium" : "low";
@@ -155,6 +171,10 @@
     else { rec = "depends"; verdict = precision + " ≈ " + (delta >= 0 ? "+" : "") + delta.toFixed(0) + "% energy, but the range crosses zero — near the crossover; verify on your stack."; }
 
     var notes = [];
+    if (exact.length > 1) {
+      var perCard = exact.map(function (a) { return a.gpu + " " + (a.dE >= 0 ? "+" : "") + a.dE.toFixed(0) + "%"; }).join(", ");
+      notes.push(exact.length + " cards in this architecture class measured this size and disagree by " + spread.toFixed(0) + " pts (" + perCard + "); the value shown is their mean and the band covers the spread.");
+    }
     if (borrowedFrom) notes.push("No measurements for this architecture; curve shape borrowed from " + (CURVES.arch_label[borrowedFrom] || borrowedFrom) + " — treat as a rough estimate.");
     if (basis === "estimated" && !borrowedFrom) notes.push("Extrapolated beyond the measured range (" + fmtNum(c.n_min) + "–" + fmtNum(c.n_max) + "B); uncertainty is wider.");
     if (modelled) notes.push("Batch/context effect is modelled (batch=" + (opts.batch || 1) + ", context=" + (opts.ctx || CTX_BASE) + ") — not yet measured; treated as savings shrinking toward zero.");

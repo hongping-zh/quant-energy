@@ -109,7 +109,18 @@ Helpers exposed for reuse (memory footprint and the batch/ctx factor above).
 
 ## REST endpoint (Cloudflare Worker) — live
 
+**Status: deployed and serving; optional.** The website never calls it — `index.html` computes
+every number locally with `estimate.js` + `curves.json`, so the tool works with no network
+beyond the page itself. The Worker exists for programmatic callers (agents, CI checks).
+
 **Live base URL:** `https://ecocompute-estimator.zhanghongping1982.workers.dev`
+
+> **Reachability.** `*.workers.dev` is blocked at the TLS layer on some networks — most
+> notably mainland China, where a request fails with `SSL_ERROR_SYSCALL` during the
+> handshake even though DNS resolves to a Cloudflare IP. That is a transit block, not an
+> outage: verify from another network (or a Cloudflare-proxied custom domain) before
+> concluding the API is down. From a blocked network, call `estimate.js` directly — same
+> engine, same numbers, no network.
 
 Try it:
 
@@ -209,5 +220,21 @@ see [`../mcp`](../mcp) — a stdio MCP server exposing `should_i_quantize`,
 ## Validation
 
 `python3 build/validate.py` checks the fit against the measured data: leave-one-out MAE,
-95% band coverage, the S-cap bound, and sign sanity. Current: overall LOO MAE ≈ 6.3 pts,
-band coverage 18/18.
+95% band coverage, the S-cap bound, and sign sanity. Current (28 anchors, after folding in the
+July 2026 RTX 4090 run): overall LOO MAE ≈ 18.1 pts, band coverage 24/28 (86%).
+
+The Ada class is now the noisy one by construction — it pools two cards (RTX 4090D, n ≤ 2, and
+RTX 4090, 10 iterations) whose ΔE% differ by ~20 pts at the same model size, and Ada INT8 is
+non-monotone in N (+242% at 0.5B, +181% at 1.5B, +50% at 7B), which a saturating curve cannot
+follow: `ada NF4` LOO MAE ≈ 16 pts, `ada INT8` ≈ 43 pts. That scatter is real and it is reported
+rather than smoothed away — it lands in `resid_std`, so the 95% bands widen accordingly. The
+quiet classes are unchanged (`blackwell` 4.8, `turing` 5.3).
+
+After any refit, mirror the calibration into the browser copy and re-check parity:
+
+```bash
+python3 build/fit_curves.py        # measured.csv -> curves.json
+python3 build/sync_estimate_js.py  # curves.json  -> inline CURVES in estimate.js
+python3 build/test_optimize.py     # fails on any Python/JS drift
+python3 build/validate.py
+```

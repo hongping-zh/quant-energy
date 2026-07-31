@@ -56,7 +56,7 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">Eco<span>Compute</span> · Methodology</div>
-      <nav class="nav"><a href="/">Tool</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
+      <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/cite/">Cite</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
     </div>
 
     <h1>How EcoCompute measures LLM inference energy</h1>
@@ -109,17 +109,21 @@ cd ecocompute-mlcube
 pip install mlcube mlcube-docker
 mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
     <p>Then drop the resulting <code>energy.json</code> on the <a href="/run/">Run it yourself</a> tab to overlay your
-    point on the crossover curve — the overlay is encoded in the URL, nothing is uploaded.</p>
+    point on the crossover curve — the overlay is encoded in the URL, nothing is uploaded. The container’s output
+    schema, honesty guarantees, scope and how to contribute a run are documented on
+    <a href="/container/">the container page</a>.</p>
 
     <h2>5 · Limitations</h2>
     <ul>
       <li>NVML reports <b>GPU-package power</b>, not whole-system draw: CPU, DRAM, PSU losses and cooling are excluded.</li>
       <li>Single-stream generation only; batched serving with continuous batching has a different energy profile.</li>
+      <li>Curves are fitted per <b>architecture class</b>, not per card: the Ada class pools RTX 4090D and RTX 4090 measurements, which differ by roughly 20 percentage points at the same model size, so Ada bands are the widest of the four classes.</li>
       <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset.</li>
       <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
     </ul>
 
     <h2>6 · How to cite</h2>
+    <p>Full artifact map, concept vs version DOIs and BibTeX: <a href="/cite/">Artifacts &amp; citation</a>. In short:</p>
     <ul>
       <li><b>The methodology and argument</b> — preprint “Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms”, <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN&nbsp;#6854700</a> (archived: <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a>).</li>
       <li><b>The numbers on this site</b> — main dataset v1.1.0, <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0).</li>
@@ -129,7 +133,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
     <footer>
       EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
       (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
-      <br><a href="/">← Back to the tool</a> · <a href="/about/">About</a> · <a href="/blog/">Notes</a>
+      <br><a href="/">← Back to the tool</a> · <a href="/container/">Measurement container</a> · <a href="/cite/">Artifacts &amp; citation</a> · <a href="/about/">About</a> · <a href="/blog/">Notes</a>
     </footer>
   </div>
 </body>

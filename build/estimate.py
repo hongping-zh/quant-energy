@@ -75,15 +75,16 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     delta = max(delta, -s_cap)  # never promise more savings than the weight-byte bound
 
     # basis
-    exact = None
+    exact = []
     if borrowed_from is None:
-        for a in c["anchors"]:
-            if abs(a["N"] - N) < 1e-6:
-                exact = a
-                break
-    if exact is not None:
+        exact = [a for a in c["anchors"] if abs(a["N"] - N) < 1e-6]
+    spread = 0.0
+    if exact:
         basis = "measured"
-        delta = exact["dE"]  # return the measured value, not the smoothed curve
+        # a class can pool several cards; a size measured on more than one of them gets
+        # their mean, and the disagreement is carried into the band instead of hidden
+        delta = sum(a["dE"] for a in exact) / len(exact)
+        spread = max(a["dE"] for a in exact) - min(a["dE"] for a in exact)
     elif borrowed_from is not None:
         basis = "estimated"
     elif c["n_min"] <= N <= c["n_max"]:
@@ -111,7 +112,7 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     modelled_term = abs(delta_base) * (1.0 - factor) * 0.5 if modelled else 0.0
     sigma = math.sqrt(base**2 + extrap**2 + borrowed_term**2 + modelled_term**2)
     if basis == "measured" and not modelled:
-        sigma = base * 0.5
+        sigma = max(base * 0.5, spread / 2.0)
 
     lo = max(delta - Z * sigma, -s_cap)
     hi = delta + Z * sigma
@@ -119,7 +120,8 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
 
     # confidence
     if basis == "measured" and not modelled:
-        confidence = "high"
+        # cards inside a class that disagree by more than 10 pts are not a "high" answer
+        confidence = "medium" if spread > 10.0 else "high"
     elif borrowed_from is not None:
         confidence = "low"
     elif basis == "interpolated":
@@ -144,6 +146,11 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
                    f"near the crossover; verify on your stack.")
 
     notes = []
+    if len(exact) > 1:
+        per_card = ", ".join(f"{a['gpu']} {a['dE']:+.0f}%" for a in exact)
+        notes.append(f"{len(exact)} cards in this architecture class measured this size and "
+                     f"disagree by {spread:.0f} pts ({per_card}); the value shown is their mean "
+                     f"and the band covers the spread.")
     if borrowed_from is not None:
         notes.append(f"No measurements for this architecture; shape borrowed from "
                      f"'{borrowed_from}' — treat as a rough estimate.")
