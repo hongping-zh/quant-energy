@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EcoCompute energy MLCube — the container behind every number on this site</title>
+<meta name="description" content="An open, MLCube-compatible container that measures LLM inference energy with direct NVML GPU power sampling and writes a schema-validated energy.json — the same measurement that produced the EcoCompute datasets. Run it on your own GPU in about a minute." />
+<link rel="canonical" href="https://quantenergy.tech/container/" />
+<meta property="og:title" content="EcoCompute energy MLCube — reproducible LLM inference energy measurement" />
+<meta property="og:description" content="Direct NVML power sampling in an MLCube-compatible container. Schema-validated energy.json, honest no-GPU fallback, and a one-click overlay of your result on the public crossover curve." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/container/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareSourceCode",
+  "name":"EcoCompute energy MLCube",
+  "description":"MLCube-compatible container that measures LLM inference energy per token with direct NVML GPU power sampling and emits a schema-validated energy.json report.",
+  "codeRepository":"https://github.com/hongping-zh/ecocompute-mlcube",
+  "programmingLanguage":"Python",
+  "runtimePlatform":"Docker",
+  "license":"https://www.apache.org/licenses/LICENSE-2.0",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/container/",
+  "image":"https://quantenergy.tech/preview.png",
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:30px;line-height:1.22;margin:0 0 10px}
+  .sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+  h2{font-size:20px;margin:34px 0 6px}
+  h3{font-size:15px;margin:22px 0 4px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+  .pill{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 8px}
+  .btn{display:inline-block;background:var(--accent);color:#06223a;font-weight:700;font-size:14px;border-radius:8px;padding:10px 16px}
+  .btn:hover{text-decoration:none;filter:brightness(1.08)}
+  .ghost{display:inline-block;border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:14px;border-radius:8px;padding:10px 16px;background:var(--panel)}
+  .ghost:hover{text-decoration:none;border-color:var(--accent)}
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+  .two>div{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px}
+  .two h3{margin:0 0 6px;font-size:14px;color:var(--accent)}
+  .two p{margin:0;font-size:13px;color:var(--muted)}
+  .yes{color:var(--good);font-weight:700}
+  .no{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Container</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/method/">Methodology</a><a href="/cite/">Cite</a><a href="/about/">About</a></nav>
+    </div>
+
+    <h1>The EcoCompute energy MLCube</h1>
+    <p class="sub">EcoCompute is an open reproducibility project measuring how LLM quantization affects inference energy
+    per token across GPUs and model sizes. This page is about the part you can run yourself: the container that
+    produced those measurements.</p>
+
+    <div class="pills">
+      <span class="pill">MLCube-compatible</span>
+      <span class="pill">Direct NVML sampling · 10 Hz</span>
+      <span class="pill">Schema-validated <code>energy.json</code></span>
+      <span class="pill">Apache-2.0</span>
+      <span class="pill">Not a certified benchmark</span>
+    </div>
+
+    <div class="callout">
+      <b>The point of shipping it.</b> Published energy numbers are usually impossible to check: they come from TDP
+      arithmetic, from a wall meter with no workload isolation, or from a benchmark you cannot rerun. This container
+      makes the disagreement productive — run it on your GPU, and your <code>energy.json</code> either lands on the
+      curve published here or visibly does not. Both outcomes are useful; the second one is more useful.
+    </div>
+
+    <div class="cta">
+      <a class="btn" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source on GitHub →</a>
+      <a class="ghost" href="/?tab=run">Overlay your energy.json on the curve →</a>
+    </div>
+
+    <h2>1 · Run it (about a minute of typing)</h2>
+    <p><b>Prerequisites for a real measurement:</b> Docker, an NVIDIA GPU with NVML power telemetry, and the NVIDIA
+    Container Toolkit. Without a GPU you can still verify the whole pipeline — see step 3.</p>
+<pre>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+# with the official MLCommons MLCube CLI (task name: energy_estimate)
+pip install mlcube mlcube-docker
+mlcube run --mlcube=. --task=energy_estimate --platform=docker
+
+# ...or drive the entrypoint directly (development / CI)
+python3 entrypoint.py energy_estimate \
+    --parameters_file workspace/parameters/energy_params.yaml \
+    --output_dir workspace/outputs
+
+cat workspace/outputs/energy.json</pre>
+    <p class="meta">Swap the run without editing defaults by pointing at another parameters file:
+    <code>mlcube run --mlcube=. --task=energy_estimate parameters_file=parameters/bert_bs32.yaml output_dir=outputs_bert/</code>.</p>
+
+    <h3>Compare against this site straight from the terminal</h3>
+<pre>python3 entrypoint.py energy_estimate \
+    --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --precision NF4 --gpu_arch ada --params_b 1.1 \
+    --output_dir workspace/outputs --prefetch --share</pre>
+    <ul>
+      <li><code>--prefetch</code> — asks the site estimator for its <em>prediction</em> before measuring and prints it,
+      so you see prediction vs. measurement side by side. Offline or slow? It is skipped silently; the measurement is
+      never blocked or altered.</li>
+      <li><code>--share</code> — prints (and writes <code>share_url.txt</code>) a link of the form
+      <code>quantenergy.tech/?tab=run&amp;overlay=…</code>. Your point is encoded <b>in the URL itself</b>: opening it
+      restores your marker on the crossover curve entirely in the browser. Nothing is uploaded and no server stores
+      anything.</li>
+    </ul>
+
+    <h2>2 · What comes out</h2>
+    <p>One JSON report per configuration, validated against
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener"><code>schema/energy.schema.json</code></a>.
+    The two fields this site plots are <code>results.vs_fp16_energy_pct</code> and <code>results.basis</code>:</p>
+    <table>
+      <tr><th>Field</th><th>Meaning</th></tr>
+      <tr><td><code>system_under_test.gpu</code> / <code>.gpu_arch</code></td><td>Card and architecture class (<code>turing</code>, <code>ampere</code>, <code>ada</code>, <code>blackwell</code>) — selects which fitted curve your point is compared against</td></tr>
+      <tr><td><code>workload.*</code></td><td><code>model_name</code>, <code>params_b</code>, <code>precision</code> (FP16 / NF4 / INT8, weight-only), <code>batch_size</code>, <code>context_length</code></td></tr>
+      <tr><td><code>measurement.*</code></td><td><code>method</code> (NVML on-device power sampling), <code>sample_rate_hz</code>, <code>tokens_per_run</code>, <code>iterations</code></td></tr>
+      <tr><td><code>measurement_source</code></td><td>Where the numbers actually came from — a direct NVML run, or a named dataset fallback</td></tr>
+      <tr><td><code>results.total_energy_joules</code>, <code>energy_per_token_mj</code>, <code>avg_power_watts</code>, <code>throughput_tokens_per_s</code></td><td>Integrated over the generation window, per configuration</td></tr>
+      <tr><td><code>results.vs_fp16_energy_pct</code></td><td>Signed ΔE% against the same model's own FP16 run on the same GPU. <b>Negative = quantization saves energy</b> — this is the value plotted on the crossover curve</td></tr>
+      <tr><td><code>results.basis</code></td><td><code>measured</code> / <code>interpolated</code> / <code>extrapolated</code> — the tag shown next to every number on this site</td></tr>
+      <tr><td><code>certified_benchmark_result</code>, <code>scenario_note</code></td><td>The report states its own scope: <code>false</code>, and the SingleStream/Offline label is nominal, not LoadGen-enforced</td></tr>
+    </table>
+    <p class="meta">Sample outputs ship with the repository:
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/examples/energy.no-gpu.json" target="_blank" rel="noopener"><code>examples/energy.no-gpu.json</code></a> and
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/examples/energy.measured.illustrative.json" target="_blank" rel="noopener"><code>examples/energy.measured.illustrative.json</code></a>
+    (the latter's numbers are synthetic and labelled as such — it documents the shape of the measured path, not a run).</p>
+
+    <h2>3 · Honesty guarantees</h2>
+    <div class="two">
+      <div>
+        <h3>No GPU? No fake measurement.</h3>
+        <p>With <code>--dry_run</code>, or when no NVIDIA GPU / NVML is present, the container emits values derived from
+        the published EcoCompute dataset, flagged in <code>measurement_source</code> and never labelled
+        <code>measured</code>.</p>
+      </div>
+      <div>
+        <h3>A GPU that cannot report power is treated the same</h3>
+        <p>Some consumer, vGPU and Turing cards return <code>NVML_ERROR_NOT_SUPPORTED</code>. The on-device path is
+        probed first; on failure the run falls back to the dataset path with the reason recorded — it does not crash and
+        it does not claim a measurement.</p>
+      </div>
+      <div>
+        <h3>Dropped samples are counted, not hidden</h3>
+        <p>A single failed power read never aborts a run; the count lands in <code>results.dropped_samples</code> so you
+        can judge the trace quality yourself.</p>
+      </div>
+      <div>
+        <h3>Contract-checked without a GPU</h3>
+        <p>A CPU-only descriptor (<code>mlcube.cpu.yaml</code> + <code>Dockerfile.cpu</code>) builds the image, mounts
+        the workspace and produces a schema-valid report, so the MLCube contract can be verified on any laptop:
+        <code>mlcube run --mlcube=mlcube.cpu.yaml --task=energy_estimate --platform=docker</code>.</p>
+      </div>
+    </div>
+    <p>Determinism matters here for a specific reason: <code>bitsandbytes</code> NF4/INT8 kernels and <code>torch</code>
+    change their numeric behaviour between releases. Top-level dependencies are pinned with exact <code>==</code>
+    versions and the image installs from a full transitive lock captured from the verified CUDA image.</p>
+
+    <h2>4 · Verified with the official MLCube CLI</h2>
+    <p>The container was exercised with MLCommons' <code>mlcube</code> CLI (v0.0.9, docker platform):</p>
+    <ul>
+      <li><code>mlcube describe</code> accepts the descriptor: task <code>energy_estimate</code>, <code>inputs=[parameters_file]</code>, <code>outputs=[output_dir]</code>.</li>
+      <li><code>mlcube run</code> on the CPU descriptor builds the image, mounts the workspace and writes <code>workspace/outputs/energy.json</code>.</li>
+      <li>A parameter swap produces a genuinely different report (<code>bert-base-uncased</code>, <code>batch_size=32</code> → Offline scenario).</li>
+      <li>Both reports validate against the JSON Schema; the pytest suite drives the task through its real CLI and asserts that the no-GPU path never labels a result <code>measured</code>.</li>
+    </ul>
+
+    <h2>5 · The runs on this site came out of it</h2>
+    <p>The newest column here — <b>RTX 4090 (Ada), July 2026</b>, five models from 0.5B to 7B × FP16 / NF4 / INT8, all
+    fifteen configurations real hardware measurements — was produced by this container, driven by the sweep scripts in
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/tree/main/autodl" target="_blank" rel="noopener"><code>autodl/</code></a>
+    (setup → environment verification → full model × precision sweep → aggregation). That run extended Ada coverage to
+    INT8 and to 7B for the first time, and it is archived as its own citable artifact:
+    <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> (CC BY 4.0).
+    It is a supplementary deep dive alongside the main
+    <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0 dataset</a>, not a replacement:
+    n&nbsp;=&nbsp;1 per configuration.</p>
+    <p class="meta">Full protocol behind both: <a href="/method/">Methodology</a>. Artifact map and DOIs: <a href="/cite/">Artifacts &amp; citation</a>.</p>
+
+    <h2>6 · Scope — what this is not</h2>
+    <table>
+      <tr><th><span class="yes">Do</span></th><th><span class="no">Don't</span></th></tr>
+      <tr><td>Compare precisions on the <b>same</b> GPU</td><td>Compare across GPUs without normalising thermal state and clocks</td></tr>
+      <tr><td>Treat <code>basis: "measured"</code> as ground truth for that configuration</td><td>Cite <code>interpolated</code> / <code>extrapolated</code> values for compliance or procurement claims</td></tr>
+      <tr><td>Read the numbers as <b>GPU-package</b> energy</td><td>Present them as whole-system, datacenter or carbon figures without a PUE and grid model</td></tr>
+      <tr><td>Report <code>iterations</code> and the observed spread downstream</td><td>Publish an n&nbsp;=&nbsp;1 number as if it were a tight distribution</td></tr>
+    </table>
+    <ul>
+      <li><b>No LoadGen.</b> The <code>scenario</code> field is a nominal label derived from batch size; the container
+      runs its own warmup/iterations loop and applies no MLPerf LoadGen timing constraints.</li>
+      <li><b>No accuracy target.</b> Only energy and throughput are reported — quantization quality is out of scope.</li>
+      <li><b>NVML measures GPU-package power</b>, not wall power: CPU, DRAM, PSU losses and cooling are excluded.</li>
+      <li>This is a supplemental <b>energy-methodology</b> container and <b>not a certified MLPerf result</b>; every
+      report carries <code>certified_benchmark_result: false</code>.</li>
+    </ul>
+
+    <h2>7 · Not built yet</h2>
+    <p>So the roadmap is not mistaken for the product — these are wanted, but they do not exist today:</p>
+    <ul>
+      <li><b>A published image on a public registry.</b> Today you build locally (MLCube builds it for you) or clone and
+      run the entrypoint; there is no <code>docker pull</code> one-liner yet.</li>
+      <li><b>A wall-power hook</b> (BMC / IPMI / smart PDU / USB meter) to report system energy alongside the NVML
+      number. This is the most common and most fair critique of NVML-only measurement.</li>
+      <li><b>Signed reports</b> for ESG and procurement contexts.</li>
+      <li><b>A one-task reproduction</b> of the full published anchor set, and a public wall of community reproductions.</li>
+    </ul>
+
+    <h2>8 · Contribute a measurement</h2>
+    <p>We are looking for collaborators to reproduce EcoCompute measurements across additional GPUs, cloud instances,
+    model families and quantization backends. If you operate NVIDIA, AMD or other accelerator infrastructure and want to
+    contribute comparable energy-per-token data, please get in touch.</p>
+    <p>Most valuable, in order:</p>
+    <ol>
+      <li><b>Runs that contradict the published curve.</b> A disagreement with a schema-valid <code>energy.json</code>
+      attached is the single most useful thing you can send.</li>
+      <li><b>GPUs we have never measured</b> — RTX 3090, L4, A100, H100, MI300X and friends.</li>
+      <li><b>Backends beyond bitsandbytes</b> — AWQ, GPTQ, FP8, vendor runtimes.</li>
+      <li><b>Wall-power implementations</b> for your BMC or PDU.</li>
+    </ol>
+    <p>How: open an issue or pull request on
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">the container repository</a>
+    with your <code>energy.json</code> (and the <code>--share</code> link if you have one), or reach the maintainer via
+    <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">hongping-zh.github.io</a>.</p>
+
+    <h2>9 · Cite the container</h2>
+<pre>@software{ecocompute_mlcube,
+  title   = {EcoCompute energy MLCube: reproducible LLM inference energy measurement},
+  author  = {Zhang, Hongping},
+  year    = {2026},
+  url     = {https://github.com/hongping-zh/ecocompute-mlcube},
+  license = {Apache-2.0}
+}</pre>
+    <p class="meta">Cite the <a href="/cite/">datasets and the preprint</a> for the numbers and the argument; cite the
+    container for the measurement procedure. The container has no Zenodo DOI yet — until it does, cite the repository
+    and pin the commit you ran.</p>
+
+    <div class="callout">
+      <b>Trademarks.</b> MLCOMMONS, MLPERF and MLCUBE are trademarks of MLCommons Association. They are used here
+      nominatively, only to describe the container format and the energy-reporting conventions the report follows. This
+      project is independently developed and carries no MLCommons endorsement, certification or certified benchmark
+      result.
+    </div>
+
+    <footer>
+      EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
+      <br><a href="/">← Back to the tool</a> · <a href="/method/">Methodology</a> · <a href="/cite/">Artifacts &amp; citation</a> · <a href="/about/">About</a>
+    </footer>
+  </div>
+</body>
+</html>
