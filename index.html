@@ -198,6 +198,12 @@
   .trustbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
   .trustbar a,.trustbar span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;text-decoration:none}
   .trustbar a:hover{border-color:var(--accent);color:var(--txt)}
+  .cta.hero{margin:18px 0 0}
+  .cta.hero a.btn{font-size:15px;padding:13px 20px}
+  .replstats{margin:10px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6}
+  .replstats b{color:var(--txt)}
+  .replstats a{color:var(--accent);text-decoration:none;font-weight:700}
+  .replstats a:hover{text-decoration:underline}
   /* Do / Don't scope table */
   .scope{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0 0}
   .scope th,.scope td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.55}
@@ -316,23 +322,24 @@
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>"Quantization doesn't always save energy. See for yourself."</p>
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. We tell you <em>whether</em> you should — and ship the container that lets you check us.</p>
-    <p class="badge" style="margin-top:8px">Open measurement stack: an <b>MLCube-compatible container</b> doing direct NVML power sampling, the <b>datasets it produced</b> (Zenodo, CC&nbsp;BY&nbsp;4.0), and the <b>preprint</b> that interprets them.</p>
-    <div class="cta">
+    <div class="cta hero">
       <a id="containerCta" class="btn" href="/container/">▶&nbsp; Reproduce in 60s</a>
       <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
     </div>
+    <div class="trustbar" aria-label="What backs these numbers">
+      <a href="#evidence">15/15 measured</a>
+      <a href="/method/">NVML @ 10&nbsp;Hz</a>
+      <a href="/container/">MLCube-compatible</a>
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener">Schema-validated</a>
+      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Zenodo DOI</a>
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
+    </div>
+    <p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
+    <p class="badge" style="margin-top:10px">Open measurement stack: an <b>MLCube-compatible container</b> doing direct NVML power sampling, the <b>datasets it produced</b> (Zenodo, CC&nbsp;BY&nbsp;4.0), and the <b>preprint</b> that interprets them.</p>
     <div class="cta" style="margin-top:6px">
-      <a id="replCta" class="ghost" href="/replications/">Public replications →</a>
       <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
       <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
       <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
-    </div>
-    <div class="trustbar" aria-label="What backs these numbers">
-      <a href="#evidence">15/15 measured · latest run</a>
-      <a href="/method/">Direct NVML @ 10&nbsp;Hz</a>
-      <a href="/container/">MLCube-compatible</a>
-      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Zenodo DOI · CC&nbsp;BY&nbsp;4.0</a>
-      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
     </div>
   </header>
 
@@ -695,10 +702,11 @@ pip install mlcube mlcube-docker
 mlcube run --mlcube=. --task=energy_estimate --platform=docker
 
 # ...or directly — add --prefetch to see the site's prediction first,
-# and --share to get a ready-to-share overlay link when it finishes
+# and --share to get a ready-to-share overlay link when it finishes.
+# Set --gpu_arch to YOUR card: turing | ampere | ada | blackwell | hopper
 python3 entrypoint.py energy_estimate \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
-    --precision NF4 --gpu_arch blackwell --params_b 1.1 \
+    --precision NF4 --gpu_arch ada --params_b 1.1 \
     --output_dir workspace/outputs --prefetch --share
 
 cat workspace/outputs/energy.json</div>
@@ -1513,6 +1521,26 @@ decorate(document.getElementById("repoCta"));
   modal.addEventListener("click",e=>{ if(e.target===modal) hide(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modal.classList.contains("open")) hide(); });
   if(location.hash==="#about") show();
+})();
+
+/* ----- hero: live count of independent replications (never a placeholder) ----- */
+(function(){
+  const el=document.getElementById("heroRepl");
+  if(!el) return;
+  fetch("/replications/replications.json",{cache:"no-store"})
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d=>{
+      const e=(d&&d.entries)||[];
+      if(!e.length){
+        el.innerHTML='<b>0</b> independent replications so far \u00b7 <b>0</b> GPU architectures \u2014 be the first: <a href="/replications/#submit">publish your run \u2192</a>';
+        return;
+      }
+      const archs=new Set(e.map(x=>x.arch).filter(Boolean)).size;
+      el.innerHTML='<b>'+e.length+'</b> independent replication'+(e.length===1?"":"s")+
+        ' \u00b7 <b>'+archs+'</b> GPU architecture'+(archs===1?"":"s")+
+        ' \u2014 <a href="/replications/">see them against the curve \u2192</a>';
+    })
+    .catch(()=>{});
 })();
 
 /* ----- permalinks for Your model / Optimize tabs + BibTeX copy ----- */

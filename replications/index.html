@@ -111,6 +111,8 @@
     <a class="ghost" href="/container/">Run yours (60s) →</a>
   </div>
 
+  <div class="stats" id="heroStats"></div>
+
   <div class="pills">
     <span class="pill">MLCube-compatible</span>
     <span class="pill">Schema-checked in your browser</span>
@@ -506,9 +508,11 @@ function renderStats(){
     [conf + " / " + disp, "consistent / outside band"],
     [disp, "open disagreements"]
   ];
-  document.getElementById("stats").innerHTML = cards.map(function(c){
+  var html = cards.map(function(c){
     return '<div class="stat"><div class="v">' + c[0] + '</div><div class="k">' + c[1] + '</div></div>';
   }).join("");
+  document.getElementById("stats").innerHTML = html;
+  document.getElementById("heroStats").innerHTML = html;
   document.getElementById("statsNote").innerHTML = GALLERY.length
     ? "Counted from <code>replications.json</code>; “outside band” compares each point with the fitted curve's residual spread."
     : "Nothing here is a placeholder: these counters read <code>replications.json</code>, which is empty until the first real submission lands. Submit one that breaks our curve and it will be published just as prominently — disagreement is the mechanism, not the enemy.";

@@ -121,7 +121,8 @@ cat workspace/outputs/energy.json</pre>
     <code>mlcube run --mlcube=. --task=energy_estimate parameters_file=parameters/bert_bs32.yaml output_dir=outputs_bert/</code>.</p>
 
     <h3>Compare against this site straight from the terminal</h3>
-<pre>python3 entrypoint.py energy_estimate \
+<pre># --gpu_arch must name YOUR card: turing | ampere | ada | blackwell | hopper
+python3 entrypoint.py energy_estimate \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --precision NF4 --gpu_arch ada --params_b 1.1 \
     --output_dir workspace/outputs --prefetch --share</pre>
