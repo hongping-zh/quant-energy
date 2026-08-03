@@ -4,19 +4,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EcoCompute — Does quantization raise or lower energy?</title>
+<title>Quantization doesn't always save energy — measured, not modelled · EcoCompute</title>
 <meta name="description" content="Open reproducibility project measuring how LLM quantization affects inference energy per token: an MLCube-compatible container doing direct NVML power sampling, the datasets it produced, and an interactive tool built on 360+ real GPU measurements. NF4/INT8 can increase energy on small models and only saves above a crossover point — run the container and check us." />
 <link rel="canonical" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
 <meta property="og:url" content="https://quantenergy.tech/" />
-<meta property="og:title" content="EcoCompute — Quantization Doesn't Always Save Energy. Run the container and check." />
+<meta property="og:title" content="Quantization doesn't always save energy — measured, not modelled · EcoCompute" />
 <meta property="og:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta property="og:image" content="https://quantenergy.tech/preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="EcoCompute — Quantization Doesn't Always Save Energy. Run the container and check." />
+<meta name="twitter:title" content="Quantization doesn't always save energy — measured, not modelled · EcoCompute" />
 <meta name="twitter:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
 <meta name="author" content="Hongping Zhang" />
@@ -194,6 +194,19 @@
   .chartnote a:hover{text-decoration:underline}
   .badge{font-size:12px;color:var(--muted)}
   .badge b{color:#34d399}
+  /* hero trust bar */
+  .trustbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+  .trustbar a,.trustbar span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;text-decoration:none}
+  .trustbar a:hover{border-color:var(--accent);color:var(--txt)}
+  /* Do / Don't scope table */
+  .scope{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0 0}
+  .scope th,.scope td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.55}
+  .scope th{font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .scope th.do{color:#34d399} .scope th.dont{color:#fb7185}
+  .related{width:100%;border-collapse:collapse;font-size:12.5px;margin:4px 0 0}
+  .related th,.related td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top;line-height:1.55}
+  .related th{font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .related td:first-child{white-space:nowrap;font-weight:700;color:var(--txt)}
   svg text{font-family:inherit}
   /* estimator mode */
   .modetabs{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px}
@@ -295,6 +308,7 @@
   <header>
     <nav class="topnav" aria-label="Site">
       <a class="aboutlink" href="/container/">Container</a>
+      <a class="aboutlink" href="/replications/">Replications</a>
       <a class="aboutlink" href="/method/">Methodology</a>
       <a class="aboutlink" href="/cite/">Cite</a>
       <a id="aboutLink" class="aboutlink" href="#about" aria-haspopup="dialog">About</a>
@@ -304,10 +318,21 @@
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. We tell you <em>whether</em> you should — and ship the container that lets you check us.</p>
     <p class="badge" style="margin-top:8px">Open measurement stack: an <b>MLCube-compatible container</b> doing direct NVML power sampling, the <b>datasets it produced</b> (Zenodo, CC&nbsp;BY&nbsp;4.0), and the <b>preprint</b> that interprets them.</p>
     <div class="cta">
-      <a id="containerCta" class="btn" href="/container/">Measure it on your own GPU →</a>
+      <a id="containerCta" class="btn" href="/container/">▶&nbsp; Reproduce in 60s</a>
+      <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
+    </div>
+    <div class="cta" style="margin-top:6px">
+      <a id="replCta" class="ghost" href="/replications/">Public replications →</a>
       <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
       <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
       <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
+    </div>
+    <div class="trustbar" aria-label="What backs these numbers">
+      <a href="#evidence">15/15 measured · latest run</a>
+      <a href="/method/">Direct NVML @ 10&nbsp;Hz</a>
+      <a href="/container/">MLCube-compatible</a>
+      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Zenodo DOI · CC&nbsp;BY&nbsp;4.0</a>
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
     </div>
   </header>
 
@@ -410,12 +435,30 @@
       <b>INT8 (bitsandbytes LLM.int8()) never saves energy here</b> (+50% … +242%): it does lower instantaneous power,
       but decode throughput collapses to 9–19 tok/s (FP16: 39–62 tok/s), so every token ends up costing more.
     </p>
-    <p class="chartnote">
-      <b>Confidence tier:</b> each of these 15 configurations was run <b>once</b> (n&nbsp;=&nbsp;1, ten decode iterations
-      integrated into one energy total), so unlike the main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%) they carry no
-      measured spread. That is why they appear as <b>hollow markers on a faded line</b> in the charts above and as hatched
-      bars — same axes, deliberately different weight.
-    </p>
+    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">Honest scope · what this run does and does not support</h3>
+    <table class="scope">
+      <tr><th class="do">✅ Do</th><th class="dont">⚠️ Don't</th></tr>
+      <tr>
+        <td>Treat each value as a real measurement of <b>this</b> RTX 4090 under <b>this</b> workload (256 tokens, batch 1, single stream)</td>
+        <td>Read n&nbsp;=&nbsp;1 as a tight distribution: every configuration was run <b>once</b> (ten decode iterations integrated into one energy total), so there is <b>no std and no CV</b> — unlike the main dataset's n&nbsp;=&nbsp;2 / CV&nbsp;&lt;&nbsp;2%</td>
+      </tr>
+      <tr>
+        <td>Compare precisions <b>on the same card</b> — that is what ΔE% is</td>
+        <td>Compare cards across these two layers without noting that one is replicated and one is not (hollow markers and hatched bars mark n&nbsp;=&nbsp;1 site-wide)</td>
+      </tr>
+      <tr>
+        <td>Use the numbers as <b>GPU-package energy</b> from direct NVML sampling</td>
+        <td>Present them as whole-system, datacenter or carbon numbers — there is no PUE, no CPU/DRAM and no grid model here</td>
+      </tr>
+      <tr>
+        <td>Cite it as a supplementary single-platform case study (<a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">DOI</a>) alongside v1.1.0</td>
+        <td>Cite it as a certified MLPerf/MLCommons result, or as a replacement for the main dataset</td>
+      </tr>
+      <tr>
+        <td>Reproduce or contradict it — one card, one hour: <a href="/container/">run the container</a> and <a href="/replications/">publish your point</a></td>
+        <td>Assume our card generalises to yours: cooling, driver, power limit and BIOS all move absolute energy</td>
+      </tr>
+    </table>
     <p class="chartnote">
       All raw <code>energy.json</code> reports, the aggregated CSV, environment metadata and both figures are archived
       under <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">DOI 10.5281/zenodo.21528103</a>,
@@ -426,6 +469,55 @@
       not whole-system wall power — a supplementary case study, not a certified benchmark. Reproduce it on your own card
       from the <b>Run it yourself</b> tab.
     </p>
+  </div>
+
+  <div class="card" id="replteaser">
+    <h2>Public replications · don't take our word for it</h2>
+    <p class="meta" style="margin:0 0 12px;line-height:1.6">
+      A single-maintainer dataset is only as strong as its first independent confirmation — or contradiction.
+      Run the container on your card, then publish your point in the open gallery: your <code>energy.json</code> is
+      parsed <b>in your browser</b>, and submitting opens a pre-filled GitHub issue you can read before you send it.
+      Disagreements are published exactly as prominently as confirmations.
+    </p>
+    <div class="cta" style="margin-top:0">
+      <a class="btn" href="/replications/">See public replications →</a>
+      <a class="ghost" href="/replications/#submit">Submit yours →</a>
+      <span class="badge">Moderated for schema and format only — never for results.</span>
+    </div>
+  </div>
+
+  <div class="card" id="related">
+    <h2>Related work · and what makes this different</h2>
+    <p class="meta" style="margin:0 0 6px;line-height:1.6">
+      EcoCompute is not a competitor to the established energy benchmarks — it answers a narrower question they do not:
+      <b>for one model on one GPU, does switching FP16 → NF4/INT8 raise or lower energy per token?</b>
+      That needs a controlled A/B of precisions on identical hardware, which is why we sample GPU-package power directly
+      instead of ranking systems or estimating carbon.
+    </p>
+    <table class="related">
+      <tr><th>Project</th><th>What it measures</th><th>How EcoCompute differs</th></tr>
+      <tr>
+        <td><a href="https://mlcommons.org/benchmarks/inference-datacenter/" target="_blank" rel="noopener">MLPerf Power</a></td>
+        <td>Audited <b>whole-system wall power</b> of submitted MLPerf Inference/Training runs, under LoadGen timing rules, with certified results</td>
+        <td>We report <b>GPU-package power only</b> and run our own warmup/iteration loop, so our numbers are a supplementary energy methodology — explicitly <code>certified_benchmark_result: false</code>, never an MLPerf result</td>
+      </tr>
+      <tr>
+        <td><a href="https://top500.org/lists/green500/" target="_blank" rel="noopener">Green500</a></td>
+        <td>Ranks whole supercomputers by <b>GFLOPS/watt</b> on HPL-class numerical workloads</td>
+        <td>Different unit and scope: one accelerator, LLM <b>decode</b> phase, joules per generated token — and a comparison between precisions rather than a league table</td>
+      </tr>
+      <tr>
+        <td><a href="https://codecarbon.io/" target="_blank" rel="noopener">CodeCarbon</a> / <a href="https://github.com/lfwa/carbontracker" target="_blank" rel="noopener">CarbonTracker</a></td>
+        <td>Workload-agnostic <b>trackers</b>: sample RAPL/NVML while <em>your</em> job runs and convert to CO₂e with grid-intensity factors</td>
+        <td>Complementary, not overlapping: they instrument whatever you run, we fix the workload (256 tokens, batch 1, single stream) so two precisions are comparable — and we publish no CO₂e, because that needs a PUE and a grid model we do not have</td>
+      </tr>
+      <tr>
+        <td><a href="https://mlco2.github.io/impact/" target="_blank" rel="noopener">ML CO₂ Impact</a> and TDP calculators</td>
+        <td><b>Estimate</b> energy from hardware TDP × runtime</td>
+        <td>No TDP anywhere in our pipeline: every published point is an integrated NVML power trace, and anything modelled is labelled <code>interpolated</code>/<code>extrapolated</code></td>
+      </tr>
+    </table>
+    <p class="chartnote">Trademark note: MLCommons, MLPerf and MLCube are trademarks of MLCommons Association, referenced here nominatively. The maintainer is an individual observer member of MLCommons; EcoCompute is independently developed and is neither an official MLCommons benchmark nor endorsed by MLCommons.</p>
   </div>
 
   <div class="hint" id="hint"></div>
@@ -726,6 +818,7 @@ cat workspace/outputs/energy.json</div>
     <br>Cite: paper — <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · main dataset v1.1.0 — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 (Ada) deep dive — <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>. These are <b>version DOIs</b>; the matching concept DOIs (<a href="https://doi.org/10.5281/zenodo.19647289" target="_blank" rel="noopener">…19647289</a>, <a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">…21528102</a>) always resolve to the newest version — see <a href="/cite/">all artifacts and how they relate</a>.
     <div class="footlinks">
       <a href="/container/">Measurement container</a>
+      <a href="/replications/">Public replications</a>
       <a href="/method/">Methodology</a>
       <a href="/cite/">Artifacts &amp; citation</a>
       <a href="/blog/">Blog / notes</a>

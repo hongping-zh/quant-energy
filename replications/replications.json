@@ -1,0 +1,21 @@
+{
+  "_comment": "Public replications gallery. One entry per independently contributed energy.json. Entries are added by the maintainer after a submission arrives as a GitHub issue on hongping-zh/ecocompute-mlcube; moderation checks schema and format only, never the numbers. Keep this list empty rather than seeded: a gallery of examples would be indistinguishable from fabricated replications.",
+  "_entry_schema": {
+    "handle": "contributor handle as they want to be credited, e.g. @someone",
+    "affiliation": "free text or null",
+    "gpu": "GPU name from system_under_test.gpu",
+    "arch": "one of turing | ada | ampere | blackwell | hopper",
+    "model": "workload.model_name",
+    "params_b": "number, workload.params_b",
+    "precision": "FP16 | NF4 | INT8",
+    "dE": "number, results.vs_fp16_energy_pct (signed, negative = saves energy)",
+    "basis": "measured | interpolated | extrapolated",
+    "n": "independent trials, integer >= 1 (declared by the contributor; the container's iterations are not trials)",
+    "cv_pct": "number or null",
+    "date": "YYYY-MM",
+    "report": "URL to the raw energy.json, or null",
+    "link": "repo / blog / paper URL, or null",
+    "note": "maintainer's one-line reading of the point, or null"
+  },
+  "entries": []
+}
