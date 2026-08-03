@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Public replications — reproduce EcoCompute on your own GPU · EcoCompute</title>
+<meta name="description" content="Independent replications of the EcoCompute energy measurements. Run the open MLCube container on your GPU, drop your energy.json, and publish your point on the public crossover curve — confirmations and disagreements are published alike." />
+<link rel="canonical" href="https://quantenergy.tech/replications/" />
+<meta property="og:title" content="Public replications — don't take our word for it, reproduce it on your GPU" />
+<meta property="og:description" content="Our claim that weight-only quantization doesn't always save energy rests on direct NVML measurements. The real proof is an independent card agreeing — or disagreeing. We publish both." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://quantenergy.tech/replications/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e;--nf4:#10b981}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+  h1{font-size:30px;line-height:1.22;margin:0 0 10px}
+  .sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+  h2{font-size:20px;margin:36px 0 6px}
+  h3{font-size:15px;margin:22px 0 4px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .meta{font-size:13px;color:var(--muted)}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px}
+  .pill{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 8px;align-items:center}
+  .btn{display:inline-block;background:var(--accent);color:#06223a;font-weight:700;font-size:14px;border-radius:8px;padding:10px 16px;border:0;cursor:pointer;font-family:inherit}
+  .btn:hover{text-decoration:none;filter:brightness(1.08)}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+  .ghost{display:inline-block;border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:14px;border-radius:8px;padding:10px 16px;background:var(--panel);cursor:pointer;font-family:inherit}
+  .ghost:hover{text-decoration:none;border-color:var(--accent)}
+  .three{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:16px 0}
+  .three>div{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px}
+  .three h3{margin:0 0 6px;font-size:14px;color:var(--accent)}
+  .three p{margin:0;font-size:13px;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .stat{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px}
+  .stat .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+  .stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .dropzone{border:1.5px dashed var(--line);border-radius:12px;padding:26px 20px;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;background:rgba(56,189,248,.03);transition:border-color .15s,background .15s}
+  .dropzone:hover,.dropzone.drag{border-color:var(--accent);color:var(--txt);background:rgba(56,189,248,.10)}
+  .dropzone b{color:var(--accent)}
+  .parsed{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+  .chip{font-size:12px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;color:var(--muted)}
+  .chip b{color:var(--txt)}
+  .chip.ok{border-color:rgba(16,185,129,.55);color:#34d399}
+  .chip.bad{border-color:rgba(244,63,94,.55);color:#fb7185}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0 0}
+  label{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  input[type=text],input[type=number]{width:100%;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
+  input:focus{outline:none;border-color:var(--accent)}
+  .checks{margin:18px 0 0;font-size:13px;color:#d3dcf6}
+  .checks label{display:flex;gap:9px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:13px;color:#d3dcf6;margin:0 0 9px}
+  .checks input{margin-top:4px;flex:none}
+  .entry{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .entry .who{font-weight:700}
+  .entry .cfg{font-size:13.5px;margin:2px 0}
+  .entry .num{font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--muted)}
+  .entry .num b{color:var(--txt)}
+  .entry .foot{font-size:12px;color:var(--muted);margin-top:6px}
+  .flag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);margin-right:6px;display:inline-block}
+  .flag.confirm{border-color:rgba(16,185,129,.55);color:#34d399}
+  .flag.dispute{border-color:rgba(251,191,36,.6);color:#fbbf24}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .filters button{font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;font-family:inherit}
+  .filters button.on{border-color:var(--accent);color:var(--accent)}
+  .empty{border:1px dashed var(--line);border-radius:12px;padding:22px 18px;text-align:center;color:var(--muted);font-size:14px}
+  .empty b{color:var(--txt)}
+  .err{color:var(--bad);font-size:13px;margin-top:10px}
+  svg text{font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Eco<span>Compute</span> · Public replications</div>
+    <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/method/">Methodology</a><a href="/cite/">Cite</a><a href="/about/">About</a></nav>
+  </div>
+
+  <h1>Don't take our word for it — reproduce it on your GPU.</h1>
+  <p class="sub">Independent replications of the EcoCompute energy measurements, published as they arrive.</p>
+
+  <p>Our central claim — <b>weight-only quantization doesn't always save energy</b> — rests on direct NVML power
+  measurements from a handful of cards run by one maintainer. That is exactly as strong as its first independent
+  confirmation. Or its first credible <em>disagreement</em>: we publish both, in the same gallery, with the same weight.</p>
+
+  <p>Run the open <a href="/container/">MLCube container</a> on your card, drop the resulting
+  <code>energy.json</code> below, and see your point land on — or off — the published crossover curve. The file is parsed
+  <b>in your browser</b>; this site has no upload endpoint, so nothing is submitted until you open and send the
+  pre-filled GitHub issue yourself.</p>
+
+  <div class="cta">
+    <a class="btn" href="#gallery">See replications ▼</a>
+    <a class="ghost" href="/container/">Run yours (60s) →</a>
+  </div>
+
+  <div class="pills">
+    <span class="pill">MLCube-compatible</span>
+    <span class="pill">Schema-checked in your browser</span>
+    <span class="pill">Apache-2.0</span>
+    <span class="pill">Moderated for format, never for results</span>
+    <span class="pill">Disagreements welcome</span>
+  </div>
+
+  <h2>How it works</h2>
+  <p class="meta">The same three steps as the <a href="/?tab=run">Run it yourself</a> tab — the third one makes your result public.</p>
+  <div class="three">
+    <div>
+      <h3>1 · Run the container</h3>
+      <p>Docker + an NVIDIA GPU. No GPU? It still completes, but the report is derived from the published dataset and
+      labelled <code>basis</code> ≠ <code>measured</code> — never faked, and not eligible for the gallery as a measurement.</p>
+    </div>
+    <div>
+      <h3>2 · Get energy.json</h3>
+      <p>Two fields the charts read: <code>results.vs_fp16_energy_pct</code> (signed ΔE% against the same model's own FP16
+      run on the same card) and <code>results.basis</code> (<code>measured</code> / <code>interpolated</code> /
+      <code>extrapolated</code>).</p>
+    </div>
+    <div>
+      <h3>3 · Submit &amp; overlay</h3>
+      <p>Your point joins the crossover chart and this gallery, credited to your handle plus optional affiliation. You can
+      withdraw it at any time by asking on GitHub — no questions, no email needed.</p>
+    </div>
+  </div>
+  <p class="meta">Why bother? Every independent measurement — agreement <em>or</em> disagreement — makes the published curve
+  more useful to the next person deciding whether to quantize. Contributors are credited by handle on every chart their
+  point appears on.</p>
+
+  <h2 id="submit">Submit a replication</h2>
+  <p class="meta">Parsing happens entirely in your browser. When you are ready, the button below opens a GitHub issue
+  <b>pre-filled with the summary you see here</b> — you read it, attach your <code>energy.json</code>, and send it. Nothing
+  leaves this page on its own.</p>
+
+  <div class="dropzone" id="dz" tabindex="0" role="button" aria-label="Choose your energy.json">
+    ⬇ Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
+  </div>
+  <input type="file" id="fi" accept=".json,application/json" style="display:none" />
+  <div class="parsed" id="parsed">
+    <span class="chip">file: <b>—</b></span>
+    <span class="chip">schema: <b>—</b></span>
+    <span class="chip">basis: <b>—</b></span>
+  </div>
+  <div class="err" id="err" style="display:none"></div>
+
+  <div id="preview" style="display:none">
+    <h3>Your point against the published curve</h3>
+    <div id="chart"></div>
+    <p class="meta" id="verdict"></p>
+  </div>
+
+  <div class="form">
+    <div>
+      <label for="handle">Handle / name (required)</label>
+      <input type="text" id="handle" placeholder="@you or Jane Doe" autocomplete="off" />
+    </div>
+    <div>
+      <label for="affil">Affiliation (optional)</label>
+      <input type="text" id="affil" placeholder="Lab / company / none" autocomplete="off" />
+    </div>
+    <div>
+      <label for="trials">Independent trials, n (you tell us)</label>
+      <input type="number" id="trials" min="1" max="99" step="1" value="1" />
+    </div>
+    <div>
+      <label for="link">Link (optional)</label>
+      <input type="text" id="link" placeholder="repo / blog / paper" autocomplete="off" />
+    </div>
+  </div>
+  <p class="meta" style="margin-top:8px">GPU, model, precision, ΔE% and <code>basis</code> are read from the file — we do
+  not let you retype them. <b>n is not in the report</b>: the container records <code>measurement.iterations</code>
+  (decode iterations inside one run), which is not the same as repeating the whole measurement. If you ran the container
+  once, n&nbsp;=&nbsp;1, and your point is drawn hollow like our own single-trial data.</p>
+
+  <div class="checks">
+    <label><input type="checkbox" id="c1" /> <span>I confirm this is a real run on the hardware named in the file.</span></label>
+    <label><input type="checkbox" id="c2" /> <span>I understand the submission will be public and credited to my handle.</span></label>
+    <label><input type="checkbox" id="c3" /> <span>(Optional) Reviewers may follow up in the GitHub issue — no email required.</span></label>
+  </div>
+
+  <div class="cta">
+    <button class="btn" id="issueBtn" type="button" disabled>Open pre-filled GitHub issue →</button>
+    <button class="ghost" id="copyBtn" type="button" disabled>Copy the summary</button>
+    <span class="meta">Requires a file, a handle, and the first two boxes.</span>
+  </div>
+
+  <div class="callout">
+    <b>Withdrawal and privacy, precisely.</b> This page stores nothing: there is no server here to store it — the site is
+    static, and your file never leaves your browser. What becomes public is the GitHub issue you choose to send, so
+    withdrawal is a message on <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">the
+    same issue tracker</a> referencing your handle; the entry is removed as soon as the maintainer sees it, normally within
+    one working day, no questions asked. We never ask for your email. We do not claim zero logging: GitHub and this site's
+    static host/CDN keep their own access logs, which we neither control nor read.
+  </div>
+
+  <h2 id="gallery">Replications gallery</h2>
+  <div class="stats" id="stats"></div>
+  <p class="meta" id="statsNote"></p>
+  <div class="filters" id="filters" style="display:none">
+    <button class="on" data-f="all" type="button">All</button>
+    <button data-f="confirm" type="button">Consistent with the curve</button>
+    <button data-f="dispute" type="button">Outside the band</button>
+    <button data-f="NF4" type="button">NF4</button>
+    <button data-f="INT8" type="button">INT8</button>
+  </div>
+  <div id="entries"></div>
+
+  <h2>Honesty guardrails</h2>
+  <ul>
+    <li>Our measured anchors and community submissions are <b>visually distinct on every chart</b> — and so are single
+      trials: filled marker = n&nbsp;≥&nbsp;2 repeated trials, hollow marker = n&nbsp;=&nbsp;1, the same convention used
+      for our own data (see <a href="/method/">methodology</a>).</li>
+    <li>Submissions are shown <b>as provided</b>, with the <code>basis</code> declared in their report.</li>
+    <li>We moderate for schema and format only, <b>never for results</b>. A run that contradicts the published curve is
+      published as prominently as one that confirms it — and, if it holds up, it changes the curve.</li>
+    <li>Non-measured points (<code>interpolated</code> / <code>extrapolated</code>) are labelled and never presented as
+      measurements — the same rule as the rest of the site.</li>
+    <li>“Consistent” / “outside the band” is computed here from the fitted curve's residual spread
+      (<code>curves.json</code>), not from anyone's judgement, and it is a statement about <em>our</em> fit, not about
+      whose measurement is right.</li>
+    <li><b>Not yet built:</b> signed reports. The container has no <code>--sign</code> task today, so there is no
+      cryptographic “verified” badge — we would rather have no badge than a decorative one. Attach a link to a signed or
+      logged run if you have one and we will link it.</li>
+  </ul>
+
+  <footer>
+    EcoCompute is an independent research project. Methodology: direct NVML sampling @ 10&nbsp;Hz · 256 tokens/run ·
+    warmup + repeated decode iterations · <b>GPU-package power, not wall power</b>. Supplemental energy methodology, not a
+    certified MLPerf result; MLCommons, MLPerf and MLCube are trademarks of MLCommons Association, used nominatively.
+    <br>Cite: preprint — <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a>
+    · main dataset v1.1.0 — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>
+    · RTX 4090 case run — <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>
+    · <a href="/cite/">all artifacts</a>.
+    <br>Contribute a replication → <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a>
+  </footer>
+</div>
+
+<script>
+var REPO_ISSUE = "https://github.com/hongping-zh/ecocompute-mlcube/issues/new";
+var CURVES = null, GALLERY = [], FILTER = "all", POINT = null;
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function num(v){ return typeof v === "number" && isFinite(v); }
+
+/* dE_pct(N) = A - S * (N/Nstar)/(1 + N/Nstar) — same model as the site's estimator. */
+function curveFor(arch, precision){
+  if(!CURVES) return null;
+  var a = String(arch||"").toLowerCase();
+  if(!CURVES.curves[a] && CURVES.borrow && CURVES.borrow[a]) a = CURVES.borrow[a];
+  var c = CURVES.curves[a] && CURVES.curves[a][precision];
+  return c ? { arch:a, c:c } : null;
+}
+function predict(c, N){ var x = N / c.Nstar; return c.A - c.S * (x / (1 + x)); }
+
+function classify(p){
+  var f = curveFor(p.arch, p.precision);
+  if(!f || !num(p.N) || !num(p.dE)) return null;
+  var pred = predict(f.c, p.N);
+  var band = Math.max(1.96 * (f.c.resid_std || 0), 5);
+  var diff = p.dE - pred;
+  return { arch:f.arch, pred:pred, band:band, diff:diff, agrees:Math.abs(diff) <= band,
+           outside:Math.max(0, Math.abs(diff) - band) };
+}
+
+/* ---------- energy.json parsing (identical field contract to the Run-it-yourself tab) ---------- */
+function parseReport(txt){
+  var o;
+  try { o = JSON.parse(txt); } catch(e){ return { ok:false, error:"That file is not valid JSON." }; }
+  if(!o || typeof o !== "object") return { ok:false, error:"Expected a JSON object at the top level." };
+  var res = o.results || {}, sut = o.system_under_test || {}, wl = o.workload || {}, ms = o.measurement || {};
+  var dE = res.vs_fp16_energy_pct != null ? +res.vs_fp16_energy_pct : NaN;
+  if(!isFinite(dE)) return { ok:false, error:"Missing results.vs_fp16_energy_pct — the signed ΔE% vs FP16." };
+  var basis = res.basis || "unknown";
+  var missing = [];
+  ["schema_version","benchmark","scenario"].forEach(function(k){ if(!o[k]) missing.push(k); });
+  if(!sut.gpu) missing.push("system_under_test.gpu");
+  if(!wl.model_name) missing.push("workload.model_name");
+  if(!wl.precision) missing.push("workload.precision");
+  return { ok:true, point:{
+    gpu: sut.gpu || "", arch: (sut.gpu_arch || "").toLowerCase(), model: wl.model_name || "",
+    N: wl.params_b != null ? +wl.params_b : NaN, precision: wl.precision || "", dE: dE, basis: basis,
+    iterations: ms.iterations != null ? +ms.iterations : null,
+    sample_rate_hz: ms.sample_rate_hz != null ? +ms.sample_rate_hz : null,
+    method: ms.method || "", schema_version: o.schema_version || "",
+    energy_per_token_mj: res.energy_per_token_mj != null ? +res.energy_per_token_mj : null,
+    fp16_energy_per_token_mj: res.fp16_energy_per_token_mj != null ? +res.fp16_energy_per_token_mj : null,
+    throughput: res.throughput_tokens_per_s != null ? +res.throughput_tokens_per_s : null,
+    timestamp: o.timestamp_utc || ""
+  }, missing: missing };
+}
+
+function chip(label, value, cls){
+  return '<span class="chip' + (cls ? " " + cls : "") + '">' + label + ': <b>' + esc(value) + '</b></span>';
+}
+
+function showParsed(p, missing){
+  var el = document.getElementById("parsed");
+  var schemaOk = missing.length === 0;
+  el.innerHTML =
+    chip("gpu", p.gpu + (p.arch ? " · " + p.arch : "")) +
+    chip("model", p.model + (num(p.N) ? " · " + p.N + "B" : "")) +
+    chip("precision", p.precision) +
+    chip("ΔE vs FP16", (p.dE > 0 ? "+" : "") + p.dE.toFixed(1) + "%") +
+    chip("basis", p.basis, p.basis === "measured" ? "ok" : "bad") +
+    chip("schema", schemaOk ? "required fields present" : "missing " + missing.join(", "), schemaOk ? "ok" : "bad") +
+    chip("iterations", p.iterations == null ? "not reported" : p.iterations);
+}
+
+/* ---------- preview chart ---------- */
+function drawPreview(p){
+  var box = document.getElementById("preview"), host = document.getElementById("chart");
+  var cls = classify(p);
+  if(!cls){ box.style.display = "none"; return; }
+  var f = curveFor(p.arch, p.precision), c = f.c;
+  var W = 640, H = 260, L = 46, R = 14, T = 14, B = 34;
+  var xs = [0.4, Math.max(8, (p.N || 1) * 1.25)];
+  var vals = [p.dE, c.A - c.S, predict(c, xs[0]), predict(c, xs[1])];
+  (c.anchors || []).forEach(function(a){ vals.push(a.dE); });
+  var lo = Math.min.apply(null, vals) - 12, hi = Math.max.apply(null, vals) + 12;
+  function X(v){ var t = (Math.log(v) - Math.log(xs[0])) / (Math.log(xs[1]) - Math.log(xs[0])); return L + t * (W - L - R); }
+  function Y(v){ var t = (v - lo) / (hi - lo); return H - B - t * (H - T - B); }
+  var path = "", i;
+  for(i = 0; i <= 60; i++){
+    var v = Math.exp(Math.log(xs[0]) + (Math.log(xs[1]) - Math.log(xs[0])) * i / 60);
+    path += (i ? "L" : "M") + X(v).toFixed(1) + " " + Y(predict(c, v)).toFixed(1) + " ";
+  }
+  var bandTop = "", bandBot = "";
+  for(i = 0; i <= 60; i++){
+    var v2 = Math.exp(Math.log(xs[0]) + (Math.log(xs[1]) - Math.log(xs[0])) * i / 60);
+    bandTop += (i ? "L" : "M") + X(v2).toFixed(1) + " " + Y(predict(c, v2) + cls.band).toFixed(1) + " ";
+    bandBot = "L" + X(v2).toFixed(1) + " " + Y(predict(c, v2) - cls.band).toFixed(1) + " " + bandBot;
+  }
+  var anchors = (c.anchors || []).map(function(a){
+    var n = (a.n == null ? 2 : a.n);
+    var t = "<title>" + esc(a.model) + " · " + esc(a.gpu) + " · " + (a.dE > 0 ? "+" : "") + a.dE + "% · n = " + n + "</title>";
+    return n < 2
+      ? '<circle cx="' + X(a.N).toFixed(1) + '" cy="' + Y(a.dE).toFixed(1) + '" r="4.5" fill="var(--bg)" fill-opacity=".9" stroke="var(--nf4)" stroke-width="2">' + t + '</circle>'
+      : '<circle cx="' + X(a.N).toFixed(1) + '" cy="' + Y(a.dE).toFixed(1) + '" r="4" fill="var(--nf4)">' + t + '</circle>';
+  }).join("");
+  var yours = '<circle cx="' + X(p.N).toFixed(1) + '" cy="' + Y(p.dE).toFixed(1) + '" r="6" fill="none" stroke="#ef4444" stroke-width="2.5"><title>your run</title></circle>';
+  var ticks = "", step = (hi - lo) / 4, k;
+  for(k = 0; k <= 4; k++){
+    var tv = lo + step * k, ty = Y(tv);
+    ticks += '<line x1="' + L + '" y1="' + ty.toFixed(1) + '" x2="' + (W - R) + '" y2="' + ty.toFixed(1) + '" stroke="#22305a"/>' +
+      '<text x="' + (L - 6) + '" y="' + (ty + 4).toFixed(1) + '" fill="#93a0c4" font-size="10.5" text-anchor="end">' +
+      (tv > 0 ? "+" : "") + tv.toFixed(0) + '%</text>';
+  }
+  host.innerHTML =
+    '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="your point against the fitted curve">' +
+    ticks +
+    '<path d="' + bandTop + bandBot + 'Z" fill="rgba(16,185,129,.10)" stroke="none"/>' +
+    '<line x1="' + L + '" y1="' + Y(0).toFixed(1) + '" x2="' + (W - R) + '" y2="' + Y(0).toFixed(1) + '" stroke="#64748b" stroke-dasharray="4 4"/>' +
+    '<path d="' + path + '" fill="none" stroke="var(--nf4)" stroke-width="2"/>' + anchors + yours +
+    '<text x="' + L + '" y="' + (H - 10) + '" fill="#93a0c4" font-size="11">' + xs[0] + 'B</text>' +
+    '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 10) + '" fill="#93a0c4" font-size="11" text-anchor="middle">model size (log)</text>' +
+    '<text x="' + (W - R) + '" y="' + (H - 10) + '" fill="#93a0c4" font-size="11" text-anchor="end">' + xs[1].toFixed(1) + 'B</text>' +
+    '</svg>' +
+    '<div class="parsed" style="margin-top:6px">' +
+      '<span class="chip">— fitted ' + esc(p.precision) + ' curve</span>' +
+      '<span class="chip">shaded = ±' + cls.band.toFixed(1) + ' pt residual band</span>' +
+      '<span class="chip">● / ○ our anchors (n ≥ 2 / n = 1)</span>' +
+      '<span class="chip" style="border-color:#ef4444;color:#ef4444">○ your run</span>' +
+    '</div>';
+  document.getElementById("verdict").innerHTML =
+    "Fitted " + esc(p.precision) + " curve for <b>" + esc(CURVES.arch_label[cls.arch] || cls.arch) + "</b> predicts " +
+    (cls.pred > 0 ? "+" : "") + cls.pred.toFixed(1) + "% at " + p.N + "B, with a ±" + cls.band.toFixed(1) +
+    " pt residual band (shaded). Your run reads " + (p.dE > 0 ? "+" : "") + p.dE.toFixed(1) + "% — " +
+    (cls.agrees
+      ? "<b>consistent with the published curve</b>."
+      : "<b>outside the band by " + cls.outside.toFixed(1) + " pts</b>. That is the interesting case: please submit it.") +
+    (p.arch && cls.arch !== p.arch ? " (No fitted curve for <code>" + esc(p.arch) + "</code> yet — compared against the borrowed <code>" + esc(cls.arch) + "</code> curve.)" : "");
+  box.style.display = "";
+}
+
+/* ---------- issue body ---------- */
+function issueText(){
+  var p = POINT; if(!p) return "";
+  var cls = classify(p);
+  var handle = document.getElementById("handle").value.trim();
+  var affil = document.getElementById("affil").value.trim();
+  var link = document.getElementById("link").value.trim();
+  var n = parseInt(document.getElementById("trials").value, 10) || 1;
+  var L = [];
+  L.push("### Replication submission");
+  L.push("");
+  L.push("| field | value |");
+  L.push("| --- | --- |");
+  L.push("| handle | " + (handle || "—") + " |");
+  L.push("| affiliation | " + (affil || "—") + " |");
+  L.push("| GPU | " + p.gpu + (p.arch ? " (" + p.arch + ")" : "") + " |");
+  L.push("| model | " + p.model + (num(p.N) ? " (" + p.N + "B)" : "") + " |");
+  L.push("| precision | " + p.precision + " |");
+  L.push("| ΔE vs FP16 | " + (p.dE > 0 ? "+" : "") + p.dE.toFixed(2) + "% |");
+  L.push("| basis | " + p.basis + " |");
+  L.push("| independent trials (n) | " + n + " |");
+  L.push("| decode iterations per run | " + (p.iterations == null ? "not reported" : p.iterations) + " |");
+  L.push("| sampling | " + (p.sample_rate_hz == null ? "not reported" : p.sample_rate_hz + " Hz") + (p.method ? " · " + p.method : "") + " |");
+  if(p.energy_per_token_mj != null) L.push("| energy per token | " + p.energy_per_token_mj + " mJ |");
+  if(p.fp16_energy_per_token_mj != null) L.push("| FP16 baseline | " + p.fp16_energy_per_token_mj + " mJ/token |");
+  if(p.throughput != null) L.push("| decode throughput | " + p.throughput + " tok/s |");
+  L.push("| schema_version | " + (p.schema_version || "—") + " |");
+  L.push("| captured at | " + (p.timestamp || "—") + " |");
+  if(link) L.push("| link | " + link + " |");
+  L.push("");
+  if(cls){
+    L.push("Compared against the fitted " + p.precision + " curve for " + (CURVES.arch_label[cls.arch] || cls.arch) +
+      ": predicted " + cls.pred.toFixed(1) + "%, residual band ±" + cls.band.toFixed(1) + " pts → " +
+      (cls.agrees ? "consistent with the published curve." : "outside the band by " + cls.outside.toFixed(1) + " pts."));
+    L.push("");
+  }
+  L.push("- [x] This is a real run on the hardware named above.");
+  L.push("- [x] I understand this submission will be public and credited to my handle.");
+  L.push("- [" + (document.getElementById("c3").checked ? "x" : " ") + "] Reviewers may follow up in this issue.");
+  L.push("");
+  L.push("**Please attach the raw `energy.json` to this issue before sending** — the summary above was generated in the");
+  L.push("browser from that file and is not a substitute for it.");
+  return L.join("\n");
+}
+
+function refreshButtons(){
+  var ready = !!POINT && document.getElementById("handle").value.trim().length > 0 &&
+    document.getElementById("c1").checked && document.getElementById("c2").checked;
+  document.getElementById("issueBtn").disabled = !ready;
+  document.getElementById("copyBtn").disabled = !POINT;
+}
+
+function ingest(txt, name){
+  var out = parseReport(txt);
+  var err = document.getElementById("err");
+  if(!out.ok){
+    POINT = null; err.style.display = ""; err.textContent = out.error;
+    document.getElementById("preview").style.display = "none";
+    refreshButtons(); return;
+  }
+  err.style.display = "none";
+  POINT = out.point;
+  showParsed(POINT, out.missing);
+  document.getElementById("parsed").insertAdjacentHTML("afterbegin", chip("file", name));
+  drawPreview(POINT);
+  refreshButtons();
+}
+
+/* ---------- gallery ---------- */
+function renderGallery(){
+  var host = document.getElementById("entries");
+  var rows = GALLERY.filter(function(e){
+    if(FILTER === "all") return true;
+    if(FILTER === "NF4" || FILTER === "INT8") return e.precision === FILTER;
+    var cls = classify({ arch:e.arch, precision:e.precision, N:e.params_b, dE:e.dE });
+    if(!cls) return false;
+    return FILTER === "confirm" ? cls.agrees : !cls.agrees;
+  });
+  if(!GALLERY.length){
+    document.getElementById("filters").style.display = "none";
+    host.innerHTML =
+      '<div class="empty"><b>No independent replications yet.</b><br>' +
+      'This gallery is deliberately empty rather than seeded with examples — every entry here will be a real submitted run. ' +
+      'The first one can be yours: <a href="/container/">run the container</a>, then <a href="#submit">submit your energy.json</a>.</div>';
+    return;
+  }
+  document.getElementById("filters").style.display = "";
+  host.innerHTML = rows.map(function(e){
+    var cls = classify({ arch:e.arch, precision:e.precision, N:e.params_b, dE:e.dE });
+    var n = e.n == null ? 1 : e.n;
+    return '<div class="entry">' +
+      '<div class="who">' + esc(e.handle) + (e.affiliation ? ' · <span class="meta">' + esc(e.affiliation) + '</span>' : '') + '</div>' +
+      '<div class="cfg">' + esc(e.gpu) + ' · ' + esc(e.model) + ' · ' + esc(e.precision) + '</div>' +
+      '<div class="num">ΔE vs FP16: <b>' + (e.dE > 0 ? "+" : "") + e.dE + '%</b> · basis: ' + esc(e.basis) +
+        ' · n = ' + n + (e.cv_pct != null ? ' · CV ' + e.cv_pct + '%' : ' (single trial, no measured spread)') + '</div>' +
+      '<div class="foot">' +
+        (cls ? '<span class="flag ' + (cls.agrees ? 'confirm">consistent with the curve' : 'dispute">outside the band') + '</span>' : '') +
+        esc(e.date || "") +
+        (e.report ? ' · <a href="' + esc(e.report) + '" target="_blank" rel="noopener">view energy.json</a>' : '') +
+        (e.link ? ' · <a href="' + esc(e.link) + '" target="_blank" rel="noopener">context</a>' : '') +
+        (e.note ? '<br>' + esc(e.note) : '') +
+      '</div></div>';
+  }).join("");
+}
+
+function renderStats(){
+  var archs = {}, conf = 0, disp = 0;
+  GALLERY.forEach(function(e){
+    if(e.arch) archs[e.arch] = 1;
+    var cls = classify({ arch:e.arch, precision:e.precision, N:e.params_b, dE:e.dE });
+    if(cls){ if(cls.agrees) conf++; else disp++; }
+  });
+  var cards = [
+    [GALLERY.length, "independent replications"],
+    [Object.keys(archs).length, "GPU architectures"],
+    [conf + " / " + disp, "consistent / outside band"],
+    [disp, "open disagreements"]
+  ];
+  document.getElementById("stats").innerHTML = cards.map(function(c){
+    return '<div class="stat"><div class="v">' + c[0] + '</div><div class="k">' + c[1] + '</div></div>';
+  }).join("");
+  document.getElementById("statsNote").innerHTML = GALLERY.length
+    ? "Counted from <code>replications.json</code>; “outside band” compares each point with the fitted curve's residual spread."
+    : "Nothing here is a placeholder: these counters read <code>replications.json</code>, which is empty until the first real submission lands. Submit one that breaks our curve and it will be published just as prominently — disagreement is the mechanism, not the enemy.";
+}
+
+/* ---------- wiring ---------- */
+(function(){
+  var dz = document.getElementById("dz"), fi = document.getElementById("fi");
+  dz.addEventListener("click", function(){ fi.click(); });
+  dz.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); fi.click(); } });
+  ["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("drag"); }); });
+  ["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("drag"); }); });
+  dz.addEventListener("drop", function(e){ if(e.dataTransfer && e.dataTransfer.files[0]) read(e.dataTransfer.files[0]); });
+  fi.addEventListener("change", function(){ if(fi.files[0]) read(fi.files[0]); });
+  function read(f){ var r = new FileReader(); r.onload = function(){ ingest(r.result, f.name); }; r.readAsText(f); }
+
+  ["handle","c1","c2"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", refreshButtons);
+    document.getElementById(id).addEventListener("change", refreshButtons);
+  });
+  ["affil","link","trials"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ /* included in the issue body on click */ });
+  });
+
+  document.getElementById("issueBtn").addEventListener("click", function(){
+    if(!POINT) return;
+    var title = "Replication: " + POINT.gpu + " · " + POINT.model + " · " + POINT.precision +
+      " · " + (POINT.dE > 0 ? "+" : "") + POINT.dE.toFixed(1) + "%";
+    var url = REPO_ISSUE + "?title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(issueText());
+    window.open(url, "_blank", "noopener");
+  });
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    var t = issueText(); var btn = document.getElementById("copyBtn");
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){
+      btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = "Copy the summary"; }, 1600);
+    });
+  });
+  document.getElementById("filters").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    FILTER = b.getAttribute("data-f");
+    [].forEach.call(this.querySelectorAll("button"), function(x){ x.classList.toggle("on", x === b); });
+    renderGallery();
+  });
+
+  fetch("/curves.json").then(function(r){ return r.json(); }).then(function(j){ CURVES = j; })
+    .catch(function(){ CURVES = null; })
+    .then(function(){
+      return fetch("replications.json").then(function(r){ return r.json(); })
+        .then(function(j){ GALLERY = (j && j.entries) || []; })
+        .catch(function(){ GALLERY = []; });
+    })
+    .then(function(){ renderStats(); renderGallery(); });
+})();
+</script>
+</body>
+</html>
