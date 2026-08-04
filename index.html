@@ -163,6 +163,12 @@
   .ntag.repl{border-color:#34d399;color:#34d399}
   .provenance a{color:var(--accent);text-decoration:none}
   .provenance a:hover{text-decoration:underline}
+  /* per-size INT8 penalty strip (RTX 4090, n=1 -> hatched, same convention as .bar-fill.single) */
+  .sizebars{display:flex;align-items:flex-end;gap:10px;height:132px;margin:14px 0 0}
+  .sizebars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+  .sizebars .v{font-size:12.5px;font-weight:700;color:var(--bad);font-variant-numeric:tabular-nums;margin:0 0 5px;white-space:nowrap}
+  .sizebars .b{width:100%;max-width:62px;background:var(--bad);opacity:.6;background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.42) 0 4px,transparent 4px 8px);border-radius:5px 5px 0 0}
+  .sizebars .k{font-size:11.5px;color:var(--muted);margin:6px 0 0;white-space:nowrap}
   .bar-val{width:150px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
   .bar-val b{color:var(--txt);font-size:14px}
   .delta{display:inline-block;min-width:62px;text-align:right;font-weight:700}
@@ -441,6 +447,26 @@
       These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b>.
       <b>INT8 (bitsandbytes LLM.int8()) never saves energy here</b> (+50% … +242%): it does lower instantaneous power,
       but decode throughput collapses to 9–19 tok/s (FP16: 39–62 tok/s), so every token ends up costing more.
+    </p>
+
+    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">INT8 energy penalty by model size · vs FP16 on the same card</h3>
+    <!-- Values are ΔE% = energy_quant/energy_fp16 - 1 from build/measured.csv (RTX 4090, INT8 rows).
+         Bar heights are proportional to the largest penalty (+242%). -->
+    <div class="sizebars" role="img"
+         aria-label="INT8 energy penalty versus FP16 on one RTX 4090: plus 242 percent at 0.5B, plus 146 percent at 1.1B, plus 181 percent at 1.5B, plus 135 percent at 3B, plus 50 percent at 7B.">
+      <div class="col"><span class="v">+242%</span><div class="b" style="height:100%"></div><span class="k">0.5B</span></div>
+      <div class="col"><span class="v">+146%</span><div class="b" style="height:60%"></div><span class="k">1.1B</span></div>
+      <div class="col"><span class="v">+181%</span><div class="b" style="height:75%"></div><span class="k">1.5B</span></div>
+      <div class="col"><span class="v">+135%</span><div class="b" style="height:56%"></div><span class="k">3B</span></div>
+      <div class="col"><span class="v">&nbsp;+50%</span><div class="b" style="height:21%"></div><span class="k">7B</span></div>
+    </div>
+    <p class="chartnote" style="margin-top:12px">
+      Every bar points the wrong way: <b>no model size we measured saved energy in INT8</b>, and the penalty does not
+      fall monotonically with size (1.5B is worse than 1.1B). The penalty does shrink towards 7B, but we have no
+      measurement above it, so <b>we do not claim INT8 breaks even at some larger size</b> — on this card INT8 bought
+      memory, not energy. Bars are hatched because these are single trials (n&nbsp;=&nbsp;1) on <b>one</b> RTX 4090;
+      INT8 was measured on Ada and Ampere only, H100 borrows the Ampere curve (estimated, not measured), and T4 and
+      RTX&nbsp;5090 have no INT8 curve at all.
     </p>
     <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">Honest scope · what this run does and does not support</h3>
     <table class="scope">
