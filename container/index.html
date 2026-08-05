@@ -102,14 +102,23 @@
     </div>
 
     <h2>1 · Run it — one command, zero configuration</h2>
-    <p><b>Prerequisites for a real measurement:</b> Docker, an NVIDIA GPU with NVML power telemetry, and the NVIDIA
-    Container Toolkit. Without a GPU you can still verify the whole pipeline — see step 3.</p>
+    <p><b>Prerequisite for a real measurement:</b> an NVIDIA GPU with NVML power telemetry. Docker is optional — see
+    the two modes below. Without a GPU you can still verify the whole pipeline — see step 3.</p>
 <pre>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</pre>
-    <p>It pulls the prebuilt image, measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a
-    schema-validated <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. First
-    run is usually well under 15 minutes (the image pull and a ~2&nbsp;GB model download dominate; the measurement is a
-    few minutes); both are cached for later runs. Nothing is installed on the host except the image, and the script
-    prints every <code>docker</code> command it runs.</p>
+    <p>It measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated
+    <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. First run is usually well
+    under 15 minutes (the one-time image pull or dependency install and a ~2&nbsp;GB model download dominate; the
+    measurement is a few minutes); everything is cached for later runs. The script prints every command it runs.</p>
+    <p>It picks one of two modes and tells you which:</p>
+    <ul>
+      <li><b>docker</b> — when the Docker daemon answers: pulls the prebuilt image and runs it with
+      <code>--gpus all</code>; nothing is installed on the host.</li>
+      <li><b>native</b> — when there is no usable Docker. Rented GPU instances (AutoDL, vast.ai and similar) are
+      themselves containers and cannot nest one, so the script clones the repository and installs into a venv,
+      reusing the host's CUDA PyTorch and keeping the checkout, venv and model cache on the data disk when there is
+      one. Same <code>entrypoint.py</code>, same report.</li>
+    </ul>
+    <p class="meta">Force either mode with <code>ECOCOMPUTE_MODE=docker</code> or <code>ECOCOMPUTE_MODE=native</code>.</p>
     <p class="meta">You do not pass an architecture: <code>gpu_arch</code> defaults to <code>auto</code> and is derived
     from the NVML device name, so a run cannot label an RTX&nbsp;4090 as Blackwell and end up compared against the wrong
     curve. A card we do not recognise is recorded by its NVML name rather than guessed into a family. Override anything
