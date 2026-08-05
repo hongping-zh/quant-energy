@@ -101,9 +101,32 @@
       <a class="ghost" href="/?tab=run">Overlay your energy.json on the curve →</a>
     </div>
 
-    <h2>1 · Run it (about a minute of typing)</h2>
+    <h2>1 · Run it — one command, zero configuration</h2>
     <p><b>Prerequisites for a real measurement:</b> Docker, an NVIDIA GPU with NVML power telemetry, and the NVIDIA
     Container Toolkit. Without a GPU you can still verify the whole pipeline — see step 3.</p>
+<pre>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</pre>
+    <p>It pulls the prebuilt image, measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a
+    schema-validated <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. First
+    run is usually well under 15 minutes (the image pull and a ~2&nbsp;GB model download dominate; the measurement is a
+    few minutes); both are cached for later runs. Nothing is installed on the host except the image, and the script
+    prints every <code>docker</code> command it runs.</p>
+    <p class="meta">You do not pass an architecture: <code>gpu_arch</code> defaults to <code>auto</code> and is derived
+    from the NVML device name, so a run cannot label an RTX&nbsp;4090 as Blackwell and end up compared against the wrong
+    curve. A card we do not recognise is recorded by its NVML name rather than guessed into a family. Override anything
+    via environment variables — <code>ECOCOMPUTE_PRECISION=INT8</code>, <code>ECOCOMPUTE_MODEL</code> +
+    <code>ECOCOMPUTE_PARAMS_B</code>, <code>ECOCOMPUTE_ITERATIONS=10</code> (the published dataset used 10; the
+    quickstart uses 5 to stay inside the time budget).</p>
+    <p>Or drive the image directly:</p>
+<pre>docker run --rm --gpus all \
+    -v "$PWD/out:/workspace/outputs" \
+    ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate \
+    --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 \
+    --precision NF4 --gpu_arch auto --output_dir /workspace/outputs --share</pre>
+    <p class="meta">The image is built and pushed by CI on every merge to <code>main</code>. If the pull is denied or you
+    are offline, <code>quickstart.sh</code> says so and builds the image from the repository instead — same result, 10–20
+    minutes longer.</p>
+
+    <h3>From source</h3>
 <pre>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
 cd ecocompute-mlcube
 
@@ -121,10 +144,9 @@ cat workspace/outputs/energy.json</pre>
     <code>mlcube run --mlcube=. --task=energy_estimate parameters_file=parameters/bert_bs32.yaml output_dir=outputs_bert/</code>.</p>
 
     <h3>Compare against this site straight from the terminal</h3>
-<pre># --gpu_arch must name YOUR card: turing | ampere | ada | blackwell | hopper
-python3 entrypoint.py energy_estimate \
+<pre>python3 entrypoint.py energy_estimate \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
-    --precision NF4 --gpu_arch ada --params_b 1.1 \
+    --precision NF4 --gpu_arch auto --params_b 1.1 \
     --output_dir workspace/outputs --prefetch --share</pre>
     <ul>
       <li><code>--prefetch</code> — asks the site estimator for its <em>prediction</em> before measuring and prints it,
@@ -227,8 +249,8 @@ python3 entrypoint.py energy_estimate \
     <h2>7 · Not built yet</h2>
     <p>So the roadmap is not mistaken for the product — these are wanted, but they do not exist today:</p>
     <ul>
-      <li><b>A published image on a public registry.</b> Today you build locally (MLCube builds it for you) or clone and
-      run the entrypoint; there is no <code>docker pull</code> one-liner yet.</li>
+      <li><b>Multi-architecture and multi-GPU images.</b> The published image is <code>linux/amd64</code>, single-GPU
+      (<code>accelerator_count: 1</code>); it does not measure multi-card or tensor-parallel serving.</li>
       <li><b>A wall-power hook</b> (BMC / IPMI / smart PDU / USB meter) to report system energy alongside the NVML
       number. This is the most common and most fair critique of NVML-only measurement.</li>
       <li><b>Signed reports</b> for ESG and procurement contexts.</li>
