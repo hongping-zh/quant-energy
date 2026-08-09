@@ -106,9 +106,13 @@
     the two modes below. Without a GPU you can still verify the whole pipeline — see step 3.</p>
 <pre>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</pre>
     <p>It measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated
-    <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. First run is usually well
-    under 15 minutes (the one-time image pull or dependency install and a ~2&nbsp;GB model download dominate; the
-    measurement is a few minutes); everything is cached for later runs. The script prints every command it runs.</p>
+    <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. The script prints every
+    command it runs.</p>
+    <p><b>Time:</b> the measurement is a few minutes; the first run is dominated by downloads and everything is cached
+    afterwards. The one end-to-end run we have timed took <b>57 minutes</b> on a China-hosted rented RTX&nbsp;4090 in
+    native mode — 5.5 of those were the ~2&nbsp;GB model, nearly all the rest was ~3&nbsp;GB of torch/CUDA wheels from
+    <code>download.pytorch.org</code>. The setup script now prefers the host's configured (domestic) package index for
+    torch, which should remove most of that, but we have not re-timed it, and we have not timed the docker path at all.</p>
     <p>It picks one of two modes and tells you which:</p>
     <ul>
       <li><b>docker</b> — when the Docker daemon answers: pulls the prebuilt image and runs it with
@@ -123,8 +127,9 @@
     from the NVML device name, so a run cannot label an RTX&nbsp;4090 as Blackwell and end up compared against the wrong
     curve. A card we do not recognise is recorded by its NVML name rather than guessed into a family. Override anything
     via environment variables — <code>ECOCOMPUTE_PRECISION=INT8</code>, <code>ECOCOMPUTE_MODEL</code> +
-    <code>ECOCOMPUTE_PARAMS_B</code>, <code>ECOCOMPUTE_ITERATIONS=10</code> (the published dataset used 10; the
-    quickstart uses 5 to stay inside the time budget).</p>
+    <code>ECOCOMPUTE_PARAMS_B</code>, <code>ECOCOMPUTE_ITERATIONS</code> (default 10 after 2 warmups, matching the
+    published dataset). Both modes install the same pinned <code>transformers</code>/<code>bitsandbytes</code> as the
+    image — quantization kernels change between releases, so this is what keeps contributed runs comparable.</p>
     <p>Or drive the image directly:</p>
 <pre>docker run --rm --gpus all \
     -v "$PWD/out:/workspace/outputs" \
