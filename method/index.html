@@ -106,6 +106,19 @@
     <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener"><code>build/measured.csv</code></a>
     and <code>n</code> on every anchor in <a href="/curves.json">curves.json</a>. Single-trial points still enter the fit —
     discarding real measurements would be worse — but they are visually marked so no one mistakes one observation for a distribution.</p>
+    <h3>How far apart two single trials land</h3>
+    <p>An n&nbsp;=&nbsp;1 point has no spread of its own, so we re-ran the same configuration on separate rented
+    RTX&nbsp;4090 instances to get a sense of the between-session scatter the charts do not show:</p>
+    <ul>
+      <li><b>TinyLlama-1.1B INT8</b>: <b>+146.1%</b> (July 2026) and <b>+137.9%</b> (August 2026) — <b>8.2 points</b> apart.</li>
+      <li><b>TinyLlama-1.1B NF4</b>: three runs of one build gave <b>+11.8 / +9.7 / +10.6%</b> — a range of <b>2.1 points</b>.</li>
+    </ul>
+    <p class="meta">These are separate sessions on different instances with <em>different library versions</em>
+    (quantization kernels change between bitsandbytes releases), so the scatter mixes hardware, session and
+    software variation — it is an upper bound on run-to-run noise, not a CV. We keep the runs as separate
+    n&nbsp;=&nbsp;1 anchors rather than pooling them into an n&nbsp;=&nbsp;2 point: filled markers on this site mean
+    repeated trials of the <em>same</em> configuration with a measured CV&nbsp;&lt;&nbsp;2%, and these are not that.
+    The NF4 numbers above come from container validation runs and are not in the dataset.</p>
     <p class="meta">The fitted curves and the estimator are open: see <a href="/estimate.js">estimate.js</a>, <a href="/optimize.js">optimize.js</a> and the <code>build/</code> scripts in <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">the site repository</a>.</p>
 
     <h2>3 · The finding this protocol produced</h2>
