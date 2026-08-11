@@ -464,7 +464,11 @@
       Every bar points the wrong way: <b>no model size we measured saved energy in INT8</b>, and the penalty does not
       fall monotonically with size (1.5B is worse than 1.1B). The penalty does shrink towards 7B, but we have no
       measurement above it, so <b>we do not claim INT8 breaks even at some larger size</b> — on this card INT8 bought
-      memory, not energy. Bars are hatched because these are single trials (n&nbsp;=&nbsp;1) on <b>one</b> RTX 4090;
+      memory, not energy. Bars are hatched because these are single trials (n&nbsp;=&nbsp;1) on <b>one</b> RTX 4090.
+      The 1.1B bar has since been re-measured on a second RTX 4090 instance (August 2026, same container):
+      <b>+138%</b> against the July run's +146% — two single trials 8&nbsp;points apart, on different software
+      versions. Both are in <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a> as separate n&nbsp;=&nbsp;1 anchors; neither is a replication of the other.
+      Also note:
       INT8 was measured on Ada and Ampere only, H100 borrows the Ampere curve (estimated, not measured), and T4 and
       RTX&nbsp;5090 have no INT8 curve at all.
     </p>

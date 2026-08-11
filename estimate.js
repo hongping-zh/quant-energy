@@ -26,8 +26,8 @@
     "borrow": {"hopper": "ampere"},
     "curves": {
       "ada": {
-        "INT8": { "A": 272.7331, "S": 291.8945, "Nstar": 2.5938, "resid_std": 22.4393, "n_min": 0.5, "n_max": 7.0, "crossover_b": null, "loo_mae": 42.656,
-          "anchors": [{"N": 0.5, "dE": 241.89, "model": "Qwen2-0.5B", "gpu": "RTX 4090", "n": 1}, {"N": 1.1, "dE": 146.11, "model": "TinyLlama-1.1B", "gpu": "RTX 4090", "n": 1}, {"N": 1.5, "dE": 180.73, "model": "Qwen2-1.5B", "gpu": "RTX 4090", "n": 1}, {"N": 3.0, "dE": 134.82, "model": "Qwen2.5-3B", "gpu": "RTX 4090", "n": 1}, {"N": 7.0, "dE": 49.54, "model": "Qwen2-7B", "gpu": "RTX 4090", "n": 1}] },
+        "INT8": { "A": 291.8945, "S": 274.5289, "Nstar": 1.4423, "resid_std": 26.5949, "n_min": 0.5, "n_max": 7.0, "crossover_b": null, "loo_mae": 47.455,
+          "anchors": [{"N": 0.5, "dE": 241.89, "model": "Qwen2-0.5B", "gpu": "RTX 4090", "n": 1}, {"N": 1.1, "dE": 146.11, "model": "TinyLlama-1.1B", "gpu": "RTX 4090", "n": 1}, {"N": 1.1, "dE": 137.9, "model": "TinyLlama-1.1B", "gpu": "RTX 4090", "n": 1}, {"N": 1.5, "dE": 180.73, "model": "Qwen2-1.5B", "gpu": "RTX 4090", "n": 1}, {"N": 3.0, "dE": 134.82, "model": "Qwen2.5-3B", "gpu": "RTX 4090", "n": 1}, {"N": 7.0, "dE": 49.54, "model": "Qwen2-7B", "gpu": "RTX 4090", "n": 1}] },
         "NF4": { "A": 54.2295, "S": 131.0936, "Nstar": 5.2846, "resid_std": 11.4822, "n_min": 0.5, "n_max": 7.0, "crossover_b": 3.728, "loo_mae": 16.123,
           "anchors": [{"N": 0.5, "dE": 35.63, "model": "Qwen2-0.5B", "gpu": "RTX 4090", "n": 1}, {"N": 0.5, "dE": 56.09, "model": "Qwen2-0.5B", "gpu": "RTX 4090D", "n": 1}, {"N": 1.1, "dE": 16.31, "model": "TinyLlama-1.1B", "gpu": "RTX 4090", "n": 1}, {"N": 1.1, "dE": 33.35, "model": "TinyLlama-1.1B", "gpu": "RTX 4090D", "n": 2}, {"N": 1.5, "dE": 15.11, "model": "Qwen2-1.5B", "gpu": "RTX 4090", "n": 1}, {"N": 1.5, "dE": 38.6, "model": "Qwen2-1.5B", "gpu": "RTX 4090D", "n": 2}, {"N": 3.0, "dE": 0.76, "model": "Qwen2.5-3B", "gpu": "RTX 4090", "n": 1}, {"N": 3.0, "dE": 25.22, "model": "Qwen2.5-3B", "gpu": "RTX 4090D", "n": 2}, {"N": 7.0, "dE": -28.46, "model": "Qwen2-7B", "gpu": "RTX 4090", "n": 1}] }
       },
@@ -49,7 +49,7 @@
     // Measured FP16 absolute decode energy (J / 1k tokens), per arch — anchors the
     // optimizer's absolute-energy numbers. Mirror of curves.json:fp16_energy.
     "fp16_energy": {
-      "ada": { "n_min": 0.5, "n_max": 7.0, "anchors": [{ "N": 0.5, "e_j1k": 1525.33 }, { "N": 1.1, "e_j1k": 1613.31 }, { "N": 1.5, "e_j1k": 2213.4 }, { "N": 3.0, "e_j1k": 3368.4 }, { "N": 7.0, "e_j1k": 5467.88 }] },
+      "ada": { "n_min": 0.5, "n_max": 7.0, "anchors": [{ "N": 0.5, "e_j1k": 1525.33 }, { "N": 1.1, "e_j1k": 1585.71 }, { "N": 1.5, "e_j1k": 2213.4 }, { "N": 3.0, "e_j1k": 3368.4 }, { "N": 7.0, "e_j1k": 5467.88 }] },
       "blackwell": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 1659.0 }, { "N": 1.5, "e_j1k": 2411.09 }, { "N": 3.0, "e_j1k": 3382.64 }, { "N": 7.0, "e_j1k": 5508.56 }] },
       "turing": { "n_min": 1.1, "n_max": 7.0, "anchors": [{ "N": 1.1, "e_j1k": 4251.21 }, { "N": 1.5, "e_j1k": 5731.8 }, { "N": 3.0, "e_j1k": 11267.69 }, { "N": 7.0, "e_j1k": 21722.65 }] },
       "ampere": { "n_min": 7.0, "n_max": 14.0, "anchors": [{ "N": 7.0, "e_j1k": 4402.43 }, { "N": 9.0, "e_j1k": 5445.12 }, { "N": 14.0, "e_j1k": 7359.98 }] }
