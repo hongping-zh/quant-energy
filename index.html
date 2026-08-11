@@ -444,8 +444,9 @@
            alt="RTX 4090: absolute decode energy and throughput for FP16, NF4 and INT8 across 0.5B-7B models. INT8 has the highest energy per token and the lowest throughput."
            style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
     <p class="chartnote" style="margin-top:14px">
-      <b>NF4 crosses over between 3B and 7B</b>: +36% energy penalty at 0.5B → <b>−29% saving at 7B</b>.
-      These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b>.
+      <b>NF4 reaches break-even just above 3B on this card</b>: +36% energy penalty at 0.5B → <b>+0.8% at 3B</b> → <b>−28% saving at 7B</b>.
+      These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b> — later than this card alone,
+      because the fit also carries the more heavily penalised RTX&nbsp;4090D anchors.
       <b>INT8 (bitsandbytes LLM.int8()) did not save energy at any size we tested</b> (+50% … +242%, five sizes, one card,
       n&nbsp;=&nbsp;1 each): it does lower instantaneous power, but decode throughput collapses to 9–19 tok/s
       (FP16: 39–62 tok/s), so a token ends up costing more. That is a statement about this backend on this card,

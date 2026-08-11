@@ -81,7 +81,12 @@
       </tr>
       <tr>
         <td><b>RTX 4090 (Ada) deep dive</b></td>
-        <td>The RTX 4090 column only — INT8 on Ada, 7B on Ada</td>
+        <td>The RTX 4090 column only — INT8 on Ada, 7B on Ada. <b>Known erratum in v1 of this record:</b> the
+        <code>vs_fp16_pct</code> column of <code>rtx4090_results.csv</code> disagrees with that file's own energy,
+        power and throughput columns (worst case Qwen2.5-3B NF4: column says +10.1%, the energies say +0.8%).
+        Use the energy columns, or this site's
+        <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a>,
+        which is derived from them. A corrected version is pending.</td>
         <td><a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a></td>
         <td><a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a></td>
       </tr>
