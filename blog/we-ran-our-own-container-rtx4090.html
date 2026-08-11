@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins — EcoCompute</title>
-<meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a −29% saving at 7B; INT8 costs more energy at every size because throughput collapses." />
+<title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested — EcoCompute</title>
+<meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a −29% saving at 7B; INT8 cost more energy at all five sizes we tested (n=1 each, bitsandbytes LLM.int8()) because throughput collapses." />
 <link rel="canonical" href="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
 <link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
-<meta property="og:title" content="We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins" />
-<meta property="og:description" content="15/15 real NVML measurements from our open MLCube container. NF4: +36% at 0.5B → −29% at 7B. INT8: a penalty everywhere, because decode throughput collapses to 9–19 tok/s." />
+<meta property="og:title" content="We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested" />
+<meta property="og:description" content="15/15 real NVML measurements from our open MLCube container. NF4: +36% at 0.5B → −29% at 7B. INT8: a penalty at all five sizes tested (n=1 each), because decode throughput collapses to 9–19 tok/s." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
 <meta property="og:image" content="https://quantenergy.tech/assets/rtx4090-int8-throughput.png" />
@@ -17,7 +17,7 @@
 {
   "@context":"https://schema.org",
   "@type":"BlogPosting",
-  "headline":"We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins",
+  "headline":"We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested",
   "datePublished":"2026-07-25",
   "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
   "mainEntityOfPage":"https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html",
@@ -64,7 +64,7 @@
       <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
     </div>
 
-    <h1>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins</h1>
+    <h1>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested</h1>
     <div class="date">2026-07-25 · Hongping Zhang</div>
 
     <p>Publishing a measurement methodology is cheap; running it is not. So we rented a single <strong>NVIDIA GeForce RTX 4090</strong> (Ada Lovelace, 24&nbsp;GB) for an afternoon and pointed our own container at it — the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>, the same MLCube-compatible container anyone can run on their own card. Five models from 0.5B to 7B, three precisions each: <strong>15 of 15 configurations came back as real hardware measurements</strong> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>), not estimates.</p>
@@ -87,7 +87,7 @@
     <p>The NF4 penalty shrinks monotonically with model size — +36.5% at 0.5B, +15% around 1–1.5B, +10.1% at 3B — and then flips to a <strong>−29.4% saving at 7B</strong>. That is the crossover this project keeps arguing about, measured end-to-end on one GPU with one methodology, which is exactly the comparison that is usually missing when numbers are stitched together from different papers.</p>
 
     <h2>INT8: lower power, more energy</h2>
-    <p>INT8 (bitsandbytes <code>LLM.int8()</code>) was a penalty at <em>every</em> size we measured, from +47% at 7B to +256% at 0.5B. The mechanism is visible in the throughput panel below: INT8 genuinely draws less instantaneous power (73–95&nbsp;W vs 88–269&nbsp;W for FP16), but decode throughput collapses to <strong>9–19 tok/s</strong> against FP16's 39–62 tok/s. Energy is power × time, so a run that takes 3–5× longer loses even when it draws less power.</p>
+    <p>INT8 (bitsandbytes <code>LLM.int8()</code>) was a penalty at all five sizes we measured, from +47% at 7B to +256% at 0.5B — one card, one backend, n&nbsp;=&nbsp;1 per size, so read it as "this kernel on this card" rather than a verdict on 8-bit inference. The mechanism is visible in the throughput panel below: INT8 genuinely draws less instantaneous power (73–95&nbsp;W vs 88–269&nbsp;W for FP16), but decode throughput collapses to <strong>9–19 tok/s</strong> against FP16's 39–62 tok/s. Energy is power × time, so a run that takes 3–5× longer loses even when it draws less power.</p>
 
     <figure>
       <a href="/assets/rtx4090-int8-throughput.png" target="_blank" rel="noopener"><img src="/assets/rtx4090-int8-throughput.png" alt="Two panels for RTX 4090: absolute decode energy per token, where INT8 is highest at every model size, and decode throughput, where INT8 collapses to 9–19 tokens per second." loading="lazy" /></a>
@@ -95,11 +95,11 @@
     </figure>
 
     <div class="callout">
-      <strong>Practical read:</strong> on a 24&nbsp;GB Ada card, use NF4 when the model is large enough (≈7B and up) or when it simply would not fit otherwise — but do not reach for weight-only INT8 at batch&nbsp;1 expecting an energy win. On this hardware there wasn't one.
+      <strong>Practical read:</strong> on a 24&nbsp;GB Ada card, use NF4 when the model is large enough (≈7B and up) or when it simply would not fit otherwise — but do not reach for weight-only INT8 at batch&nbsp;1 expecting an energy win. On this hardware, with this backend, there wasn't one. Other kernels (GPTQ, AWQ, TensorRT-LLM) are a different measurement we have not made.
     </div>
 
     <h2>What this run is not</h2>
-    <p>Being explicit about scope is the point of the project, so: each configuration was run <strong>once</strong> (n&nbsp;=&nbsp;1), with the 10 decode iterations integrated into a single energy total — there is no standard deviation or CV to report yet. NVML gives <strong>GPU-package power</strong>, not whole-system wall power. The workload is one short prompt at a fixed 256-token length and batch&nbsp;1, so it speaks to single-stream decode, not to batched serving. And the card is an <strong>RTX 4090, not an RTX 4090D</strong> — both are Ada, but they are different SKUs, which is why the site now lists them as separate columns instead of overwriting the older one. We publish this as a supplementary case study, not as a certified benchmark.</p>
+    <p>Being explicit about scope is the point of the project, so: each configuration was run <strong>once</strong> (n&nbsp;=&nbsp;1), with the 10 decode iterations integrated into a single energy total — there is no standard deviation or CV to report yet. We have since re-measured one of these cells — TinyLlama-1.1B INT8 — on a second rented RTX 4090 in August 2026: <strong>+137.9%</strong> against July's +146.1%, i.e. two single trials <strong>8.2 points apart</strong> (different session, different bitsandbytes version). That is the resolution these numbers deserve to be read at. NVML gives <strong>GPU-package power</strong>, not whole-system wall power. The workload is one short prompt at a fixed 256-token length and batch&nbsp;1, so it speaks to single-stream decode, not to batched serving. And the card is an <strong>RTX 4090, not an RTX 4090D</strong> — both are Ada, but they are different SKUs, which is why the site now lists them as separate columns instead of overwriting the older one. We publish this as a supplementary case study, not as a certified benchmark.</p>
 
     <h2>Run it yourself, or take the data</h2>
     <p>The container does the same thing on your GPU and writes an <code>energy.json</code> with the exact fields the charts on this site read:</p>

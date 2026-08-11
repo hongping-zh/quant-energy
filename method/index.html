@@ -141,12 +141,14 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
     schema, honesty guarantees, scope and how to contribute a run are documented on
     <a href="/container/">the container page</a>.</p>
 
-    <h2>5 · Limitations</h2>
+    <h2 id="limits">5 · Limitations</h2>
     <ul>
       <li>NVML reports <b>GPU-package power</b>, not whole-system draw: CPU, DRAM, PSU losses and cooling are excluded.</li>
       <li>Single-stream generation only; batched serving with continuous batching has a different energy profile.</li>
       <li>Curves are fitted per <b>architecture class</b>, not per card: the Ada class pools RTX 4090D and RTX 4090 measurements, which differ by roughly 20 percentage points at the same model size, so Ada bands are the widest of the four classes.</li>
-      <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset.</li>
+      <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset. Two single trials of the same configuration have landed <b>8.2 points apart</b> (see above), which is the resolution to read these points at.</li>
+      <li>Results are <b>backend-specific</b>: NF4 and INT8 here mean bitsandbytes NF4 and LLM.int8() at the versions recorded in each report. GPTQ, AWQ, TensorRT-LLM, llama.cpp and newer bitsandbytes releases implement different kernels and can behave differently. "INT8 cost energy at every size we tested" is a claim about this backend on these cards — not about INT8 as a format.</li>
+      <li>What would falsify the central claim: a measured run, from this container or an equivalent NVML-based protocol, showing quantization saving energy <em>below</em> the crossover we publish for that architecture, or costing energy above it. We publish such runs on <a href="/replications/">the replications page</a> whether they agree with us or not.</li>
       <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
     </ul>
 

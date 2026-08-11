@@ -8,11 +8,11 @@
     <language>en</language>
     <lastBuildDate>Sat, 25 Jul 2026 00:00:00 GMT</lastBuildDate>
     <item>
-      <title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 never wins</title>
+      <title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested</title>
       <link>https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html</link>
       <guid isPermaLink="true">https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html</guid>
       <pubDate>Sat, 25 Jul 2026 00:00:00 GMT</pubDate>
-      <description>15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a -29% saving at 7B; INT8 costs more energy at every size because decode throughput collapses to 9-19 tok/s. Data archived at DOI 10.5281/zenodo.21528103.</description>
+      <description>15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a -29% saving at 7B; INT8 cost more energy at all five sizes tested (n=1 each, bitsandbytes LLM.int8()) because decode throughput collapses to 9-19 tok/s. Data archived at DOI 10.5281/zenodo.21528103.</description>
     </item>
     <item>
       <title>When not to quantize: the small-model energy penalty</title>

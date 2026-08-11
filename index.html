@@ -333,14 +333,15 @@
       <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
-      <a href="#evidence">15/15 measured</a>
-      <a href="/method/">NVML @ 10&nbsp;Hz</a>
+      <a href="#evidence">15/15 measured · n&nbsp;=&nbsp;1 each</a>
+      <a href="/method/">NVML @ 10&nbsp;Hz · GPU package</a>
       <a href="/container/">MLCube-compatible</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener">Schema-validated</a>
       <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Zenodo DOI</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
     </div>
     <p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
+    <p class="badge" style="margin-top:8px">Scope of every number here: <b>GPU-package power</b> (NVML), not whole-system draw — no PSU losses, CPU, DRAM, cooling, PUE or CO₂e. <b>Single-stream decode</b>, batch 1, 256 tokens. Replication is stated per point: the main dataset is n&nbsp;=&nbsp;2 (CV&nbsp;&lt;&nbsp;2%), the RTX 4090 deep dive is <b>n&nbsp;=&nbsp;1 per configuration</b>. <a href="/method/#limits" style="color:var(--accent);text-decoration:underline">Limits and how to disprove us →</a></p>
     <p class="badge" style="margin-top:10px">Open measurement stack: an <b>MLCube-compatible container</b> doing direct NVML power sampling, the <b>datasets it produced</b> (Zenodo, CC&nbsp;BY&nbsp;4.0), and the <b>preprint</b> that interprets them.</p>
     <div class="cta" style="margin-top:6px">
       <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
@@ -383,7 +384,7 @@
   </div>
 
   <div class="card">
-    <h2>Crossover curve · the bigger the model, the more quantization saves</h2>
+    <h2>Crossover curve · in what we measured, the bigger the model, the more quantization saves</h2>
     <div class="legend">
       <span><i class="swatch" style="background:var(--nf4)"></i>NF4</span>
       <span><i class="swatch" style="background:var(--int8)"></i>INT8</span>
@@ -445,11 +446,14 @@
     <p class="chartnote" style="margin-top:14px">
       <b>NF4 crosses over between 3B and 7B</b>: +36% energy penalty at 0.5B → <b>−29% saving at 7B</b>.
       These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b>.
-      <b>INT8 (bitsandbytes LLM.int8()) never saves energy here</b> (+50% … +242%): it does lower instantaneous power,
-      but decode throughput collapses to 9–19 tok/s (FP16: 39–62 tok/s), so every token ends up costing more.
+      <b>INT8 (bitsandbytes LLM.int8()) did not save energy at any size we tested</b> (+50% … +242%, five sizes, one card,
+      n&nbsp;=&nbsp;1 each): it does lower instantaneous power, but decode throughput collapses to 9–19 tok/s
+      (FP16: 39–62 tok/s), so a token ends up costing more. That is a statement about this backend on this card,
+      not about INT8 in general — a different kernel, card or serving stack could well reverse it.
     </p>
 
     <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">INT8 energy penalty by model size · vs FP16 on the same card</h3>
+    <p class="meta" style="margin:6px 0 0">One RTX 4090 · bitsandbytes <code>LLM.int8()</code> · batch 1, 256 tokens · <b>n&nbsp;=&nbsp;1 per bar</b> (no error bar exists to draw) · GPU-package power.</p>
     <!-- Values are ΔE% = energy_quant/energy_fp16 - 1 from build/measured.csv (RTX 4090, INT8 rows).
          Bar heights are proportional to the largest penalty (+242%). -->
     <div class="sizebars" role="img"
@@ -461,7 +465,7 @@
       <div class="col"><span class="v">&nbsp;+50%</span><div class="b" style="height:21%"></div><span class="k">7B</span></div>
     </div>
     <p class="chartnote" style="margin-top:12px">
-      Every bar points the wrong way: <b>no model size we measured saved energy in INT8</b>, and the penalty does not
+      Every bar here points the wrong way: <b>no model size we tested saved energy in INT8 on this card</b>, and the penalty does not
       fall monotonically with size (1.5B is worse than 1.1B). The penalty does shrink towards 7B, but we have no
       measurement above it, so <b>we do not claim INT8 breaks even at some larger size</b> — on this card INT8 bought
       memory, not energy. Bars are hatched because these are single trials (n&nbsp;=&nbsp;1) on <b>one</b> RTX 4090.
