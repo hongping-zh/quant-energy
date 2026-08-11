@@ -61,7 +61,7 @@
     <h1>When <em>not</em> to quantize: the small-model energy penalty</h1>
     <div class="date">2026-06-25 · Hongping Zhang</div>
 
-    <div class="callout"><strong>Update, 2026-07-25:</strong> Ada now has INT8 and 7B measurements. On an RTX 4090 the NF4 crossover lands between 3B and 7B (−29% at 7B), and INT8 was an energy penalty at all five sizes we tested (n&nbsp;=&nbsp;1 each, bitsandbytes LLM.int8()) — see <a href="/blog/we-ran-our-own-container-rtx4090.html">the newer note</a>. The "INT8 on A800 only" caveat below applied to the data available when this was written.</div>
+    <div class="callout"><strong>Update, 2026-07-25:</strong> Ada now has INT8 and 7B measurements. On an RTX 4090 NF4 is already at break-even by 3B (+0.8%) and saves −28% at 7B, and INT8 was an energy penalty at all five sizes we tested (n&nbsp;=&nbsp;1 each, bitsandbytes LLM.int8()) — see <a href="/blog/we-ran-our-own-container-rtx4090.html">the newer note</a>. The "INT8 on A800 only" caveat below applied to the data available when this was written.</div>
 
     <p>Quantization is usually sold as a free win: cast your weights to 4-bit (NF4) or 8-bit (INT8), use a fraction of the VRAM, ship. And for memory, that story holds. For <em>energy</em>, it does not — at least not for small models.</p>
 
@@ -75,7 +75,7 @@
     <table>
       <tr><th>GPU</th><th>~1–3B (small)</th><th>7B</th><th>Crossover</th></tr>
       <tr><td>RTX 4090D (Ada)</td><td class="pos">+25% to +56%</td><td>not measured</td><td>none in measured range</td></tr>
-      <tr><td>RTX 4090 (Ada, July 2026)</td><td class="pos">+1% to +16%</td><td class="neg">−28%</td><td>between 3B and 7B (pooled Ada fit: ≈ 3.7B)</td></tr>
+      <tr><td>RTX 4090 (Ada, July 2026)</td><td class="pos">+1% to +16%</td><td class="neg">−28%</td><td>just above 3B on this card (pooled Ada fit, incl. 4090D: ≈ 3.7B)</td></tr>
       <tr><td>RTX 5090 (Blackwell)</td><td class="pos">+12% to +29%</td><td class="neg">−11%</td><td>≈ 4.8B</td></tr>
       <tr><td>T4 (Turing)</td><td class="pos">+0% to +5%</td><td class="neg">−14%</td><td>≈ 2.1B</td></tr>
       <tr><td>A800 (Ampere)</td><td>not measured</td><td class="neg">−4%</td><td>&lt; 7B</td></tr>

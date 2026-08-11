@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested — EcoCompute</title>
-<meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to a −29% saving at 7B; INT8 cost more energy at all five sizes we tested (n=1 each, bitsandbytes LLM.int8()) because throughput collapses." />
+<title>We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested — EcoCompute</title>
+<meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to break-even at 3B and a −28% saving at 7B; INT8 cost more energy at all five sizes we tested (n=1 each, bitsandbytes LLM.int8()) because throughput collapses." />
 <link rel="canonical" href="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
 <link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
-<meta property="og:title" content="We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested" />
-<meta property="og:description" content="15/15 real NVML measurements from our open MLCube container. NF4: +36% at 0.5B → −29% at 7B. INT8: a penalty at all five sizes tested (n=1 each), because decode throughput collapses to 9–19 tok/s." />
+<meta property="og:title" content="We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested" />
+<meta property="og:description" content="15/15 real NVML measurements from our open MLCube container. NF4: +36% at 0.5B → +0.8% at 3B → −28% at 7B. INT8: a penalty at all five sizes tested (n=1 each), because decode throughput collapses to 9–19 tok/s." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />
 <meta property="og:image" content="https://quantenergy.tech/assets/rtx4090-int8-throughput.png" />
@@ -17,7 +17,7 @@
 {
   "@context":"https://schema.org",
   "@type":"BlogPosting",
-  "headline":"We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested",
+  "headline":"We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested",
   "datePublished":"2026-07-25",
   "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
   "mainEntityOfPage":"https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html",
@@ -64,7 +64,7 @@
       <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
     </div>
 
-    <h1>We ran our own container on a rented RTX 4090: NF4 crosses over at 7B, INT8 lost at every size we tested</h1>
+    <h1>We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested</h1>
     <div class="date">2026-07-25 · Hongping Zhang</div>
 
     <p>Publishing a measurement methodology is cheap; running it is not. So we rented a single <strong>NVIDIA GeForce RTX 4090</strong> (Ada Lovelace, 24&nbsp;GB) for an afternoon and pointed our own container at it — the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>, the same MLCube-compatible container anyone can run on their own card. Five models from 0.5B to 7B, three precisions each: <strong>15 of 15 configurations came back as real hardware measurements</strong> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>), not estimates.</p>
@@ -74,17 +74,24 @@
     <h2>What we measured</h2>
     <p>Decode-phase energy, integrated from direct NVML power samples at 10&nbsp;Hz over the generation loop: 256 tokens per run, 10 iterations after 2 warmups, batch&nbsp;1, greedy decoding from one fixed prompt.</p>
     <table>
-      <tr><th>Model</th><th>FP16 (mJ/token)</th><th>NF4 vs FP16</th><th>INT8 vs FP16</th></tr>
-      <tr><td>Qwen2-0.5B</td><td>1550.9</td><td class="pos">+36.5%</td><td class="pos">+255.8%</td></tr>
-      <tr><td>TinyLlama-1.1B</td><td>1619.7</td><td class="pos">+15.3%</td><td class="pos">+143.9%</td></tr>
-      <tr><td>Qwen2-1.5B</td><td>2200.7</td><td class="pos">+15.7%</td><td class="pos">+186.3%</td></tr>
-      <tr><td>Qwen2.5-3B</td><td>3558.0</td><td class="pos">+10.1%</td><td class="pos">+138.5%</td></tr>
-      <tr><td>Qwen2-7B</td><td>5467.9</td><td class="neg">−29.4%</td><td class="pos">+47.4%</td></tr>
+      <tr><th>Model</th><th>FP16 (mJ/token)</th><th>NF4 (mJ/token)</th><th>NF4 vs FP16</th><th>INT8 (mJ/token)</th><th>INT8 vs FP16</th></tr>
+      <tr><td>Qwen2-0.5B</td><td>1550.9</td><td>2103.6</td><td class="pos">+35.6%</td><td>5302.5</td><td class="pos">+241.9%</td></tr>
+      <tr><td>TinyLlama-1.1B</td><td>1619.7</td><td>1883.9</td><td class="pos">+16.3%</td><td>3986.2</td><td class="pos">+146.1%</td></tr>
+      <tr><td>Qwen2-1.5B</td><td>2200.7</td><td>2533.3</td><td class="pos">+15.1%</td><td>6177.9</td><td class="pos">+180.7%</td></tr>
+      <tr><td>Qwen2.5-3B</td><td>3558.0</td><td>3584.9</td><td class="pos">+0.8%</td><td>8354.9</td><td class="pos">+134.8%</td></tr>
+      <tr><td>Qwen2-7B</td><td>5467.9</td><td>3911.8</td><td class="neg">−28.5%</td><td>8176.8</td><td class="pos">+49.5%</td></tr>
     </table>
-    <p class="meta">Positive = quantization costs more energy than FP16. Every cell is a measurement on the same card in the same session.</p>
+    <p class="meta">Positive = quantization costs more energy than FP16. Every cell is a measurement on the same card in the same session. Each Δ is recomputed here from the two energy columns next to it, so you can check every percentage with a calculator.</p>
+    <div class="callout"><strong>Correction, 2026-08-11:</strong> this table originally quoted the <code>vs_fp16_pct</code> column of
+    <code>rtx4090_results.csv</code> (Zenodo <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>),
+    which does not match that file's own energy, power and throughput columns — those three agree with each other to within 0.7&nbsp;points
+    everywhere, while the percentage column drifts by up to 14. The worst case was <b>Qwen2.5-3B NF4: the column said +10.1%,
+    the energies say +0.8%</b>. The Δ column above (and every chart on this site, which is fitted from
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a>)
+    is now derived from the energies. The energy measurements themselves never changed; a corrected version of the Zenodo record is pending.</div>
 
-    <h2>NF4: the crossover is real, and it sits between 3B and 7B</h2>
-    <p>The NF4 penalty shrinks monotonically with model size — +36.5% at 0.5B, +15% around 1–1.5B, +10.1% at 3B — and then flips to a <strong>−29.4% saving at 7B</strong>. That is the crossover this project keeps arguing about, measured end-to-end on one GPU with one methodology, which is exactly the comparison that is usually missing when numbers are stitched together from different papers.</p>
+    <h2>NF4: the crossover is real, and on this card it sits just above 3B</h2>
+    <p>The NF4 penalty shrinks with model size — +35.6% at 0.5B, +16.3% and +15.1% at 1.1B and 1.5B — is <strong>already gone at 3B (+0.8%, i.e. break-even)</strong>, and flips to a <strong>−28.5% saving at 7B</strong>. Interpolating between the 3B and 7B points puts break-even at roughly <b>3.1B</b> on this card. The pooled Ada fit on the front page still lands near 3.7B because it also carries the RTX&nbsp;4090D anchors, which are consistently more penalised at the same size — that gap between two cards of the same architecture is itself one of the honest limitations of a per-architecture curve.</p>
 
     <h2>INT8: lower power, more energy</h2>
     <p>INT8 (bitsandbytes <code>LLM.int8()</code>) was a penalty at all five sizes we measured, from +47% at 7B to +256% at 0.5B — one card, one backend, n&nbsp;=&nbsp;1 per size, so read it as "this kernel on this card" rather than a verdict on 8-bit inference. The mechanism is visible in the throughput panel below: INT8 genuinely draws less instantaneous power (73–95&nbsp;W vs 88–269&nbsp;W for FP16), but decode throughput collapses to <strong>9–19 tok/s</strong> against FP16's 39–62 tok/s. Energy is power × time, so a run that takes 3–5× longer loses even when it draws less power.</p>
@@ -95,7 +102,7 @@
     </figure>
 
     <div class="callout">
-      <strong>Practical read:</strong> on a 24&nbsp;GB Ada card, use NF4 when the model is large enough (≈7B and up) or when it simply would not fit otherwise — but do not reach for weight-only INT8 at batch&nbsp;1 expecting an energy win. On this hardware, with this backend, there wasn't one. Other kernels (GPTQ, AWQ, TensorRT-LLM) are a different measurement we have not made.
+      <strong>Practical read:</strong> on a 24&nbsp;GB Ada card, use NF4 when the model is large enough (break-even is just above 3B here, and 7B saves clearly) or when it simply would not fit otherwise — but do not reach for weight-only INT8 at batch&nbsp;1 expecting an energy win. On this hardware, with this backend, there wasn't one. Other kernels (GPTQ, AWQ, TensorRT-LLM) are a different measurement we have not made.
     </div>
 
     <h2>What this run is not</h2>
