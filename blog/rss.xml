@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Sat, 25 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 16 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>quantenergy.tech 中文使用说明（手机查阅版） / Chinese-language site guide</title>
+      <link>https://quantenergy.tech/blog/zh-guide.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/zh-guide.html</guid>
+      <pubDate>Sun, 16 Aug 2026 00:00:00 GMT</pubDate>
+      <description>中文版站点导览：四个标签怎么用、每个数字的测量边界（GPU 芯片功耗、单流 batch 1、逐点标注的 n）、该引用哪个 DOI，以及四条诚实声明。A Chinese-language guide to the site, its measurement boundaries and its citable artifacts. PDF: /blog/quantenergy-zh-guide.pdf</description>
+    </item>
     <item>
       <title>We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested</title>
       <link>https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html</link>

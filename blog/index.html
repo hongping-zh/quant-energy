@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-08-16 · 中文</div>
+      <h2><a href="/blog/zh-guide.html" hreflang="zh-Hans">quantenergy.tech 中文使用说明（手机查阅版）</a></h2>
+      <p lang="zh-Hans">中文版站点导览：四个标签怎么用、每个数字的测量边界（GPU 芯片功耗、单流 batch 1、逐点标注的 n）、该引用哪个 DOI，以及四条必须记住的诚实声明。<span lang="en">A Chinese-language guide to the site, its data boundaries and its citable artifacts.</span></p>
+      <p><a href="/blog/zh-guide.html">阅读 →</a> &nbsp; <a href="/blog/quantenergy-zh-guide.pdf">PDF 版</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-07-25</div>
       <h2><a href="/blog/we-ran-our-own-container-rtx4090.html">We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested</a></h2>
       <p>15 of 15 configurations measured with direct NVML on one Ada card, using the open MLCube container anyone can run. NF4 goes from a +36% penalty at 0.5B to break-even at 3B and a <em>−28% saving</em> at 7B; INT8 cost more energy at all five sizes tested (n&nbsp;=&nbsp;1 each, bitsandbytes LLM.int8()), because throughput collapses.</p>

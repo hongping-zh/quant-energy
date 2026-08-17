@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>quantenergy.tech 中文使用说明（手机查阅版）— EcoCompute</title>
+<meta name="description" content="EcoCompute / quantenergy.tech 的中文说明：四个标签怎么用、数据从哪来、哪些是实测哪些是估算，以及三条必须记住的诚实声明。" />
+<link rel="canonical" href="https://quantenergy.tech/blog/zh-guide.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="quantenergy.tech 中文使用说明（手机查阅版）" />
+<meta property="og:description" content="别的量化工具教你怎么量化，这个网站告诉你该不该量化。四个标签的用法、数据边界与诚实声明。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/zh-guide.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"quantenergy.tech 中文使用说明（手机查阅版）",
+  "inLanguage":"zh-Hans",
+  "datePublished":"2026-08-16",
+  "dateModified":"2026-08-16",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/zh-guide.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",Roboto,Helvetica,Arial,sans-serif;line-height:1.85}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:26px;line-height:1.35;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:19px;margin:32px 0 6px}
+  h3{font-size:16px;margin:20px 0 4px;color:#c7d2f2}
+  p{margin:12px 0;color:#d3dcf6}
+  ul,ol{color:#d3dcf6;padding-left:22px}
+  li{margin:6px 0}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  @media print{
+    body{background:#fff;color:#111}
+    .wrap{max-width:none;padding:0}
+    a{color:#0b57d0}
+    p,ul,ol,li{color:#111}
+    h3{color:#111}
+    .date,.meta,footer{color:#444}
+    th{color:#444}
+    th,td{border-color:#bbb}
+    .callout{background:#f4f6fb;border-color:#bbb}
+    code{background:#eef2fa}
+    .top nav{display:none}
+    .pos{color:#b00020}
+    .neg{color:#0a7f4f}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← 全部笔记</a> &nbsp; <a href="/">工具</a></nav>
+    </div>
+
+    <h1>quantenergy.tech 中文使用说明（手机查阅版）</h1>
+    <div class="date">2026-08-16 · Hongping Zhang · 中文 / Chinese-language site guide</div>
+
+    <p><b>EcoCompute 一句话定位：</b>别的量化工具教你「怎么量化」，这个网站告诉你「<b>该不该</b>量化」。它用真实 GPU 功耗测量（NVML 直采，不是 TDP 估算）回答一个问题：量化到底省电还是更费电？</p>
+    <p>预印本：<i>Weight-Only Quantization Does Not Always Save Energy</i>（<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a>）。</p>
+
+    <div class="callout"><b>先说清楚测量边界（本页所有数字都适用）：</b>我们采集的是 <b>GPU 芯片（package）功耗</b>，不是整机墙上功耗——不含电源损耗、CPU、内存、散热，也不换算 PUE 或 CO₂e；工况是 <b>单流解码、batch 1、256 token</b>。重复次数逐点标注：主数据集是 n&nbsp;=&nbsp;2（CV&nbsp;&lt;&nbsp;2%），RTX 4090 深挖是<b>每个配置 n&nbsp;=&nbsp;1</b>。详见 <a href="/method/#limits">方法与局限</a>。</div>
+
+    <h2>0 · 30 秒上手</h2>
+    <ol>
+      <li>想看别人测过的数据 → 点「已测模型」标签。</li>
+      <li>想知道你自己的模型量化后能耗怎么变 → 点「你的模型」标签，拖一下滑块。</li>
+      <li>想在给定的延迟／显存上限下找最优配置 → 点「优化（约束）」标签。</li>
+      <li>想在自己的 GPU 上复现测量 → 点「自己跑」标签，一行命令。</li>
+    </ol>
+
+    <h2>1 · 顶部栏（Hero）</h2>
+    <ul>
+      <li>标题：<b>EcoCompute.</b></li>
+      <li>核心标语：每个量化工具都告诉你怎么量化，我们告诉你<b>该不该</b>量化。</li>
+      <li>来源徽标：数据来自预印本，覆盖 4 种 NVIDIA GPU 架构（Turing / Ada / Ampere / Blackwell）的直接 NVML 功耗测量；Hopper 是借用 Ampere 曲线的外推，页面上会标出来。</li>
+      <li>两个按钮：「在 SSRN 读预印本」看论文方法与结论；「RTX 4090 实测数据集 · Zenodo DOI」下载我们自己在 RTX 4090 上跑出的实测数据。</li>
+      <li>右上角 About 链接 → 打开详细说明弹窗（见第 6 节）。</li>
+    </ul>
+
+    <h2>2 · 标签一：已测模型（Tested models）</h2>
+    <p>功能：看「已经测过」的真实数据，判断某个 GPU + 模型上量化到底是省电还是费电。</p>
+    <ul>
+      <li>两个下拉框：先选 GPU，再选模型。</li>
+      <li><b>卡片①·每 100 万 token 的推理能耗</b>：柱状图对比 FP16 / NF4 / INT8，下方给出结论（省还是赔），可一键「复制决策摘要」「复制永久链接」。</li>
+      <li><b>卡片②·交叉曲线</b>：一句话规律——模型越大，量化越可能省电。曲线在 0 以上 = 量化更费电；0 以下 = 省电。实线只连接实测点，超出实测范围的尺寸不在此图绘制。</li>
+      <li><b>卡片③·最新实测：RTX 4090（Ada）</b>：15/15 组配置全是真实硬件测量（0.5B–7B × FP16/NF4/INT8），由我们的开源容器在自己租的 RTX 4090 上跑出（2026 年 7 月），<b>每个配置 n&nbsp;=&nbsp;1</b>。</li>
+    </ul>
+    <p>这一列的关键发现（Δ 全部由能量列重算，见下方「更正说明」）：</p>
+    <table>
+      <tr><th>模型</th><th>NF4 vs FP16</th><th>INT8 vs FP16</th></tr>
+      <tr><td>Qwen2-0.5B</td><td class="pos">+35.6%</td><td class="pos">+241.9%</td></tr>
+      <tr><td>TinyLlama-1.1B</td><td class="pos">+16.3%</td><td class="pos">+146.1%</td></tr>
+      <tr><td>Qwen2-1.5B</td><td class="pos">+15.1%</td><td class="pos">+180.7%</td></tr>
+      <tr><td>Qwen2.5-3B</td><td class="pos">+0.8%</td><td class="pos">+134.8%</td></tr>
+      <tr><td>Qwen2-7B</td><td class="neg">−28.5%</td><td class="pos">+49.5%</td></tr>
+    </table>
+    <ul>
+      <li><b>NF4 在这张卡上 3B 就已打平</b>（+0.8%），7B 是 −28.5% 的净节省；3B→7B 插值得交叉点约 <b>3.1B</b>。首页拟合曲线给的是 <b>≈3.7B</b>，因为拟合里还包含惩罚更重的 RTX&nbsp;4090D 锚点。</li>
+      <li><b>INT8（bitsandbytes LLM.int8()）在我们测过的每一个尺寸上都没能省电</b>（+50%…+242%，五个尺寸、一张卡、每个 n&nbsp;=&nbsp;1）：它确实降低瞬时功耗，但解码吞吐掉到 9–19 tok/s（FP16 为 39–62），每个 token 反而更贵。这是<b>「这个后端在这张卡上」</b>的结论，不是对 INT8 这个格式的判决——换 GPTQ/AWQ/TensorRT-LLM 或别的卡完全可能相反。</li>
+      <li>原始 <code>energy.json</code>、汇总 CSV、环境元数据都存档在 Zenodo（DOI <a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a>，CC BY 4.0）。</li>
+    </ul>
+    <div class="callout"><b>更正说明（2026-08-11）：</b>该 Zenodo 记录 v1 的 <code>vs_fp16_pct</code> 一列与它自己的能量／功率／吞吐列对不上（最严重的是 Qwen2.5-3B NF4：列里写 +10.1%，能量算出来是 +0.8%）。<b>测量值本身没有改变</b>，站点的 <code>measured.csv</code> 与所有曲线一直都是从能量列推导的；上表也已按能量列重算。修正版 Zenodo 记录待发布，详见 <a href="/blog/we-ran-our-own-container-rtx4090.html">那篇 4090 笔记</a>。</div>
+
+    <h2>3 · 标签二：你的模型（Your model / 估算）</h2>
+    <p>功能：输入你关心的模型规模，估算量化后的能耗变化与不确定性。</p>
+    <ul>
+      <li>模型规模滑块（参数量，单位 B）：唯一必填项。</li>
+      <li>FP16 区指示器（ecoGate）：标出「还没到交叉点、量化会赔」的区域。</li>
+      <li>高级选项（可展开）：GPU 架构、精度、批大小、上下文长度。</li>
+      <li><b>卡片①</b>：大数字 = 估算的能耗增减百分比，带置信区间（CI）与数据基础标签（实测锚定 / 拟合外推），同时给出估算 VRAM、估算能耗、结论与注意事项。</li>
+      <li><b>卡片②</b>：把你输入的模型标在拟合曲线上并画出 ±CI 误差带。<b>注意这是拟合外推，不是新测量</b>；大模型（≈≥7B）的结论只作方向性参考。</li>
+      <li>可「复制本估算的永久链接」，并展开看 JSON 报告结构。</li>
+    </ul>
+
+    <h2>4 · 标签三：优化（约束）（Optimize）</h2>
+    <p>功能：从「静态查询」升级到「带约束的优化」——在预算内找最优配置。</p>
+    <ul>
+      <li>三个输入：GPU 架构、模型规模、优化目标（最小化能耗 / 延迟、最大化吞吐、最小化显存）。</li>
+      <li>高级约束（可选）：最大延迟、最大显存、最小吞吐。</li>
+      <li>工具会穷举 精度 × 批大小 × 上下文，按约束过滤，返回推荐配置、备选方案，以及能耗 ↔ 延迟帕累托前沿（左下角更优，★ 为推荐点）。</li>
+    </ul>
+
+    <h2>5 · 标签四：自己跑（Run it yourself）</h2>
+    <p>功能：在自己的 GPU 上复现测量，把结果叠加到站点的交叉曲线上。详见 <a href="/container/">容器页</a>。</p>
+    <ul>
+      <li><b>方法一·有 Docker（一行命令）</b>：直接 <code>docker run</code> 预构建镜像，无需下载执行脚本，命令完全透明。换精度用 <code>ECOCOMPUTE_PRECISION=INT8</code>；指定某张卡用 <code>--gpus "device=1"</code>。</li>
+      <li><b>方法二·无 Docker（AutoDL / vast.ai 等租卡）</b>：一行 <code>curl … | bash</code> 会自动克隆仓库、建 venv 并运行（租卡通常不能嵌套 Docker，这条路才需要）。<b>第一次跑要装 torch 等依赖，实测约 57 分钟</b>（缓存后重跑约 2 分钟）——我们不承诺 15 分钟。</li>
+      <li><b>方法三·从源码（完全可控）</b>：<code>git clone</code> + MLCube / <code>python3 entrypoint.py</code>。</li>
+      <li><b>你得到什么</b>：与本站字段完全一致的 <code>energy.json</code>；只有真实 NVML 采到功耗时 <code>basis</code> 才是 <code>measured</code>，采不到会明确标成回退值，不要拿去发布。</li>
+      <li><b>叠加结果</b>：把 <code>energy.json</code> 拖进上传区，你的点会出现在交叉曲线上——全程在浏览器本地解析，不上传任何数据。运行结束还会打印一个 <code>quantenergy.tech/?tab=run&amp;overlay=…</code> 链接，打开即恢复你的标记。同意或不同意，都可以在 <a href="/replications/">复现页</a> 提交。</li>
+    </ul>
+
+    <h2>6 · About 弹窗</h2>
+    <ul>
+      <li><b>核心发现</b>：权重量化（NF4/INT8）减小显存占用，但不总是降低能耗；小模型上反量化开销会抵消带宽收益 → 更费电，大模型才开始省。交叉点取决于模型规模 + GPU 架构两者。</li>
+      <li><b>我们怎么测</b>：直接 NVML 功耗采样（10 Hz、256 token/run、10 次解码迭代、2 次预热），跨 4 种架构。<b>10 次迭代不等于 10 次独立试验</b>——一份报告仍然是 n&nbsp;=&nbsp;1。建模部分（延迟/吞吐用 roofline 模型、超范围用外推）会明确标注，绝不把估算当测量。</li>
+      <li><b>我们自己的测量容器</b>：EcoCompute energy MLCube，开源、能跑在你的 GPU 上；最新的 RTX 4090 列就是它产出的。（使用 MLCube 规范不代表 MLCommons 背书，也不是官方 MLPerf 结果。）</li>
+      <li><b>研究论文</b>：SSRN #6854700（含 Zenodo 存档 DOI）。</li>
+      <li><b>该引用哪个产物？</b>（三个独立产物，各管一摊，完整对照见 <a href="/cite/">引用页</a>）
+        <ul>
+          <li>论文 → SSRN #6854700</li>
+          <li>主数据集 v1.1.0（360+ 配置，0.5B–14B，4 架构，n=2，CV&lt;2%）→ DOI 10.5281/zenodo.19647290（本页除 RTX 4090 列外的数据都以此为准）</li>
+          <li>RTX 4090（Ada）深挖（2026 年 7 月，15/15 实测，n=1）→ DOI 10.5281/zenodo.21528103</li>
+        </ul>
+      </li>
+      <li><b>给开发者</b>：REST API（<code>/v1/estimate</code>、<code>/v1/optimize</code>）、OpenAPI、供 Claude/Cursor 使用的 MCP 工具 <code>recommend_config</code>。该 API 是可选的便利接口，站点本身不依赖它。</li>
+    </ul>
+
+    <h2>7 · 页脚与博客</h2>
+    <ul>
+      <li>数据署名：Hongping Zhang；数值来自推理期间的直接 NVML 功耗采样（非 TDP 估算）；能耗按每 100 万 token 计，ΔE% 相对各自 FP16 基线。</li>
+      <li>链接：博客／笔记（<a href="/blog/">/blog/</a>）、<a href="/blog/rss.xml">RSS</a>、GitHub、数据集与代码。</li>
+      <li>引用框：可展开 BibTeX，含论文、主数据集 v1.1.0、RTX 4090 实测三项 DOI。</li>
+    </ul>
+
+    <h2>8 · 手机上最该记住的 4 条「诚实声明」</h2>
+    <ol>
+      <li><b>量化 ≠ 省电</b>：小模型量化往往更费电，大模型才省；交叉点随 GPU 架构变化。</li>
+      <li><b>测量 / 估算分得清</b>：柱状图与「已测模型」是实测；「你的模型」是估算，带置信区间，大模型只作方向参考。</li>
+      <li><b>知道每个数字的边界</b>：GPU 芯片功耗、单流 batch 1、特定后端版本；RTX 4090 那一列每个配置 n&nbsp;=&nbsp;1，没有误差棒可画。同一配置隔一次会话重跑，我们实测到的差异可达 8.2 个百分点（1.1B INT8：+146.1% 与 +137.9%）。</li>
+      <li><b>隐私</b>：上传 <code>energy.json</code> 只在你浏览器本地解析，不上传服务器；分享链接把结果编码在 URL 里。</li>
+    </ol>
+
+    <footer>
+      本页是 quantenergy.tech 的中文说明，内容以站点当前数据为准；英文版说明散布在 <a href="/method/">方法页</a>、<a href="/container/">容器页</a> 与 <a href="/cite/">引用页</a>。
+      <br>论文：<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · 主数据集 v1.1.0：<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 深挖：<a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">测量容器</a>
+    </footer>
+  </div>
+</body>
+</html>
