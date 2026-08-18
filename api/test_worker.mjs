@@ -1,12 +1,15 @@
 import worker from "./worker.js";
 
-async function hit(method, url, body) {
+async function hit(method, url, body, env) {
   const init = { method };
-  if (body) { init.body = JSON.stringify(body); init.headers = { "content-type": "application/json" }; }
-  const res = await worker.fetch(new Request("https://x" + url, init));
+  if (body !== undefined) {
+    init.body = typeof body === "string" ? body : JSON.stringify(body);
+    init.headers = { "content-type": "application/json" };
+  }
+  const res = await worker.fetch(new Request("https://x" + url, init), env);
   const txt = await res.text();
   let j; try { j = JSON.parse(txt); } catch { j = txt; }
-  return { status: res.status, j };
+  return { status: res.status, j, cache: res.headers.get("cache-control"), headers: res.headers };
 }
 
 const a = await hit("GET", "/v1/estimate?params_b=7&arch=blackwell&precision=nf4");
@@ -41,5 +44,26 @@ console.log("optimize missing params_b:", o3.status, o3.j.error);
 
 const o4 = await hit("GET", "/v1/optimize?params_b=7&arch=ada&max_vram_gb=4");
 console.log("optimize infeasible:", o4.status, "recommended=", o4.j.recommended, "| closest:", o4.j.closest_infeasible && o4.j.closest_infeasible.summary);
+
+// Caching: successful GETs are edge-cacheable, everything else is not.
+console.log("\ncache GET estimate:", a.cache);
+console.log("cache POST estimate:", c.cache);
+console.log("cache 400:", d.cache, "| nosniff:", a.headers.get("x-content-type-options"));
+
+// Oversized body is refused before it is parsed.
+const big = await hit("POST", "/v1/estimate", '{"q":"' + "x".repeat(9000) + '"}');
+console.log("oversized body:", big.status, big.j.error);
+const arr = await hit("POST", "/v1/estimate", "[1,2,3]");
+console.log("array body:", arr.status, arr.j.error);
+
+// Rate limiting is optional: absent binding behaves as before, a refusing one 429s.
+const noEnv = await hit("GET", "/v1/architectures", undefined, {});
+console.log("no limiter bound:", noEnv.status);
+const limitedEnv = { API_RATE_LIMIT: { limit: async () => ({ success: false }) } };
+const rl = await hit("GET", "/v1/estimate?params_b=7&arch=ada", undefined, limitedEnv);
+console.log("limiter refuses:", rl.status, rl.headers.get("retry-after"));
+const brokenEnv = { API_RATE_LIMIT: { limit: async () => { throw new Error("down"); } } };
+const rb = await hit("GET", "/v1/estimate?params_b=7&arch=ada", undefined, brokenEnv);
+console.log("limiter throws -> fail open:", rb.status);
 
 console.log("\nOK");

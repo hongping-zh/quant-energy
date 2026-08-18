@@ -23,12 +23,62 @@ const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
   "access-control-allow-headers": "content-type",
+  "access-control-max-age": "86400",
 };
-const json = (obj, status = 200) =>
+const SAFE = {
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+};
+// The estimator is deterministic: the same query always yields the same answer
+// until the curves are refit and the Worker redeployed. Successful GETs are
+// therefore cacheable at the edge; anything else is not.
+const CACHE_OK = "public, max-age=300, s-maxage=3600";
+const CACHE_NO = "no-store";
+const json = (obj, status = 200, cache = CACHE_NO) =>
   new Response(JSON.stringify(obj, null, 2), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", ...CORS },
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": cache,
+      ...SAFE,
+      ...CORS,
+    },
   });
+
+// Largest POST body we will read. Every documented field is a number or a short
+// string; anything larger is a mistake or an attempt to make us allocate.
+const MAX_BODY = 8 * 1024;
+async function readBody(req) {
+  const len = parseInt(req.headers.get("content-length") || "0", 10);
+  if (len > MAX_BODY) return { error: json({ error: `body too large (max ${MAX_BODY} bytes)` }, 413) };
+  const txt = await req.text();
+  if (txt.length > MAX_BODY) return { error: json({ error: `body too large (max ${MAX_BODY} bytes)` }, 413) };
+  try {
+    const body = JSON.parse(txt || "{}");
+    if (!body || typeof body !== "object" || Array.isArray(body)) return { error: json({ error: "body must be a JSON object" }, 400) };
+    return { body };
+  } catch {
+    return { error: json({ error: "invalid JSON body" }, 400) };
+  }
+}
+
+// Per-IP throttle, only if the ratelimits binding exists (see wrangler.toml).
+// Without it the Worker behaves exactly as before rather than failing shut.
+async function throttled(req, env) {
+  const limiter = env && env.API_RATE_LIMIT;
+  if (!limiter || typeof limiter.limit !== "function") return null;
+  const key = req.headers.get("cf-connecting-ip") || "anonymous";
+  try {
+    const { success } = await limiter.limit({ key });
+    if (success) return null;
+  } catch {
+    return null;
+  }
+  return new Response(
+    JSON.stringify({ error: "rate limit exceeded", hint: "the estimator is also a plain JS module: https://github.com/hongping-zh/quant-energy/blob/main/estimate.js" }, null, 2),
+    { status: 429, headers: { "content-type": "application/json; charset=utf-8", "retry-after": "60", "cache-control": CACHE_NO, ...SAFE, ...CORS } }
+  );
+}
 
 function architectures() {
   const out = {};
@@ -57,13 +107,13 @@ function resolveParams(p) {
   };
 }
 
-function handleEstimate(p) {
+function handleEstimate(p, cache = CACHE_NO) {
   const a = resolveParams(p);
   if (!(a.N > 0)) return json({ error: "params_b (model size in billions) is required and must be > 0" }, 400);
   if (!a.arch) return json({ error: "arch is required", supported: Object.keys(architectures()) }, 400);
   const r = estimate(a.N, a.arch, a.precision || "NF4", { batch: a.batch || 1, ctx: a.ctx || 2048 });
   if (r.error) return json({ ...r, input: a }, 400);
-  return json({ input: { params_b: a.N, arch: a.arch, precision: a.precision || "NF4", batch: a.batch || 1, ctx: a.ctx || 2048 }, ...r });
+  return json({ input: { params_b: a.N, arch: a.arch, precision: a.precision || "NF4", batch: a.batch || 1, ctx: a.ctx || 2048 }, ...r }, 200, cache);
 }
 
 const NUM = ["params_b", "max_latency_ms", "max_vram_gb", "min_throughput", "batch", "context", "ctx"];
@@ -82,13 +132,13 @@ function resolveOptimize(p) {
   return out;
 }
 
-function handleOptimize(p) {
+function handleOptimize(p, cache = CACHE_NO) {
   const a = resolveOptimize(p);
   if (!(a.params_b > 0)) return json({ error: "params_b (model size in billions) is required and must be > 0" }, 400);
   if (!a.arch) return json({ error: "arch is required", supported: Object.keys(architectures()) }, 400);
   const r = optimize(a);
   if (r.error) return json({ ...r, input: a }, 400);
-  return json(r);
+  return json(r, 200, cache);
 }
 
 const OPENAPI = {
@@ -132,30 +182,33 @@ const OPENAPI = {
 };
 
 export default {
-  async fetch(req) {
-    if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  async fetch(req, env) {
+    if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, ...SAFE } });
     const u = new URL(req.url);
     const path = u.pathname.replace(/\/+$/, "") || "/";
 
-    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/openapi.json"] });
-    if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] });
-    if (path === "/v1/architectures") return json(architectures());
+    const limited = await throttled(req, env);
+    if (limited) return limited;
+
+    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/openapi.json"] }, 200, CACHE_OK);
+    if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] }, 200, CACHE_OK);
+    if (path === "/v1/architectures") return json(architectures(), 200, CACHE_OK);
 
     if (path === "/v1/optimize") {
-      if (req.method === "GET") return handleOptimize(Object.fromEntries(u.searchParams));
+      if (req.method === "GET") return handleOptimize(Object.fromEntries(u.searchParams), CACHE_OK);
       if (req.method === "POST") {
-        let body = {};
-        try { body = await req.json(); } catch { return json({ error: "invalid JSON body" }, 400); }
+        const { body, error } = await readBody(req);
+        if (error) return error;
         return handleOptimize(body);
       }
       return json({ error: "use GET or POST" }, 405);
     }
 
     if (path === "/v1/estimate") {
-      if (req.method === "GET") return handleEstimate(Object.fromEntries(u.searchParams));
+      if (req.method === "GET") return handleEstimate(Object.fromEntries(u.searchParams), CACHE_OK);
       if (req.method === "POST") {
-        let body = {};
-        try { body = await req.json(); } catch { return json({ error: "invalid JSON body" }, 400); }
+        const { body, error } = await readBody(req);
+        if (error) return error;
         return handleEstimate(body);
       }
       return json({ error: "use GET or POST" }, 405);

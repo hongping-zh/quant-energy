@@ -164,6 +164,22 @@ Example response:
 }
 ```
 
+### Caching and throttling
+
+The estimator is deterministic — the same query returns the same answer until the curves
+are refit and the Worker redeployed — so successful `GET`s carry
+`cache-control: public, max-age=300, s-maxage=3600` and are served from Cloudflare's edge.
+`POST`s, errors and 429s are `no-store`; a refit therefore reaches callers within an hour
+at worst. Responses also carry `x-content-type-options: nosniff` and
+`referrer-policy: no-referrer`.
+
+`wrangler.toml` declares a `[[ratelimits]]` binding (`API_RATE_LIMIT`, 120 requests per
+minute per IP per Cloudflare location) and the Worker answers `429` with `retry-after: 60`
+above it. Two deliberate properties: the Worker **no-ops if the binding is missing** (an
+older wrangler can deploy after deleting the block) and it **fails open** if the limiter
+itself errors — throttling a free estimator is worth less than serving it. `POST` bodies
+above 8 KiB are refused with `413` before being parsed.
+
 Deploy:
 
 ```bash

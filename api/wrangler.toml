@@ -4,6 +4,17 @@ name = "ecocompute-estimator"
 main = "worker.js"
 compatibility_date = "2024-09-23"
 
+# Per-IP throttle for the public endpoint (Workers Rate Limiting API; needs
+# wrangler >= 4.36.0). The Worker no-ops if the binding is missing, so an older
+# wrangler can still deploy after deleting this block.
+[[ratelimits]]
+name = "API_RATE_LIMIT"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 120
+period = 60
+
 # Free-plan friendly. After deploy the URL is:
 #   https://ecocompute-estimator.<your-subdomain>.workers.dev
 # To attach a custom domain/route, add a [[routes]] block, e.g.:
