@@ -148,7 +148,7 @@
     <h2>5 · 标签四：自己跑（Run it yourself）</h2>
     <p>功能：在自己的 GPU 上复现测量，把结果叠加到站点的交叉曲线上。详见 <a href="/container/">容器页</a>。</p>
     <ul>
-      <li><b>方法一·有 Docker（一行命令）</b>：直接 <code>docker run</code> 预构建镜像，无需下载执行脚本，命令完全透明。换精度用 <code>ECOCOMPUTE_PRECISION=INT8</code>；指定某张卡用 <code>--gpus "device=1"</code>。</li>
+      <li><b>方法一·有 Docker（一行命令）</b>：直接 <code>docker run</code> 预构建镜像，无需下载执行脚本，命令完全透明。换精度用参数 <code>--precision INT8</code>（<code>ECOCOMPUTE_*</code> 环境变量只有 <code>quickstart.sh</code> 认，直接 <code>docker run</code> 时无效）；指定某张卡用 <code>--gpus "device=1"</code>。逐步命令见<a href="/blog/zh-container-guide.html">容器中文手册</a>。</li>
       <li><b>方法二·无 Docker（AutoDL / vast.ai 等租卡）</b>：一行 <code>curl … | bash</code> 会自动克隆仓库、建 venv 并运行（租卡通常不能嵌套 Docker，这条路才需要）。<b>第一次跑要装 torch 等依赖，实测约 57 分钟</b>（缓存后重跑约 2 分钟）——我们不承诺 15 分钟。</li>
       <li><b>方法三·从源码（完全可控）</b>：<code>git clone</code> + MLCube / <code>python3 entrypoint.py</code>。</li>
       <li><b>你得到什么</b>：与本站字段完全一致的 <code>energy.json</code>；只有真实 NVML 采到功耗时 <code>basis</code> 才是 <code>measured</code>，采不到会明确标成回退值，不要拿去发布。</li>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EcoCompute 容器数据测量 · 中文使用手册 — EcoCompute</title>
+<meta name="description" content="用 EcoCompute energy MLCube 容器在自己的 GPU 上复现能耗测量：三种运行方式、常用参数、energy.json 字段说明（含新的困惑度质量块）、故障排查与测量边界。" />
+<link rel="canonical" href="https://quantenergy.tech/blog/zh-container-guide.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="EcoCompute 容器数据测量 · 中文使用手册" />
+<meta property="og:description" content="一行命令在你自己的 GPU 上跑出 schema 合规的 energy.json，并叠加到交叉曲线上。含参数、输出字段、质量探针与故障排查。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/zh-container-guide.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"EcoCompute 容器数据测量 · 中文使用手册",
+  "inLanguage":"zh-Hans",
+  "datePublished":"2026-08-18",
+  "dateModified":"2026-08-18",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/zh-container-guide.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",Roboto,Helvetica,Arial,sans-serif;line-height:1.85}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:26px;line-height:1.35;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:19px;margin:32px 0 6px}
+  h3{font-size:16px;margin:20px 0 4px;color:#c7d2f2}
+  p{margin:12px 0;color:#d3dcf6}
+  ul,ol{color:#d3dcf6;padding-left:22px}
+  li{margin:6px 0}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px;word-break:break-all}
+  pre{background:#0a0f1f;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.7}
+  pre code{background:none;padding:0;word-break:normal;white-space:pre}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  @media print{
+    body{background:#fff;color:#111}
+    .wrap{max-width:none;padding:0}
+    a{color:#0b57d0}
+    p,ul,ol,li{color:#111}
+    h3{color:#111}
+    .date,.meta,footer{color:#444}
+    th{color:#444}
+    th,td{border-color:#bbb}
+    .callout{background:#f4f6fb;border-color:#bbb}
+    code{background:#eef2fa}
+    pre{background:#f4f6fb;border-color:#bbb;color:#111;overflow:visible}
+    pre code{white-space:pre-wrap;word-break:break-all}
+    .top nav{display:none}
+    .pos{color:#b00020}
+    .neg{color:#0a7f4f}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← 全部笔记</a> &nbsp; <a href="/">工具</a></nav>
+    </div>
+
+    <h1>EcoCompute 容器数据测量 · 中文使用手册</h1>
+    <div class="date">2026-08-18 · Hongping Zhang · 容器复现指南 / Container how-to</div>
+
+    <p>本手册教你如何用 <b>EcoCompute energy MLCube</b> 容器，在你自己的 GPU 上复现能耗测量，并把结果叠加到 <a href="/">quantenergy.tech</a> 的交叉曲线上。</p>
+    <ul>
+      <li>容器仓库：<a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a>（Apache-2.0）</li>
+      <li>对应网站版块：quantenergy.tech →「自己跑（Run it yourself）」；英文详版见<a href="/container/">容器页</a></li>
+    </ul>
+
+    <div class="callout"><b>我最想要的是一个「打脸」的结果。</b>目前所有数字都出自一个人手里的几张卡，<a href="/replications/">复现页</a>上独立复现数为 0。与曲线<b>不一致</b>的测量比再多一次自证有价值得多；审核只看格式与 schema，从不因为结论不合我意而拒稿。</div>
+
+    <h2>1 · 这个容器是干什么的</h2>
+    <p>它做一件很单纯的事：对你的 <b>GPU × 模型 × 精度</b> 组合做一次真实测量。</p>
+    <ul>
+      <li>用 <b>NVML 直接采样 GPU 功耗</b>（10 Hz），不是用 TDP 估算。</li>
+      <li>同一次运行里测<b>你指定精度的量化版本</b>和<b>它自己的 FP16 基线</b>，两者的差才是可比的。</li>
+      <li>采样窗口<b>关闭之后</b>，再用同一个已加载的模型做一次 teacher-forcing 前向，算<b>困惑度</b>（perplexity），于是你同时看到「省了多少电」和「掉了多少质量」。这一步不进能耗账，只多几秒。</li>
+      <li>写出一份 <code>energy.json</code>，字段与站点图表完全一致，并当场做 schema 校验。</li>
+      <li>打印一个叠加链接，打开即把你的点画到交叉曲线上（<b>结果编码在 URL 里，全程浏览器本地解析，不上传</b>）。</li>
+    </ul>
+    <p class="meta">单位说明：<code>energy_per_token_mj</code> 是<b>每个 token 的毫焦（mJ/token，等价于每 1000 token 的焦耳）</b>；站点图表把它换算成「每 100 万 token」显示。<code>vs_fp16_energy_pct</code>（ΔE%）是相对同模型 FP16 基线的能耗变化，正=更费电，负=更省电。</p>
+
+    <h2>2 · 准备条件</h2>
+    <table>
+      <tr><th>方式</th><th>需要什么</th></tr>
+      <tr><td>有 Docker（推荐）</td><td>Docker + 一张 NVIDIA GPU + NVIDIA Container Toolkit（让 <code>--gpus</code> 可用）</td></tr>
+      <tr><td>无 Docker（租卡）</td><td>AutoDL / vast.ai 等租来的 GPU；只需 <code>git</code> 和 <code>python3</code>，脚本会自动建 venv</td></tr>
+      <tr><td>从源码</td><td>Docker 或 Python 环境 + 能 <code>git clone</code> 仓库</td></tr>
+    </table>
+    <p>没有 NVIDIA GPU 也能「跑完」：容器会退回到公开数据集的参考值，但报告里会明确标成 <code>basis ≠ "measured"</code>——那不是测量，别拿去发布。</p>
+
+    <h2>3 · 三种运行方式</h2>
+
+    <h3>方式一：有 Docker —— 一行命令（最推荐）</h3>
+    <p>不用下载脚本、不用执行任何脚本，直接跑预构建镜像，命令完全透明：</p>
+<pre><code>docker run --rm --gpus all --user "$(id -u):$(id -g)" \
+  -e HOME=/workspace/models/.hf -e HF_HOME=/workspace/models/.hf \
+  -v "$PWD/ecocompute-out:/workspace/outputs" \
+  -v "$HOME/.cache/ecocompute-hf:/workspace/models/.hf" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+  --params_b 1.1 --precision NF4 --gpu_arch auto \
+  --iterations 10 --warmup 2 --output_dir /workspace/outputs --share</code></pre>
+    <ul>
+      <li><code>--user "$(id -u):$(id -g)"</code>：避免输出文件归 root，方便你直接读取。</li>
+      <li>两个 <code>-v</code> 挂载：结果写到当前目录的 <code>ecocompute-out/</code>，模型缓存留在本机。</li>
+      <li><code>--gpu_arch auto</code>：架构从 NVML 设备名识别，一般不用改，也就无法把 4090 误标成 Blackwell。</li>
+      <li><code>--share</code>：结束后打印叠加链接。</li>
+    </ul>
+
+    <h3>方式二：无 Docker（AutoDL / vast.ai 等租卡）—— 一行 bootstrap</h3>
+    <p>租卡环境通常不能嵌套 Docker，用这一行会自动克隆仓库、在数据盘上建 venv 并运行：</p>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</code></pre>
+    <ul>
+      <li>脚本自己判定：有可用 Docker 就走镜像，没有就走 venv（native）模式，并打印它选了哪条。</li>
+      <li>数据盘检测：存在 <code>/root/autodl-tmp</code> 时，代码、venv、模型缓存都放数据盘，避免系统盘爆满。</li>
+      <li>需要 <code>git</code> 和 <code>python3</code>；Python &lt; 3.9 装不上发布钉版，报告会标注「与镜像运行不可比」。用 <code>ECO_PYTHON</code> 指定 ≥3.9 的解释器；venv 建好后不能换解释器，所以要配合 <code>ECO_RECREATE_VENV=1</code>。</li>
+      <li><b>下模型之前会先验一次真的 4-bit kernel。</b> <code>bitsandbytes</code> 必须与 torch 的 CUDA 线匹配，否则量化运行会在模型下载完之后才炸。检查失败时脚本先升级 <code>bitsandbytes</code>（一个小 wheel，走你已配好的国内源），不行才回退去 cu121 索引重装 torch（约 2.5 GB，租卡常拉不动）。<b>两条都失败就在下载模型之前停下</b>，不让你花时间换一份 <code>basis ≠ measured</code> 的报告；确实想跑用 <code>ECOCOMPUTE_ALLOW_FALLBACK=1</code>。升级过 bitsandbytes 就离开了发布钉版，报告会写明，ΔE% 不能直接和镜像运行比；想严格用 <code>ECO_KEEP_PINS=1</code>。</li>
+    </ul>
+    <p class="meta">耗时要说实话：测量本身几分钟，第一次的时间几乎全在下载。我们唯一完整计时过的一次是<b>租来的 4090、native 模式、57 分钟</b>（约 2 GB 模型 5.5 分钟，其余是 ~3 GB 的 torch/CUDA wheel）。缓存全热之后同机重跑是 <b>1 分 48 秒</b>。docker 路径我们没计过时，就不编一个数字给你。</p>
+
+    <h3>方式三：从源码（完全可控）</h3>
+<pre><code>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+# A) 用 MLCommons MLCube CLI
+pip install mlcube mlcube-docker
+mlcube run --mlcube=. --task=energy_estimate --platform=docker
+
+# B) 直接调入口（这里显式钉了架构，仅作演示；平时用 auto）
+python3 entrypoint.py energy_estimate \
+  --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+  --precision NF4 --gpu_arch blackwell --params_b 1.1 \
+  --output_dir workspace/outputs --prefetch --share
+cat workspace/outputs/energy.json</code></pre>
+    <p class="meta"><code>--prefetch</code> 会在测量前先问站点的预测值并打印出来，好让你当场看到「我的曲线在你的卡上准不准」；<code>--share</code> 给出可分享的叠加链接。另有一份 CPU-only 描述符（<code>mlcube.cpu.yaml</code>），没有 GPU 也能验证整条链路是否通。</p>
+
+    <h2>4 · 常用参数</h2>
+    <div class="callout"><b>先说一个容易踩的坑：</b><code>ECOCOMPUTE_*</code> 环境变量<b>只有 <code>quickstart.sh</code> 认</b>。<code>entrypoint.py</code> 一个环境变量都不读，所以在 <code>docker run</code> 或直接调入口时，请用命令行参数（<code>--precision</code> 等）；在 <code>docker run</code> 前面加 <code>ECOCOMPUTE_PRECISION=INT8</code> 是<b>没有效果</b>的。</div>
+
+    <h3>环境变量（仅 <code>quickstart.sh</code>）</h3>
+    <table>
+      <tr><th>变量</th><th>作用（默认值）</th></tr>
+      <tr><td><code>ECOCOMPUTE_MODEL</code></td><td>HuggingFace 模型 id（TinyLlama/TinyLlama-1.1B-Chat-v1.0）</td></tr>
+      <tr><td><code>ECOCOMPUTE_PARAMS_B</code></td><td>模型参数量，单位 B，必须与模型匹配（1.1）</td></tr>
+      <tr><td><code>ECOCOMPUTE_PRECISION</code></td><td><code>NF4</code> 或 <code>INT8</code>（NF4；FP16 基线始终也会测）</td></tr>
+      <tr><td><code>ECOCOMPUTE_ITERATIONS</code></td><td>解码运行次数（10，与已发布数据集一致）</td></tr>
+      <tr><td><code>ECOCOMPUTE_MODE</code></td><td>强制 <code>docker</code> 或 <code>native</code>（有 Docker 用 docker，否则 native）</td></tr>
+      <tr><td><code>ECOCOMPUTE_QUALITY</code></td><td>设 <code>0</code> 关掉困惑度探针（默认开）</td></tr>
+      <tr><td><code>ECOCOMPUTE_PREFETCH</code></td><td>设 <code>1</code> 先取站点预测值再测（默认关；这是唯一会联网访问本站的行为）</td></tr>
+      <tr><td><code>ECOCOMPUTE_ALLOW_FALLBACK</code></td><td>设 <code>1</code>：量化后端坏掉时也照跑（报告将不是测量）</td></tr>
+      <tr><td><code>ECOCOMPUTE_OUT</code> / <code>ECOCOMPUTE_CACHE</code></td><td>输出目录（<code>./ecocompute-out</code>）／模型缓存（<code>$HOME/.cache/ecocompute-hf</code>）</td></tr>
+      <tr><td><code>ECOCOMPUTE_GPU_ARGS</code></td><td>Docker 的 GPU 参数（<code>--gpus all</code>；指定某卡：<code>--gpus "device=1"</code>）</td></tr>
+      <tr><td><code>ECOCOMPUTE_IMAGE</code> / <code>ECOCOMPUTE_NO_BUILD</code></td><td>镜像地址／拉取失败时直接报错而不本地构建</td></tr>
+      <tr><td><code>ECOCOMPUTE_SRC</code></td><td>native 模式的代码检出目录（默认放数据盘）</td></tr>
+      <tr><td><code>ECO_PYTHON</code> / <code>ECO_RECREATE_VENV</code> / <code>ECO_KEEP_PINS</code></td><td>指定解释器／重建 venv／不为修复而离开发布钉版</td></tr>
+    </table>
+
+    <h3>命令行参数（<code>energy_estimate</code> 子命令）</h3>
+    <p><code>--model</code> · <code>--params_b</code> · <code>--precision</code> · <code>--gpu_arch</code>（<code>auto</code> 或具体架构）· <code>--batch_size</code> · <code>--tokens</code> · <code>--iterations</code> · <code>--warmup</code> · <code>--sample_rate_hz</code> · <code>--output_dir</code> · <code>--share</code> · <code>--prefetch</code> · <code>--no_quality_probe</code> · <code>--quality_text 你自己的文本</code> · <code>--quality_seq_len</code> · <code>--dry_run</code>（强制无 GPU 参考路径）。</p>
+
+    <p>示例：换 INT8、指定第 1 号卡（注意精度是用<b>参数</b>给的）：</p>
+<pre><code>docker run --rm --gpus "device=1" --user "$(id -u):$(id -g)" \
+  -e HOME=/workspace/models/.hf -e HF_HOME=/workspace/models/.hf \
+  -v "$PWD/ecocompute-out:/workspace/outputs" \
+  -v "$HOME/.cache/ecocompute-hf:/workspace/models/.hf" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+  --params_b 1.1 --precision INT8 --gpu_arch auto \
+  --iterations 10 --warmup 2 --output_dir /workspace/outputs --share</code></pre>
+
+    <h2>5 · 输出说明（energy.json）</h2>
+    <p>结果写在 <code>ECOCOMPUTE_OUT/energy.json</code>（默认 <code>./ecocompute-out/energy.json</code>），并额外生成 <code>share_url.txt</code>。最关键的字段：</p>
+    <ul>
+      <li><code>results.energy_per_token_mj</code> —— 这一配置的每 token 能耗（mJ）</li>
+      <li><code>results.fp16_energy_per_token_mj</code> —— 同模型 FP16 基线</li>
+      <li><code>results.vs_fp16_energy_pct</code> —— 相对 FP16 的能耗变化（正=更费，负=更省）</li>
+      <li><code>results.basis</code> —— <code>"measured"</code>（真实测量）/ <code>"interpolated"</code> / <code>"extrapolated"</code>（建模）</li>
+      <li><code>measurement_source</code> —— 测量来源，真实测量时是 <code>direct-nvml</code></li>
+      <li><code>system_under_test.gpu</code> / <code>.gpu_arch</code>、<code>workload.model_name</code> / <code>.precision</code> / <code>.batch_size</code></li>
+      <li><code>software</code> —— python / torch / transformers / bitsandbytes 版本，以及是否与发布钉版一致</li>
+      <li><code>quality</code>（schema 1.1 新增，可选）—— <code>value</code> 是困惑度，<code>fp16_value</code> 是同一次运行的 FP16 基线，<code>delta_vs_fp16_pct</code> 是两者之差；<code>corpus.sha256</code> 记录评测文本指纹，探针失败时 <code>basis</code> 为 <code>"unavailable"</code> 并附错误原因。</li>
+    </ul>
+    <p>运行结束的打印示例（数值取自我们 2026 年 7 月那次真实的 RTX 4090 运行；<code>quality</code> 行是新增的，那次运行还没有）：</p>
+<pre><code>  GPU            : NVIDIA GeForce RTX 4090 (ada)
+  Workload       : TinyLlama/TinyLlama-1.1B-Chat-v1.0  NF4  batch 1
+  Energy/token   : 1883.91 mJ  (FP16 baseline 1619.68 mJ)
+  vs FP16        : +16.3 %
+  Basis          : measured   (source: direct-nvml)
+  Quality (ppl)  : 12.4831 vs FP16 12.3016  (+1.475%)
+  Software       : python 3.10.12, torch 2.5.1+cu121, transformers 4.57.6, bitsandbytes 0.43.3</code></pre>
+
+    <h3>关于困惑度这一栏怎么读</h3>
+    <ul>
+      <li><b>只看 Δ，不要看绝对值。</b>困惑度依赖评测文本和分词器，绝对数字与论文里的 WikiText 值不可比；只有「同一次运行里 FP16 与量化版跑同样的字节」这个差是干净的。</li>
+      <li><b>困惑度不是任务质量。</b>它衡量的是「这次量化把语言模型打坏了多少」，不能替代推理、长上下文等下游评测。</li>
+      <li>评测文本内置在仓库 <code>quality/</code> 目录（两段公有领域文本，约 1.06 万词），不联网、不引入新数据集依赖，所有人跑的是同样的字节，sha256 写进报告。想用自己的留出文本：<code>--quality_text</code>，指纹同样会记录，避免拿不同语料的结果互相比较。</li>
+    </ul>
+
+    <h2>6 · 把结果叠加到网站曲线</h2>
+    <p>两种方式，都不上传任何数据：</p>
+    <ol>
+      <li><b>分享链接（最省事）</b>：加了 <code>--share</code> 后终端会打印 <code>quantenergy.tech/?tab=run&amp;overlay=…</code>，打开即把你的点恢复到交叉曲线上（结果编码在 URL 里）。</li>
+      <li><b>拖文件</b>：在「自己跑」标签底部把 <code>energy.json</code> 拖进上传区（或点击选择）；你的点按「模型规模 × ΔE%」落到曲线上，颜色由 <code>basis</code> 决定，架构与当前曲线不符时会加一圈虚线提示。</li>
+    </ol>
+    <p>要<b>进入公开的复现画廊</b>，去 <a href="/replications/#submit">/replications/#submit</a>：文件同样只在你浏览器里解析，按钮会带着摘要打开一个 GitHub issue，附件由你自己上传、自己发送。全程不要邮箱；想撤回，在 issue 上说一句即可，不问理由。</p>
+
+    <h2>7 · 故障排查</h2>
+    <ul>
+      <li><b><code>nvidia-smi</code> 找不到 / 没有 GPU</b> → 仍能跑完，但报告是数据集派生值（<code>basis ≠ "measured"</code>）。发布前先修好 GPU 访问。</li>
+      <li><b>Docker 报 <code>could not select device driver with capabilities: [[gpu]]</code></b> → 多半没装 NVIDIA Container Toolkit。脚本会不带 GPU 重试以验证流程，但结果同样不是测量。<a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html" target="_blank" rel="noopener">安装指南</a></li>
+      <li><b>某些消费卡 / vGPU / Turing 卡报 <code>NVML_ERROR_NOT_SUPPORTED</code></b> → 这类卡读不到功耗遥测，容器不会假装测到，同样退回派生值。采样失败的次数记在 <code>results.dropped_samples</code>，不隐藏。</li>
+      <li><b>镜像拉取失败</b> → 本机已有该镜像就直接用；否则脚本尝试从源码本地构建（约 10–20 分钟，主要是 torch）；设了 <code>ECOCOMPUTE_NO_BUILD=1</code> 则直接报错退出。</li>
+      <li><b>native 模式提示 Python 太旧（&lt;3.9）</b> → 报告会标「与镜像运行不可比」。解决：用 ≥3.9 的解释器重建 venv：<br><code>ECO_RECREATE_VENV=1 ECO_PYTHON=/path/to/python3.10 SKIP_DOWNLOAD=1 bash autodl/00_setup.sh</code></li>
+      <li><b>提示 <code>bitsandbytes … cannot run a NF4 kernel against torch's CUDA …</code></b> → 见第 3 节方式二：这是 torch 的 CUDA 线与 bitsandbytes 内核不匹配，脚本会先试着升级 bitsandbytes。</li>
+      <li><b>首次运行特别慢</b> → 在下载模型权重到 <code>HF_HOME</code> 缓存，之后复用。</li>
+    </ul>
+
+    <h2>8 · 诚实声明 / 注意事项</h2>
+    <ol>
+      <li><b>测量与估算分得清</b>：只有 <code>measurement_source: "direct-nvml"</code> 且 <code>basis: "measured"</code> 才是真实 NVML 测量；读不到遥测时退回公开数据集并明确标注，绝不把估算伪装成测量。</li>
+      <li><b>NVML 测的是 GPU 封装功耗</b>，不是整机墙上功耗——不含 CPU、内存、电源损耗与散热，也不换算 PUE 或 CO₂e（那需要我没有的电网模型）。工况是单流、batch 1、256 token。</li>
+      <li><b>10 次解码迭代 ≠ 10 次独立试验</b>：迭代发生在同一次运行内部，<b>一份报告永远是 n = 1</b>，无论迭代数多高。</li>
+      <li><b>样本量</b>：主数据集 v1.1.0 每个配置 n = 2（CV &lt; 2%）；RTX 4090（Ada）深挖是每个配置 n = 1，属补充性案例研究。同一配置隔一次会话重跑，我们实测到的差异可达 8.2 个百分点（1.1B INT8：+146.1% 与 +137.9%）。</li>
+      <li><b>量化内核随版本变化</b>：你的 torch / transformers / bitsandbytes 与发布钉版不同时报告会提示，跨版本比较 ΔE% 必须注明。结论也因此是「这个后端在这张卡上」的结论，不是对 NF4/INT8 格式本身的判决。</li>
+      <li><b>不是认证基准</b>：每份报告都写着 <code>certified_benchmark_result: false</code>。使用 MLCube 规范不代表 MLCommons 背书，也不是官方 MLPerf 结果。</li>
+      <li><b>困惑度是代理指标</b>：只有 Δ 有意义，且不等于下游任务质量（见第 5 节）。</li>
+      <li><b>隐私</b>：<code>energy.json</code> 只在你浏览器本地解析，不上传服务器；分享链接把结果编码在 URL 里。</li>
+    </ol>
+
+    <h2>9 · 引用与链接</h2>
+    <ul>
+      <li>容器仓库：<a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a>（Apache-2.0；数据 CC BY 4.0）</li>
+      <li>论文预印本（SSRN #6854700）：<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">papers.ssrn.com</a></li>
+      <li>主数据集 v1.1.0：<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></li>
+      <li>RTX 4090（Ada）实测深挖：<a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a> —— <b>勘误</b>：该版本 <code>rtx4090_results.csv</code> 里的 <code>vs_fp16_pct</code> 一列有误（例如 Qwen2.5-3B NF4 写作 +10.1%，按其自身能量列应为 +0.8%）。能量、功率、吞吐三列彼此自洽且未受影响，站点与曲线一直用能量列重算，详见<a href="/cite/">引用页</a>。</li>
+      <li>提交你的复现结果：<a href="/replications/#submit">/replications/#submit</a></li>
+    </ul>
+
+    <footer>
+      本手册对应 <code>quickstart.sh</code> 与 <code>entrypoint.py</code> 的当前行为（schema <code>ecocompute-energy/1.1</code>）；英文详版见<a href="/container/">容器页</a>，站点整体的中文导览见<a href="/blog/zh-guide.html">中文使用说明</a>。
+      <br>容器：<a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> · 论文：<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · 主数据集：<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>
+    </footer>
+  </div>
+</body>
+</html>
