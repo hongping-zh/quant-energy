@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Sun, 16 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 18 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>EcoCompute 容器数据测量 · 中文使用手册 / Chinese-language container how-to</title>
+      <link>https://quantenergy.tech/blog/zh-container-guide.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/zh-container-guide.html</guid>
+      <pubDate>Tue, 18 Aug 2026 00:00:00 GMT</pubDate>
+      <description>在你自己的 GPU 上复现能耗测量的中文逐步手册：三种运行方式、参数说明、energy.json 字段（含 schema 1.1 新增的困惑度质量块）、故障排查与测量边界。A Chinese-language how-to for reproducing the NVML energy measurements with the open container. PDF: /blog/quantenergy-zh-container-guide.pdf</description>
+    </item>
     <item>
       <title>quantenergy.tech 中文使用说明（手机查阅版） / Chinese-language site guide</title>
       <link>https://quantenergy.tech/blog/zh-guide.html</link>
