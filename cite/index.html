@@ -86,7 +86,13 @@
         power and throughput columns (worst case Qwen2.5-3B NF4: column says +10.1%, the energies say +0.8%).
         Use the energy columns, or this site's
         <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a>,
-        which is derived from them. A corrected version is pending.</td>
+        which is derived from them. A corrected version is pending.
+        <br /><br /><b>Also pending for v2:</b> a second RTX 4090 session (2026-08-19) that pairs energy with a
+        teacher-forcing perplexity measured in the same run —
+        <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_paired_energy_quality_2026-08-19.csv" target="_blank" rel="noopener">rtx4090_paired_energy_quality_2026-08-19.csv</a>
+        (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/README.md" target="_blank" rel="noopener">what it does and does not show</a>).
+        Its INT8 energy penalty is 2.0&ndash;2.5&times; the July session's at every size, so the two sessions are
+        published separately and neither the curves nor this site's numbers use it.</td>
         <td><a href="https://doi.org/10.5281/zenodo.21528102" target="_blank" rel="noopener">10.5281/zenodo.21528102</a></td>
         <td><a href="https://doi.org/10.5281/zenodo.21528103" target="_blank" rel="noopener">10.5281/zenodo.21528103</a></td>
       </tr>
