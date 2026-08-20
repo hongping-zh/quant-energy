@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Tue, 18 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 20 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Energy and quality, measured in the same run</title>
+      <link>https://quantenergy.tech/blog/energy-and-quality-same-run.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/energy-and-quality-same-run.html</guid>
+      <pubDate>Thu, 20 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Ten RTX 4090 configurations whose decode energy and perplexity come from the same run (direct NVML, n=1 each). NF4 saves 39% energy at 7B but costs 12% perplexity; INT8 costs about 0.5% perplexity and never saves energy. A delta-perplexity filter of 1% rejects every NF4 row and admits nearly every INT8 one, inverting the energy ranking. Also reports a 2.0-2.5x cross-session discrepancy in the INT8 penalty on the same card model and software stack. Data: DOI 10.5281/zenodo.22019742.</description>
+    </item>
     <item>
       <title>EcoCompute 容器数据测量 · 中文使用手册 / Chinese-language container how-to</title>
       <link>https://quantenergy.tech/blog/zh-container-guide.html</link>
@@ -26,7 +33,7 @@
       <link>https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html</link>
       <guid isPermaLink="true">https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html</guid>
       <pubDate>Sat, 25 Jul 2026 00:00:00 GMT</pubDate>
-      <description>15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to break-even at 3B and a -28% saving at 7B; INT8 cost more energy at all five sizes tested (n=1 each, bitsandbytes LLM.int8()) because decode throughput collapses to 9-19 tok/s. Data archived at DOI 10.5281/zenodo.21528103.</description>
+      <description>15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to break-even at 3B and a -28% saving at 7B; INT8 cost more energy at all five sizes tested (n=1 each, bitsandbytes LLM.int8()) because decode throughput collapses to 9-19 tok/s. Data archived at DOI 10.5281/zenodo.22019742.</description>
     </item>
     <item>
       <title>When not to quantize: the small-model energy penalty</title>
