@@ -32,9 +32,15 @@
   </url>
   <url>
     <loc>https://quantenergy.tech/blog/</loc>
-    <lastmod>2026-07-10</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quantenergy.tech/blog/energy-and-quality-same-run.html</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://quantenergy.tech/blog/when-not-to-quantize.html</loc>

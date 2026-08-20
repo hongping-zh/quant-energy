@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Energy and quality, measured in the same run — EcoCompute</title>
+<meta name="description" content="Ten RTX 4090 configurations where decode energy and perplexity come from the same run: NF4 saves 39% energy at 7B but costs 12% perplexity; INT8 costs almost no quality and never saves energy. Plus a 2x cross-session discrepancy we cannot yet explain." />
+<link rel="canonical" href="https://quantenergy.tech/blog/energy-and-quality-same-run.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="Energy and quality, measured in the same run" />
+<meta property="og:description" content="NF4 saves 39% energy at 7B and costs 12% perplexity. INT8 costs almost nothing in quality and never saves energy. Ten paired measurements on one RTX 4090." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/energy-and-quality-same-run.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"Energy and quality, measured in the same run",
+  "datePublished":"2026-08-20",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/energy-and-quality-same-run.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.22019742"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>Energy and quality, measured in the same run</h1>
+    <div class="date">2026-08-20 · Hongping Zhang</div>
+
+    <p>Everything we have published so far measures one axis: joules. That is a defensible thing to
+    measure and an indefensible thing to give advice from. "NF4 saves 39% energy at 7B" is only a
+    recommendation if the quantized model is still the model you wanted. So the container now scores
+    <strong>perplexity in the same run as the energy</strong>, and this note is the first dataset
+    where both numbers for a configuration come from the same process, the same weights and the same
+    session.</p>
+
+    <p>Ten measured configurations on one rented RTX 4090 (Ada, 24&nbsp;GB), five model sizes ×
+    NF4/INT8, each with its own FP16 baseline measured in the same run. Every row is direct NVML,
+    <code>basis: measured</code>, n&nbsp;=&nbsp;1. Archived at
+    <a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">DOI 10.5281/zenodo.22019742</a>
+    (CC&nbsp;BY&nbsp;4.0, raw <code>energy.json</code> included).</p>
+
+    <h2>The result</h2>
+    <table>
+      <tr><th>Model</th><th>N</th><th>NF4 Δenergy</th><th>NF4 Δppl</th><th>INT8 Δenergy</th><th>INT8 Δppl</th></tr>
+      <tr><td>Qwen2-0.5B</td><td class="num">0.5B</td><td class="num pos">+31.1%</td><td class="num">+9.45%</td><td class="num pos">+594.6%</td><td class="num">+0.52%</td></tr>
+      <tr><td>TinyLlama-1.1B</td><td class="num">1.1B</td><td class="num pos">+5.5%</td><td class="num">+5.01%</td><td class="num pos">+301.6%</td><td class="num">+0.54%</td></tr>
+      <tr><td>Qwen2-1.5B</td><td class="num">1.5B</td><td class="num neg">−2.2%</td><td class="num">+6.93%</td><td class="num pos">+365.1%</td><td class="num">+0.51%</td></tr>
+      <tr><td>Qwen2.5-3B</td><td class="num">3.0B</td><td class="num neg">−15.1%</td><td class="num">+27.56%</td><td class="num pos">+273.2%</td><td class="num">+3.79%</td></tr>
+      <tr><td>Qwen2-7B</td><td class="num">7.0B</td><td class="num neg">−39.0%</td><td class="num">+12.06%</td><td class="num pos">+105.8%</td><td class="num">+1.19%</td></tr>
+    </table>
+    <p class="meta">Negative energy = quantization saves. Positive Δppl = the quantized model is worse.
+    Batch 1, 256 generated tokens, 10 decode iterations, greedy; NVML at 10&nbsp;Hz over the decode
+    loop. Perplexity is teacher-forcing on a fixed vendored public-domain text (SHA-256
+    <code>22ac091a…</code>), scored <em>after</em> the power sampler stops, so it costs the energy
+    figure nothing.</p>
+
+    <h2>The two axes disagree, and that is the point</h2>
+    <p>Read the energy column alone and you would recommend <strong>3B NF4</strong>: it saves 15% of
+    the joules. Read the quality column and it is the worst configuration in the table — perplexity
+    rises 27.6%. Conversely INT8 is nearly free on quality (about +0.5% at three of five sizes) and
+    catastrophic on energy: it never once saved a joule, and at 0.5B it cost almost seven times the
+    FP16 energy, because decode throughput collapses to 6–14&nbsp;tok/s while the package still draws
+    85–100&nbsp;W.</p>
+
+    <p>Apply the obvious filter — "recommend nothing that degrades the model by more than 1%
+    perplexity" — and this session rejects <em>every</em> NF4 configuration and admits <em>every</em>
+    INT8 configuration except 3B. Which is the exact opposite of the energy ranking. Two honest
+    measurements, two opposite recommendations.</p>
+
+    <div class="callout">
+      <strong>Why we are not publishing a "quality-adjusted energy" number.</strong> It would be easy
+      to divide joules by some function of perplexity and print one figure. That single number would
+      encode a weighting nobody agreed to — is 1% perplexity worth 5% energy, or 50%? — and it would
+      hide exactly the disagreement above, which is the useful finding. Both columns are published
+      side by side, and the quality axis is used as a <em>filter</em> (Δppl ≤ 1%), not as a
+      denominator.
+    </div>
+
+    <h2>The uncomfortable finding: the same configuration, twice, differing by 2×</h2>
+    <p>We measured the same card model in July. Comparing the two sessions, the INT8 energy penalty is
+    <strong>2.0–2.5× larger in August at every one of the five sizes</strong> (INT8 decode throughput
+    0.62–0.65× July's), while the FP16 baselines of the two sessions agree to within −10%…+19% and the
+    software stack was the same down to the CUDA build (torch 2.5.1+cu121, bitsandbytes 0.43.3, pins
+    matched).</p>
+    <table>
+      <tr><th>INT8 Δenergy</th><th>0.5B</th><th>1.1B</th><th>1.5B</th><th>3B</th><th>7B</th></tr>
+      <tr><td>July 2026</td><td class="num">+241.9%</td><td class="num">+146.1%</td><td class="num">+180.7%</td><td class="num">+134.8%</td><td class="num">+49.5%</td></tr>
+      <tr><td>August 2026</td><td class="num">+594.6%</td><td class="num">+301.6%</td><td class="num">+365.1%</td><td class="num">+273.2%</td><td class="num">+105.8%</td></tr>
+    </table>
+    <p>A ratio that consistent across five independent model sizes is not noise, and the healthy FP16
+    baselines rule out "the card was throttled". Something about the <code>LLM.int8()</code> path on
+    that rented instance was uniformly ~1.6× slower, and we cannot yet say what — clock/power caps,
+    host CPU, PCIe topology and per-instance BIOS settings are all still on the list.</p>
+
+    <p>We are stating it rather than quietly picking the nicer session, because it has a consequence
+    for everyone publishing numbers like ours: <strong>a quantization energy penalty measured once, on
+    one rented instance, can be off by a factor of two</strong> — and almost nobody reports that layer
+    of variance. What reproduced across our two sessions is the <em>shape</em>: the NF4 penalty falls
+    monotonically with model size and crosses into savings (near 1.4B in August, near 3.2B in July);
+    INT8 never saves. The magnitudes did not. So the two sessions are archived as separate files, must
+    not be pooled, and the site's fitted curves still use only the July session — mixing them would
+    make the published error bars describe a mixture of two backends rather than an estimate of
+    either.</p>
+
+    <h2>What this does not show</h2>
+    <ul>
+      <li><strong>Perplexity is not task quality.</strong> It measures how much the language model was
+      damaged, on one fixed text. A 5% perplexity rise may be invisible in a classification pipeline
+      and fatal in long-form generation. Absolute values here are also specific to that text and each
+      model's tokenizer — only the FP16 delta within a row is meaningful, and it is not comparable
+      with published WikiText numbers.</li>
+      <li><strong>n = 1 per configuration.</strong> The 10 decode iterations inside a run are
+      integrated into one energy total; they are not ten independent trials, so there is no CV to
+      report. The 2× cross-session gap above is precisely the reason we say so loudly.</li>
+      <li><strong>One card, one backend.</strong> bitsandbytes NF4 / <code>LLM.int8()</code>. AWQ,
+      GPTQ and TensorRT-LLM have different kernels and may behave differently — an INT8 result here is
+      a result about <em>this</em> INT8 implementation.</li>
+      <li><strong>GPU package power only</strong>, via NVML: no CPU, DRAM, PSU losses, PUE or CO₂e.
+      Prefill is excluded; this is decode.</li>
+    </ul>
+
+    <h2>Reproduce it, or contradict it</h2>
+    <p>Every number above comes out of the same open container you can run in one command; the quality
+    probe is on by default and adds a few seconds:</p>
+<pre>docker run --rm --gpus all -v "$PWD/out:/out" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  --model Qwen/Qwen2-7B --precision NF4 --output_dir /out</pre>
+    <p>The report it writes (<code>energy.json</code>, schema
+    <code>ecocompute-energy/1.1</code>) carries the energy, the FP16 baseline, both perplexities and
+    the full version stack, and you can drop it on
+    <a href="/replications/">the replications page</a> to see it plotted against our curve — including
+    when it disagrees. A run that contradicts this note is more useful to us than one that agrees.</p>
+
+    <footer>
+      Data: <a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">10.5281/zenodo.22019742</a>
+      (RTX 4090 deep dive; supersedes 10.5281/zenodo.21528103, whose <code>vs_fp16_pct</code> column
+      contradicted its own energy column) · also in-repo as
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_paired_energy_quality_2026-08-19.csv" target="_blank" rel="noopener">rtx4090_paired_energy_quality_2026-08-19.csv</a>.
+      <br>Main dataset v1.1.0: <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> ·
+      paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> ·
+      container: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a>.
+      <br>Not a certified benchmark result. MLCOMMONS, MLPERF and MLCUBE are trademarks of MLCommons
+      Association, referenced nominatively.
+    </footer>
+  </div>
+</body>
+</html>

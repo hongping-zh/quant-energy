@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-08-20</div>
+      <h2><a href="/blog/energy-and-quality-same-run.html">Energy and quality, measured in the same run</a></h2>
+      <p>Ten RTX 4090 configurations where the joules and the perplexity come from the same run. NF4 saves 39% energy at 7B but costs 12% perplexity; INT8 costs almost nothing in quality and never saves energy — a Δppl ≤ 1% filter rejects every NF4 row and admits nearly every INT8 one, the exact opposite of the energy ranking. Also: the same INT8 configuration measured 2.0–2.5× worse than in July, on the same card model and the same software stack.</p>
+      <p><a href="/blog/energy-and-quality-same-run.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-08-18 · 中文</div>
       <h2><a href="/blog/zh-container-guide.html" hreflang="zh-Hans">EcoCompute 容器数据测量 · 中文使用手册</a></h2>
       <p lang="zh-Hans">在你自己的 GPU 上复现测量的逐步手册：三种运行方式（Docker 一行命令 / 租卡 bootstrap / 源码）、每个参数的作用、<code>energy.json</code> 各字段（含新增的困惑度质量块）、故障排查，以及每个数字的边界。<span lang="en">A Chinese-language how-to for running the measurement container on your own GPU.</span></p>
