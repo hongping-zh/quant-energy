@@ -51,7 +51,7 @@ Internal consistency of this session: each size's FP16 baseline was measured twi
 and in the INT8 run) and agrees to 0.3 %–2.7 %; the FP16 perplexities agree to the last printed digit.
 
 Raw `energy.json` reports for all ten runs are archived with the Zenodo record for the RTX 4090 deep
-dive (concept DOI [10.5281/zenodo.22019741](https://doi.org/10.5281/zenodo.22019741), version [10.5281/zenodo.22019742](https://doi.org/10.5281/zenodo.22019742)).
+dive (concept DOI [10.5281/zenodo.22019741](https://doi.org/10.5281/zenodo.22019741), version [10.5281/zenodo.22037483](https://doi.org/10.5281/zenodo.22037483)).
 
 ## `rtx4090_int8_repeats_2026-08-20.csv` (+ `.summary.csv`)
 

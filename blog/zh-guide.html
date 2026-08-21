@@ -122,7 +122,7 @@
     <ul>
       <li><b>NF4 在这张卡上 3B 就已打平</b>（+0.8%），7B 是 −28.5% 的净节省；3B→7B 插值得交叉点约 <b>3.1B</b>。首页拟合曲线给的是 <b>≈3.7B</b>，因为拟合里还包含惩罚更重的 RTX&nbsp;4090D 锚点。</li>
       <li><b>INT8（bitsandbytes LLM.int8()）在我们测过的每一个尺寸上都没能省电</b>（+50%…+242%，五个尺寸、一张卡、每个 n&nbsp;=&nbsp;1）：它确实降低瞬时功耗，但解码吞吐掉到 9–19 tok/s（FP16 为 39–62），每个 token 反而更贵。这是<b>「这个后端在这张卡上」</b>的结论，不是对 INT8 这个格式的判决——换 GPTQ/AWQ/TensorRT-LLM 或别的卡完全可能相反。</li>
-      <li>原始 <code>energy.json</code>、汇总 CSV、环境元数据都存档在 Zenodo（DOI <a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">10.5281/zenodo.22019742</a>，CC BY 4.0）。</li>
+      <li>原始 <code>energy.json</code>、汇总 CSV、环境元数据都存档在 Zenodo（DOI <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>，CC BY 4.0）。</li>
     </ul>
     <div class="callout"><b>更正说明（2026-08-11）：</b>该 Zenodo 记录 v1 的 <code>vs_fp16_pct</code> 一列与它自己的能量／功率／吞吐列对不上（最严重的是 Qwen2.5-3B NF4：列里写 +10.1%，能量算出来是 +0.8%）。<b>测量值本身没有改变</b>，站点的 <code>measured.csv</code> 与所有曲线一直都是从能量列推导的；上表也已按能量列重算。修正版 Zenodo 记录待发布，详见 <a href="/blog/we-ran-our-own-container-rtx4090.html">那篇 4090 笔记</a>。</div>
 
@@ -165,7 +165,7 @@
         <ul>
           <li>论文 → SSRN #6854700</li>
           <li>主数据集 v1.1.0（360+ 配置，0.5B–14B，4 架构，n=2，CV&lt;2%）→ DOI 10.5281/zenodo.19647290（本页除 RTX 4090 列外的数据都以此为准）</li>
-          <li>RTX 4090（Ada）深挖（2026 年 7 月，15/15 实测，n=1）→ DOI 10.5281/zenodo.22019742</li>
+          <li>RTX 4090（Ada）深挖（2026 年 7 月，15/15 实测，n=1）→ DOI 10.5281/zenodo.22037483</li>
         </ul>
       </li>
       <li><b>给开发者</b>：REST API（<code>/v1/estimate</code>、<code>/v1/optimize</code>）、OpenAPI、供 Claude/Cursor 使用的 MCP 工具 <code>recommend_config</code>。该 API 是可选的便利接口，站点本身不依赖它。</li>
@@ -188,7 +188,7 @@
 
     <footer>
       本页是 quantenergy.tech 的中文说明，内容以站点当前数据为准；英文版说明散布在 <a href="/method/">方法页</a>、<a href="/container/">容器页</a> 与 <a href="/cite/">引用页</a>。
-      <br>论文：<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · 主数据集 v1.1.0：<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 深挖：<a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">10.5281/zenodo.22019742</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">测量容器</a>
+      <br>论文：<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> · 主数据集 v1.1.0：<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 深挖：<a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">测量容器</a>
     </footer>
   </div>
 </body>
