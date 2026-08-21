@@ -1,0 +1,6 @@
+params_b,model,precision,n_trials,energy_j_per_1k_tok_mean,energy_j_per_1k_tok_sd,energy_cv_pct,fp16_energy_j_per_1k_tok_mean,fp16_energy_j_per_1k_tok_sd,fp16_energy_cv_pct,vs_fp16_energy_pct_mean,vs_fp16_energy_pct_sd,vs_fp16_energy_cv_pct,throughput_tok_s_mean,throughput_cv_pct,avg_power_w_mean,avg_power_cv_pct,delta_perplexity_pct,perplexity_identical_across_replicates
+0.5,Qwen/Qwen2-0.5B,INT8,3,8254.213,64.357,0.78,1211.906,29.693,2.45,581.29,12.523,2.15,8.933,0.65,73.867,0.79,0.519,yes
+1.1,TinyLlama/TinyLlama-1.1B-Chat-v1.0,INT8,3,5623.256,113.156,2.01,1381.34,27.272,1.97,307.09,1.761,0.57,13.8,2.61,77.7,0.51,0.543,yes
+1.5,Qwen/Qwen2-1.5B,INT8,3,9733.543,29.633,0.3,2175.769,30.631,1.41,347.433,7.599,2.19,7.867,0.73,76.6,0.73,0.514,yes
+3.0,Qwen/Qwen2.5-3B,INT8,3,12718.698,63.498,0.5,3426.928,51.909,1.51,271.213,7.386,2.72,6.2,0.0,79.133,0.32,3.789,yes
+7.0,Qwen/Qwen2-7B,INT8,3,11796.261,227.683,1.93,5729.959,6.917,0.12,105.873,4.095,3.87,7.7,2.6,90.7,0.61,1.193,yes

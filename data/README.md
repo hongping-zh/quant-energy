@@ -32,9 +32,10 @@ sampler stops, so it costs the energy figure nothing.
   `delta_perplexity_pct` within a row is meaningful — never compare the absolute value with
   published WikiText numbers or across models.
 - **Do not pool this session with the July 2026 one.** Its INT8 penalty is 2.0–2.5× larger at every
-  size (INT8 throughput 0.62–0.65×), while the FP16 baselines agree to −10 %…+19 % and the CUDA build
-  was the same (torch 2.5.1+cu121). What reproduces across sessions is the shape — the NF4 penalty
-  falls monotonically with size and crosses over, INT8 never saves energy — not the magnitudes.
+  size (INT8 throughput 0.62–0.65×), while the FP16 baselines agree to −10 %…+19 %. What reproduces
+  across sessions is the shape — the NF4 penalty falls monotonically with size and crosses over,
+  INT8 never saves energy — not the magnitudes. `rtx4090_int8_repeats_2026-08-20.csv` (below)
+  measures how large run-to-run noise actually is, and it is 30–50× smaller than this gap.
 - **`n = 1` per configuration.** The 10 decode iterations inside a run are integrated into one energy
   total, not ten independent trials.
 - GPU-package power only (NVML at 10 Hz): no CPU, DRAM, PSU, PUE or CO₂e.
@@ -51,3 +52,39 @@ and in the INT8 run) and agrees to 0.3 %–2.7 %; the FP16 perplexities agree to
 
 Raw `energy.json` reports for all ten runs are archived with the Zenodo record for the RTX 4090 deep
 dive (concept DOI [10.5281/zenodo.22019741](https://doi.org/10.5281/zenodo.22019741), version [10.5281/zenodo.22019742](https://doi.org/10.5281/zenodo.22019742)).
+
+## `rtx4090_int8_repeats_2026-08-20.csv` (+ `.summary.csv`)
+
+The same INT8 configurations, run **three times each** on the same instance the next day, to answer
+the question the single-trial files cannot: how much of the July–August disagreement is just noise?
+Fifteen rows, all `measured` / `direct-nvml`, same pins (`torch 2.5.1+cu121`, `bitsandbytes 0.43.3`).
+The `.summary.csv` carries mean, SD and CV per size.
+
+| N (B) | Δenergy mean (n=3) | SD | **CV** | energy CV | FP16 baseline CV | 2026-08-19 single trial | July 2026 |
+|------:|-------------------:|---:|-------:|----------:|-----------------:|------------------------:|----------:|
+| 0.5 | +581.3 % | 12.5 | 2.15 % | 0.78 % | 2.45 % | +594.6 % | +241.9 % |
+| 1.1 | +307.1 % | 1.8 | 0.57 % | 2.01 % | 1.97 % | +301.6 % | +146.1 % |
+| 1.5 | +347.4 % | 7.6 | 2.19 % | 0.30 % | 1.41 % | +365.1 % | +180.7 % |
+| 3.0 | +271.2 % | 7.4 | 2.72 % | 0.50 % | 1.51 % | +273.2 % | +134.8 % |
+| 7.0 | +105.9 % | 4.1 | 3.87 % | 1.93 % | 0.12 % | +105.8 % | +49.5 % |
+
+- **Run-to-run noise is 0.6–3.9 % (CV of ΔE%), the cross-session gap is 100–140 percentage points.**
+  The disagreement with July is therefore 30–50× the measurement noise — it is a property of the
+  session, not of the sampling.
+- **The 2026-08-19 single trials were representative**: every n=3 mean lands near them (largest
+  deviation 1.5B, −18 points ≈ 2.3 SD).
+- **Absolute joules drifted 12–17 % lower overnight on the same host** (INT8 and FP16 together), while
+  ΔE% held. Report and compare the **FP16-normalised** delta; the absolute J/1k-token figures in
+  these files are not comparable across days, let alone across machines.
+- **The perplexity column is bit-identical across all three replicates** (and identical to
+  2026-08-19). Teacher forcing is deterministic, so the quality axis has CV = 0 *by construction*:
+  this shows the pipeline replays exactly, it is **not** independent evidence that the quality result
+  replicates.
+- **What causes the July–August gap is still open.** The leading hypothesis is the `LLM.int8()`
+  kernel path differing between the image's pinned `torch==2.13.0` and the native path's
+  `torch 2.5.1+cu121` (`matches_reference_pins` deliberately excludes torch, which must match the
+  host driver). It is untested: the instance cannot nest Docker, so the image cannot be run there as
+  a control. What any explanation has to account for: at every size
+  INT8 energy rose 1.41–1.58× with **unchanged package power** (74–91 W vs July's ~76 W), i.e. it is
+  a throughput effect (0.63–0.72×), and at small sizes the August FP16 baseline was also lower
+  (0.5B: 0.78×), which is what pushes that size's ratio to 2.0×.

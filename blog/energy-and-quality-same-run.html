@@ -117,18 +117,29 @@
     <h2>The uncomfortable finding: the same configuration, twice, differing by 2×</h2>
     <p>We measured the same card model in July. Comparing the two sessions, the INT8 energy penalty is
     <strong>2.0–2.5× larger in August at every one of the five sizes</strong> (INT8 decode throughput
-    0.62–0.65× July's), while the FP16 baselines of the two sessions agree to within −10%…+19% and the
-    software stack was the same down to the CUDA build (torch 2.5.1+cu121, bitsandbytes 0.43.3, pins
-    matched).</p>
+    0.62–0.65× July's), while the FP16 baselines of the two sessions agree to within −10%…+19% and
+    every pinned dependency matched (bitsandbytes 0.43.3, transformers 4.57.6).</p>
     <table>
       <tr><th>INT8 Δenergy</th><th>0.5B</th><th>1.1B</th><th>1.5B</th><th>3B</th><th>7B</th></tr>
       <tr><td>July 2026</td><td class="num">+241.9%</td><td class="num">+146.1%</td><td class="num">+180.7%</td><td class="num">+134.8%</td><td class="num">+49.5%</td></tr>
       <tr><td>August 2026</td><td class="num">+594.6%</td><td class="num">+301.6%</td><td class="num">+365.1%</td><td class="num">+273.2%</td><td class="num">+105.8%</td></tr>
     </table>
-    <p>A ratio that consistent across five independent model sizes is not noise, and the healthy FP16
-    baselines rule out "the card was throttled". Something about the <code>LLM.int8()</code> path on
-    that rented instance was uniformly ~1.6× slower, and we cannot yet say what — clock/power caps,
-    host CPU, PCIe topology and per-instance BIOS settings are all still on the list.</p>
+    <p><strong>It is not noise, and we now have the number to say so.</strong> We re-ran all five INT8
+    configurations three times each the next day on the same instance
+    (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.csv" target="_blank" rel="noopener">rtx4090_int8_repeats_2026-08-20.csv</a>):
+    the coefficient of variation of Δenergy is <strong>0.6–3.9%</strong>, and the n=3 means land on the
+    single trials above. Run-to-run noise is 30–50× smaller than the 100–140 point gap with July.</p>
+
+    <p>What has to be explained, then, is a property of the session. The decomposition: INT8 energy per
+    token rose 1.41–1.58× with <em>unchanged package power</em> (74–91&nbsp;W against July's ~76&nbsp;W)
+    — so it is entirely a throughput effect — and at the small sizes the August FP16 baseline was also
+    lower (0.5B: 0.78×), which is what stretches that size's ratio to 2.0×. The leading hypothesis is
+    the <code>LLM.int8()</code> kernel path differing between the container image, which pins
+    <code>torch==2.13.0</code>, and the native path used in August, which must build against the host
+    driver and got <code>torch 2.5.1+cu121</code>. That hypothesis is <em>untested</em>: the rented
+    instance cannot nest Docker, so the image cannot be run there as a control. Testing it costs one
+    1.1B INT8 run on any Docker-capable RTX 4090 — back near +146% confirms the kernel explanation,
+    still near +300% moves suspicion to the instance.</p>
 
     <p>We are stating it rather than quietly picking the nicer session, because it has a consequence
     for everyone publishing numbers like ours: <strong>a quantization energy penalty measured once, on
@@ -147,9 +158,14 @@
       and fatal in long-form generation. Absolute values here are also specific to that text and each
       model's tokenizer — only the FP16 delta within a row is meaningful, and it is not comparable
       with published WikiText numbers.</li>
-      <li><strong>n = 1 per configuration.</strong> The 10 decode iterations inside a run are
-      integrated into one energy total; they are not ten independent trials, so there is no CV to
-      report. The 2× cross-session gap above is precisely the reason we say so loudly.</li>
+      <li><strong>n = 1 per configuration</strong> in the paired table — the 10 decode iterations
+      inside a run are integrated into one energy total, not ten independent trials. Only the INT8
+      repeatability file has n = 3. And note that its perplexity column is bit-identical across all
+      three replicates: teacher forcing is deterministic, so the quality axis has CV = 0 <em>by
+      construction</em> and replication says nothing about it.</li>
+      <li><strong>Absolute joules are not comparable across days.</strong> Between 2026-08-19 and
+      2026-08-20, on the same host, absolute energy per token drifted 12–17% lower for INT8 and FP16
+      alike, while the FP16-normalised ΔE% held. Compare deltas, not joules.</li>
       <li><strong>One card, one backend.</strong> bitsandbytes NF4 / <code>LLM.int8()</code>. AWQ,
       GPTQ and TensorRT-LLM have different kernels and may behave differently — an INT8 result here is
       a result about <em>this</em> INT8 implementation.</li>
