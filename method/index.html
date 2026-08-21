@@ -119,6 +119,32 @@
     n&nbsp;=&nbsp;1 anchors rather than pooling them into an n&nbsp;=&nbsp;2 point: filled markers on this site mean
     repeated trials of the <em>same</em> configuration with a measured CV&nbsp;&lt;&nbsp;2%, and these are not that.
     The NF4 numbers above come from container validation runs and are not in the dataset.</p>
+
+    <h3>Run-to-run noise vs between-session scatter: they differ by 30–50×</h3>
+    <p>On 2026-08-20 we ran all five INT8 configurations <b>three times each</b> on one instance, which finally
+    separates the two kinds of variation the point above conflates
+    (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.csv" target="_blank" rel="noopener">raw</a>,
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.summary.csv" target="_blank" rel="noopener">per-size mean/SD/CV</a>):</p>
+    <ul>
+      <li><b>Within one session, ΔE% is highly repeatable</b>: CV&nbsp;=&nbsp;0.6–3.9% (energy CV 0.3–2.0%,
+      FP16-baseline CV 0.1–2.5%) across 0.5B–7B.</li>
+      <li><b>Between sessions it is not</b>: the same five configurations measured 100–140 percentage points
+      higher in August than in July (e.g. 1.1B +146.1% → +307.1%). That is <b>30–50× the within-session noise</b>,
+      so it cannot be attributed to sampling.</li>
+      <li><b>Absolute joules are the least stable quantity of all.</b> Between two consecutive days on the
+      <em>same</em> host, absolute energy per token drifted 12–17% lower for INT8 and FP16 alike, while the
+      FP16-normalised ΔE% moved only a few points. This is why every number on this site is a delta against a
+      baseline measured in the same run, and why absolute J/token should not be compared across days.</li>
+    </ul>
+    <p class="meta">Consequence for anyone using or citing energy deltas, ours included: <b>a quantization
+    penalty measured once on one rented instance can be off by a factor of two</b>, and the run-to-run CV does not
+    warn you about it. The leading hypothesis for our own gap is the <code>LLM.int8()</code> kernel path differing
+    between the image (which pins <code>torch==2.13.0</code>) and the native path (which must build against the host
+    driver, here <code>torch 2.5.1+cu121</code>) — untested, because the instance cannot nest Docker and so cannot
+    run the image as a control. The decomposition constrains it: INT8 energy rose 1.41–1.58× at unchanged package
+    power, i.e. purely a throughput effect. One caveat on the repeats: the perplexity column is bit-identical
+    across replicates because teacher forcing is deterministic, so the quality axis has CV&nbsp;=&nbsp;0 by
+    construction and is not independently replicated.</p>
     <p class="meta">The fitted curves and the estimator are open: see <a href="/estimate.js">estimate.js</a>, <a href="/optimize.js">optimize.js</a> and the <code>build/</code> scripts in <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">the site repository</a>.</p>
 
     <h2>3 · The finding this protocol produced</h2>
