@@ -96,7 +96,7 @@
         The percentages are recomputed from the energy column in the record listed here. If you already cited
         21528103, cite this record instead — no measurement changed, only the derived percentages.</td>
         <td><a href="https://doi.org/10.5281/zenodo.22019741" target="_blank" rel="noopener">10.5281/zenodo.22019741</a></td>
-        <td><a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">10.5281/zenodo.22019742</a></td>
+        <td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td>
       </tr>
       <tr>
         <td><b>Dataset v1</b> <span class="pill old">superseded</span></td>
@@ -117,11 +117,13 @@
    |      360+ configurations, 0.5B-14B, 4 architectures, FP16/NF4/INT8/FP8, n=2, CV &lt; 2%
    |      supersedes  dataset v1 (18900288 -> 18900289, 113 configurations)
    |
-   +-- RTX 4090 (Ada) deep dive (22019741 -> 22019742)  ..  SUPPLEMENTS v1.1.0, does not replace it
-          1 card, n=1 per configuration, produced by the open container (ecocompute-mlcube)
-          session 2026-07-24: 15/15 measured, 0.5B-7B x FP16/NF4/INT8, energy only
-          session 2026-08-19: 10 measured, 0.5B-7B x NF4/INT8, energy + paired perplexity
+   +-- RTX 4090 (Ada) deep dive (22019741 -> 22037483)  ..  SUPPLEMENTS v1.1.0, does not replace it
+          1 card, produced by the open container (ecocompute-mlcube)
+          session 2026-07-24: 15/15 measured, 0.5B-7B x FP16/NF4/INT8, energy only, n=1
+          session 2026-08-19: 10 measured, 0.5B-7B x NF4/INT8, energy + paired perplexity, n=1
                               INT8 penalty 2.0-2.5x the July session's -> do not pool
+          session 2026-08-20: the 5 INT8 configurations re-run 3x each, n=3
+                              CV of the energy delta 0.6-3.9%, i.e. 30-50x smaller than that gap
           supersedes  21528102 -> 21528103 (its vs_fp16_pct column contradicted its energy column)</pre>
     <p>Concretely: <b>supplements</b> means the RTX 4090 run adds coverage v1.1.0 does not have (INT8 on Ada, and 7B
     on Ada) at a lower repeat count, so it is a deep dive rather than a replacement — and if you quote a
@@ -165,8 +167,8 @@
 
     <div class="card">
       <h3>3 · RTX 4090 (Ada) deep dive — the newest column</h3>
-      <p class="kv"><b>Published</b> 2026-08-20 (measured 2026-07-24 and 2026-08-19) · CC BY 4.0</p>
-      <p class="kv"><b>Contents</b> one RTX 4090, five models 0.5B–7B × FP16/NF4/INT8, 15/15 real measurements from the open container; plus a second session of 10 measurements pairing energy with same-run perplexity; n&nbsp;=&nbsp;1 per configuration</p>
+      <p class="kv"><b>Published</b> 2026-08-21 (measured 2026-07-24, 2026-08-19 and 2026-08-20) · CC BY 4.0</p>
+      <p class="kv"><b>Contents</b> one RTX 4090, five models 0.5B–7B × FP16/NF4/INT8, 15/15 real measurements from the open container; a second session of 10 measurements pairing energy with same-run perplexity (n&nbsp;=&nbsp;1 each); and a third session repeating the five INT8 configurations three times each (n&nbsp;=&nbsp;3, CV of the energy delta 0.6–3.9%)</p>
       <p class="kv"><b>Cite it for</b> the RTX 4090 column, INT8-on-Ada and 7B-on-Ada claims</p>
 <pre>@dataset{zhang_ecocompute_rtx4090_2026,
   title     = {EcoCompute --- LLM Inference Energy on NVIDIA RTX 4090 (Ada)},
@@ -175,10 +177,11 @@
   publisher = {Zenodo},
   note      = {Supplementary single-platform deep dive to dataset v1.1.0
                (10.5281/zenodo.19647290); direct NVML, FP16/NF4/INT8, 0.5B--7B;
-               two sessions, the second pairing energy with perplexity;
+               three sessions: energy only, energy with paired perplexity,
+               and INT8 repeated 3x per size (CV 0.6--3.9%);
                supersedes 10.5281/zenodo.21528103},
-  doi       = {10.5281/zenodo.22019742},
-  url       = {https://doi.org/10.5281/zenodo.22019742}
+  doi       = {10.5281/zenodo.22037483},
+  url       = {https://doi.org/10.5281/zenodo.22037483}
 }</pre>
     </div>
 
@@ -211,7 +214,7 @@
       <tr><td>Site</td><td><a href="https://quantenergy.tech/">quantenergy.tech</a></td></tr>
       <tr><td>Measurement container</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a> (Apache-2.0)</td></tr>
       <tr><td>Main dataset (v1.1.0)</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0)</td></tr>
-      <tr><td>RTX 4090 (Ada) deep dive</td><td><a href="https://doi.org/10.5281/zenodo.22019742" target="_blank" rel="noopener">10.5281/zenodo.22019742</a> (CC BY 4.0)</td></tr>
+      <tr><td>RTX 4090 (Ada) deep dive</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (CC BY 4.0)</td></tr>
       <tr><td>Preprint</td><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a></td></tr>
       <tr><td>Preview image</td><td><a href="/preview.png">quantenergy.tech/preview.png</a> (1200×630)</td></tr>
       <tr><td>Maintainer / contact</td><td>Hongping Zhang — <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">hongping-zh.github.io</a> · ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">open an issue</a></td></tr>
