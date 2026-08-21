@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Thu, 20 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 21 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>How repeatable is a quantization energy number?</title>
+      <link>https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html</guid>
+      <pubDate>Fri, 21 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Five INT8 configurations re-run three times each on one RTX 4090 (n=3, direct NVML). The coefficient of variation of the FP16-normalised energy delta is 0.6-3.9% and of the raw joules 0.3-2.0%, so the 100-140 percentage point gap between two of our own sessions is 30-50x the run-to-run noise and cannot be sampling. The gap is entirely a throughput effect at unchanged package power; the leading hypothesis, untested, is the LLM.int8() kernel path differing between torch 2.13.0 in the image and torch 2.5.1+cu121 natively. Absolute joules also drifted 12-17% lower overnight on the same host. Data: DOI 10.5281/zenodo.22037483.</description>
+    </item>
     <item>
       <title>Energy and quality, measured in the same run</title>
       <link>https://quantenergy.tech/blog/energy-and-quality-same-run.html</link>

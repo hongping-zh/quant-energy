@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How repeatable is a quantization energy number? — EcoCompute</title>
+<meta name="description" content="We re-ran five INT8 configurations three times each on the same RTX 4090. Run-to-run CV of the energy delta is 0.6-3.9% — 30-50x smaller than the gap between two of our own sessions. Absolute joules drifted 12-17% overnight on the same host." />
+<link rel="canonical" href="https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="How repeatable is a quantization energy number?" />
+<meta property="og:description" content="Run-to-run CV is 0.6-3.9%. The gap between two of our own sessions is 100-140 percentage points. Same card model, same pins, 30-50x the noise." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"How repeatable is a quantization energy number?",
+  "datePublished":"2026-08-21",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.22037483"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>How repeatable is a quantization energy number?</h1>
+    <div class="date">2026-08-21 · Hongping Zhang</div>
+
+    <p>Last note ended on an uncomfortable result: the same INT8 configurations, on the same GPU model,
+    with the same pinned dependencies, measured <strong>2.0–2.5× worse in August than in July</strong>.
+    We had no way to say whether that was two unlucky draws from a noisy measurement or a real
+    property of the sessions, because every configuration had been measured exactly once.</p>
+
+    <p>So we measured the noise. Five INT8 configurations, <strong>three independent runs each</strong>,
+    same rented RTX 4090, same day, same stack — the first points on this site that carry a real
+    coefficient of variation. New version of the dataset:
+    <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">DOI 10.5281/zenodo.22037483</a>
+    (CC&nbsp;BY&nbsp;4.0; 15 raw <code>energy.json</code> reports and their logs included).</p>
+
+    <h2>The noise</h2>
+    <table>
+      <tr><th>Model</th><th>N</th><th>Δenergy vs FP16, mean of 3</th><th>SD</th><th>CV</th><th>CV of raw J/1k tok</th><th>CV of the FP16 baseline</th></tr>
+      <tr><td>Qwen2-0.5B</td><td class="num">0.5B</td><td class="num pos">+581.3%</td><td class="num">12.5</td><td class="num">2.15%</td><td class="num">0.78%</td><td class="num">2.45%</td></tr>
+      <tr><td>TinyLlama-1.1B</td><td class="num">1.1B</td><td class="num pos">+307.1%</td><td class="num">1.8</td><td class="num">0.57%</td><td class="num">2.01%</td><td class="num">1.97%</td></tr>
+      <tr><td>Qwen2-1.5B</td><td class="num">1.5B</td><td class="num pos">+347.4%</td><td class="num">7.6</td><td class="num">2.19%</td><td class="num">0.30%</td><td class="num">1.41%</td></tr>
+      <tr><td>Qwen2.5-3B</td><td class="num">3.0B</td><td class="num pos">+271.2%</td><td class="num">7.4</td><td class="num">2.72%</td><td class="num">0.50%</td><td class="num">1.51%</td></tr>
+      <tr><td>Qwen2-7B</td><td class="num">7.0B</td><td class="num pos">+105.9%</td><td class="num">4.1</td><td class="num">3.87%</td><td class="num">1.93%</td><td class="num">0.12%</td></tr>
+    </table>
+    <p class="meta">n&nbsp;=&nbsp;3 independent runs per row; SD is the sample standard deviation
+    (ddof&nbsp;=&nbsp;1) of the three, CV&nbsp;=&nbsp;SD/mean. Direct NVML at 10&nbsp;Hz, batch 1, 256
+    generated tokens, 2 warmup + 10 decode iterations per run, bitsandbytes <code>LLM.int8()</code>.
+    Throughput CV 0.0–2.6%, average-power CV 0.3–0.8%. Raw rows:
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.csv" target="_blank" rel="noopener">rtx4090_int8_repeats_2026-08-20.csv</a>,
+    aggregates in the <code>.summary.csv</code> beside it.</p>
+
+    <p>The measurement itself is tight: <strong>0.6–3.9% CV on the delta, 0.3–2.0% on the raw
+    joules</strong>. And the single trials we published the day before were not flukes — every n=3
+    mean lands on them, the largest deviation being 1.5B at −17.7 points, about 2.3 SD.</p>
+
+    <h2>What that buys us: the 2× gap is not sampling</h2>
+    <p>Put the two numbers next to each other. Run-to-run noise on the INT8 delta is a few percent.
+    The gap between our July and August sessions is <strong>100–140 percentage points</strong> — for
+    example TinyLlama-1.1B at +146.1% against +307.1%. That is <strong>30–50× the noise</strong>.
+    Before this note, "the sessions really differ" was an argument from the tidiness of the ratios;
+    now it is a measurement.</p>
+
+    <p>Which promotes the discrepancy from an anomaly to a constraint that any explanation has to fit:</p>
+    <ul>
+      <li><strong>Power is not the mechanism.</strong> INT8 energy per token rose 1.41–1.58× at
+      essentially <em>unchanged</em> GPU package power (74–91&nbsp;W against July's ~76&nbsp;W). The
+      whole effect is throughput, which fell to 0.63–0.72×.</li>
+      <li><strong>At the small sizes the FP16 baseline moved too</strong> (0.5B: 0.78× of July's),
+      which is what stretches that size's ratio all the way to 2.0× — the INT8 side alone does not
+      explain it.</li>
+      <li><strong>It is not a scaling bug.</strong> Every report is internally consistent:
+      <code>total_energy / tokens</code> agrees with <code>avg_power / throughput</code> (0.5B:
+      21043&nbsp;J / 2560&nbsp;tok = 8.22&nbsp;J/tok versus 74.1&nbsp;W / 9.0&nbsp;tok/s =
+      8.23&nbsp;J/tok), and the schema and quality probe both pass.</li>
+    </ul>
+
+    <p>The leading hypothesis is still the <code>LLM.int8()</code> kernel path: the container image
+    pins <code>torch==2.13.0</code>, while the native path we had to use in August must build against
+    the host driver and got <code>torch 2.5.1+cu121</code>. It is a hypothesis, not an attribution —
+    that rented instance cannot nest Docker, so the image cannot be run there as a control. One 1.1B
+    INT8 run of the image on any Docker-capable RTX 4090 settles it: back near +146% and the kernel
+    path explains it, still near +300% and suspicion moves to the instance. If you have such a card,
+    that single run is the most useful contribution anyone could make to this dataset right now.</p>
+
+    <h2>The finding we did not expect: absolute joules drift overnight</h2>
+    <p>Between 2026-08-19 and 2026-08-20, on the <em>same</em> host, absolute energy per token came out
+    <strong>12–17% lower</strong> — for INT8 and FP16 alike — while the FP16-normalised delta barely
+    moved. We do not know what changed on the machine, and that is rather the point: on rented
+    infrastructure you do not get to know.</p>
+
+    <div class="callout">
+      <strong>Practical consequence.</strong> An absolute figure like "8250&nbsp;J per 1000 tokens"
+      from a single session is worth much less than it looks. A delta measured against an FP16 baseline
+      <em>from the same run</em> survives a 15% day-to-day shift in the machine; the joule count does
+      not. This is why every chart on this site is a percentage against FP16, and why the container
+      always measures its own baseline instead of reusing a published one.
+    </div>
+
+    <h2>What this does <em>not</em> show</h2>
+    <ul>
+      <li><strong>n&nbsp;=&nbsp;3 is a small sample</strong>, and all three runs sat on one rented
+      instance within one day. It bounds run-to-run noise on that host; it says nothing about
+      machine-to-machine variance — which the July/August gap suggests is the dominant term.</li>
+      <li><strong>The quality axis has CV&nbsp;=&nbsp;0 by construction.</strong> Perplexity came out
+      bit-identical in all three replicates (7B: 3.9003 against an FP16 3.8543, +1.193%, every time)
+      because teacher forcing is deterministic. That is a check that the pipeline replays exactly, not
+      evidence that a quality result reproduces.</li>
+      <li><strong>The 10 decode iterations inside a run are still one number</strong>, integrated into
+      a single energy total. The n here is three <em>runs</em>, not thirty.</li>
+      <li><strong>INT8 only.</strong> NF4 was not repeated in this session; its numbers remain n=1.</li>
+      <li>GPU package power via NVML — no CPU, DRAM, PSU losses, PUE or CO₂e — decode phase, batch 1,
+      one card, one backend.</li>
+    </ul>
+
+    <h2>What we are <em>not</em> doing with it</h2>
+    <p>Now that there is a session with error bars, the tempting move would be to fold it into the
+    fitted curves. We have not: the August magnitudes disagree with July's by a factor of two, and a
+    fit over both would produce error bars describing a mixture of two backends rather than an
+    estimate of either. <code>build/measured.csv</code> and the published curves are unchanged and
+    still July-only; the repeatability data ships as its own file, alongside the
+    <a href="/method/">method page's</a> statement of what does and does not carry across sessions.
+    When a second compatible session exists — or when the kernel hypothesis is tested — that decision
+    gets revisited in public.</p>
+
+    <h2>Reproduce it, or contradict it</h2>
+    <p>Same one command as always; run it three times into three directories and you have your own CV:</p>
+<pre>for i in 1 2 3; do
+  docker run --rm --gpus all -v "$PWD/out:/out" \
+    ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+    --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --precision INT8 \
+    --output_dir /out/rep$i
+done</pre>
+    <p>Each <code>energy.json</code> carries its own FP16 baseline, both perplexities and the full
+    version stack, so the three are comparable without any bookkeeping on your side. Drop one on
+    <a href="/replications/">the replications page</a> to see it against our curve — especially if it
+    disagrees.</p>
+
+    <footer>
+      Data: <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>
+      (RTX 4090 deep dive, third session; concept DOI
+      <a href="https://doi.org/10.5281/zenodo.22019741" target="_blank" rel="noopener">10.5281/zenodo.22019741</a>
+      always resolves to the newest version) · in-repo as
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.csv" target="_blank" rel="noopener">rtx4090_int8_repeats_2026-08-20.csv</a>
+      · previous note: <a href="/blog/energy-and-quality-same-run.html">energy and quality in the same run</a>.
+      <br>Main dataset v1.1.0: <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> ·
+      paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> ·
+      container: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a>.
+      <br>Not a certified benchmark result. MLCOMMONS, MLPERF and MLCUBE are trademarks of MLCommons
+      Association, referenced nominatively.
+    </footer>
+  </div>
+</body>
+</html>

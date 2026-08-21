@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-08-21</div>
+      <h2><a href="/blog/how-repeatable-is-a-quantization-energy-number.html">How repeatable is a quantization energy number?</a></h2>
+      <p>Five INT8 configurations re-run three times each on the same RTX 4090: the coefficient of variation of the energy delta is 0.6–3.9% — 30–50× smaller than the 100–140 point gap between two of our own sessions, so that gap is not sampling. Also, absolute joules drifted 12–17% lower overnight on the same host while the FP16-normalised delta held.</p>
+      <p><a href="/blog/how-repeatable-is-a-quantization-energy-number.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-08-20</div>
       <h2><a href="/blog/energy-and-quality-same-run.html">Energy and quality, measured in the same run</a></h2>
       <p>Ten RTX 4090 configurations where the joules and the perplexity come from the same run. NF4 saves 39% energy at 7B but costs 12% perplexity; INT8 costs almost nothing in quality and never saves energy — a Δppl ≤ 1% filter rejects every NF4 row and admits nearly every INT8 one, the exact opposite of the energy ranking. Also: the same INT8 configuration measured 2.0–2.5× worse than in July, on the same card model and the same software stack.</p>
