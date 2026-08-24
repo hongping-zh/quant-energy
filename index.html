@@ -294,25 +294,11 @@
   .stackgrid h3{margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:.3px;color:var(--accent)}
   .stackgrid p{margin:0;font-size:12.5px;line-height:1.65;color:var(--muted)}
   .stackgrid code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11.5px}
-  /* about */
+  /* nav */
   header{position:relative}
   .topnav{position:absolute;top:2px;right:0;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
   .aboutlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--card);transition:border-color .15s,color .15s}
   .aboutlink:hover{border-color:var(--accent);color:var(--txt)}
-  .modal{position:fixed;inset:0;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;background:rgba(6,10,22,.72);backdrop-filter:blur(3px)}
-  .modal.open{display:flex}
-  .modal-card{position:relative;width:100%;max-width:620px;background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--line);border-radius:16px;padding:28px 28px 24px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
-  .modal-card h2{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:.3px}
-  .modal-card h3{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:20px 0 6px}
-  .modal-card p{font-size:14px;line-height:1.65;color:var(--txt);margin:0 0 10px}
-  .modal-card p.sub{color:var(--muted);font-size:13px}
-  .modal-card a{color:var(--accent);text-decoration:none}
-  .modal-card a:hover{text-decoration:underline}
-  .modal-card ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.7;color:var(--txt)}
-  .modal-card ul.dev code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
-  .modal-close{position:absolute;top:14px;right:16px;background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:4px}
-  .modal-close:hover{color:var(--txt)}
-  .modal-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -323,7 +309,7 @@
       <a class="aboutlink" href="/replications/">Replications</a>
       <a class="aboutlink" href="/method/">Methodology</a>
       <a class="aboutlink" href="/cite/">Cite</a>
-      <a id="aboutLink" class="aboutlink" href="#about" aria-haspopup="dialog">About</a>
+      <a class="aboutlink" href="/about/">About</a>
     </nav>
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>"Quantization doesn't always save energy. See for yourself."</p>
@@ -333,7 +319,7 @@
       <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
-      <a href="#evidence">15/15 measured · n&nbsp;=&nbsp;1 each</a>
+      <a href="#evidence">29 measured anchors · RTX 4090 11 · A800 6 · RTX 4090D 4 · RTX 5090 4 · T4 4</a>
       <a href="/method/">NVML @ 10&nbsp;Hz · GPU package</a>
       <a href="/container/">MLCube-compatible</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener">Schema-validated</a>
@@ -446,6 +432,7 @@
       <span>Above zero = penalty (more energy) · below = savings</span>
     </div>
     <div id="cross"></div>
+    <p class="meta" id="crossAnchors" style="margin:6px 0 10px"></p>
     <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). <b>Marker fill encodes replication, not accuracy:</b> filled dots are points repeated at least twice in the main dataset (<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a>, n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); hollow dots on a faded line were measured <b>once</b> (n&nbsp;=&nbsp;1) — the July&nbsp;2026 <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep dive</a> and one early RTX 4090D point — so they carry no measured spread and should be read as a single observation, not as a distribution. INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
   </div>
 
@@ -485,8 +472,9 @@
   <div class="card" id="evidence">
     <h2>Latest run · RTX 4090 (Ada) · measured in our own open container</h2>
     <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      <b>15 of 15 configurations are real hardware measurements</b> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>)
-      — five models (0.5B–7B) × FP16 / NF4 / INT8, produced by the
+      <b>15 of the 15 configurations in this one session are real hardware measurements</b> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>)
+      — five models (0.5B–7B) × FP16 / NF4 / INT8 on this single card, not a site-wide total; the site as a whole rests on
+      29 measured anchors across five cards. Produced by the
       <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>
       container on a rented NVIDIA GeForce RTX 4090, July 2026. It extends the Ada data in two ways the earlier
       RTX 4090D anchor could not: <b>INT8 on Ada</b> and <b>7B models</b>.
@@ -681,7 +669,7 @@
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
-      <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="#about">About → How we measure</a>.</p>
+      <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="/about/">About → How we measure</a>.<br><b>What each fitted curve rests on:</b> Ada NF4 9 anchors (RTX 4090 ×5, RTX 4090D ×4) · Ada INT8 6 (RTX 4090 only) · Blackwell NF4 4 · Turing NF4 4 · Ampere NF4 3 and INT8 3 (A800). <b>Ada is the only class that pools two different cards</b>, and they disagree by roughly 20 points at the same model size, so the Ada band is the widest of the four — see <a href="/method/">the methodology page</a> for the leave-one-out error per class.</p>
     </div>
 
     <div class="hint" id="estHint"></div>
@@ -824,71 +812,6 @@
       </div>
     </div>
   </div><!-- /runView -->
-
-  <div id="about" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
-    <div class="modal-card">
-      <button id="aboutClose" class="modal-close" type="button" aria-label="Close">&times;</button>
-      <h2 id="aboutTitle">About EcoCompute</h2>
-      <p class="sub">Evidence over hype — does quantization actually lower your LLM inference energy, or raise it?</p>
-
-      <p>EcoCompute answers a single question: <b>does quantization actually lower the energy cost of your LLM inference — or raise it?</b> Most quantization tooling tells you <em>how</em> to quantize; EcoCompute tells you <em>whether</em> you should.</p>
-
-      <h3>The finding</h3>
-      <p>Weight-only quantization (NF4/INT8) reduces memory footprint, but it does <b>not</b> always reduce energy. On small models the dequantization overhead can outweigh the memory-bandwidth savings, so quantization <em>increases</em> energy; on larger models it starts to save. The exact "crossover" point depends on both model size <b>and</b> GPU architecture.</p>
-
-      <h3>How we measure</h3>
-      <p>Every number on the "Tested models" tab comes from <b>direct NVML power sampling</b> during real inference (10&nbsp;Hz, 256 tokens/run, 10 iterations) across four NVIDIA architectures (Turing, Ada, Ampere, Blackwell) — not TDP estimates. Where we model rather than measure (latency/throughput via a roofline model, or sizes outside the measured range), we label it explicitly. We never present estimates as measurements.</p>
-
-      <h3>Our own measurement container — and the newest run</h3>
-      <p>The measurement is open, not just the numbers. We develop the <b>EcoCompute energy MLCube</b>, an MLCube-compatible container that runs the same direct NVML power sampling on <em>your</em> GPU and writes an <code>energy.json</code> with the exact fields these charts read (full guide: <a href="/container/">the container page</a>; drop your report on the <b>Run it yourself</b> tab). The newest column on this site — <b>RTX 4090 (Ada), July 2026</b> — was produced with it: all 15 configurations (five models, 0.5B–7B × FP16/NF4/INT8) are real hardware measurements, and they extend our Ada coverage to <b>INT8</b> and <b>7B</b> for the first time. The complete run — raw per-configuration reports, aggregated CSV, environment metadata and figures — is archived on Zenodo under <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (CC BY 4.0). It is a <b>supplementary deep dive alongside the main v1.1.0 dataset</b>, not a replacement for it and not a certified benchmark: n&nbsp;=&nbsp;1 per configuration, and NVML reports GPU-package power rather than whole-system draw.</p>
-
-      <h3>The research</h3>
-      <p>Based on the preprint <i>"Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms"</i> by <b>Hongping Zhang</b> (Independent Researcher, Changsha, China; ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>), openly available on <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN</a>. The measurement methodology — reproducible, direct NVML power sampling rather than TDP estimates — is the paper's core contribution, and the dataset is <b>actively being expanded</b> to cover more GPU architectures and model families.</p>
-
-      <h3>Which artifact should I cite?</h3>
-      <p>Three artifacts, three jobs — cite the one that matches your claim. The full map, with concept vs version DOIs and BibTeX for each, lives on <a href="/cite/">Artifacts &amp; citation</a>.</p>
-      <ul>
-        <li>
-          <b>The paper</b> — the argument and the methodology:
-          <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN&nbsp;#6854700</a>
-          (archived copy: <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a>).
-        </li>
-        <li>
-          <b>The main dataset — v1.1.0, current</b>:
-          <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>
-          (CC BY 4.0). 360+ configurations, 0.5B–14B, four architectures (RTX 4090D, RTX 5090, A800, T4), FP16/NF4/INT8/FP8, n&nbsp;=&nbsp;2 repeats with CV&nbsp;&lt;&nbsp;2%.
-          <b>This is the source of truth for the numbers on this page</b> — cite it for anything except the RTX 4090 column.
-        </li>
-        <li>
-          <b>The RTX 4090 (Ada) deep dive — July 2026</b>:
-          <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>
-          (CC BY 4.0). One card, 15/15 measured configurations from our own container, adding INT8 on Ada and 7B; n&nbsp;=&nbsp;1, so it complements v1.1.0 rather than superseding it.
-        </li>
-      </ul>
-      <p class="sub">Older references still circulating: <b>v1</b> (113 configurations, <a href="https://doi.org/10.5281/zenodo.18900289" target="_blank" rel="noopener">10.5281/zenodo.18900289</a>, March 2026) is <b>superseded by v1.1.0</b> — mirrors or skill listings that still say “113+ configurations” are describing v1.</p>
-
-      <h3>Contribute a measurement</h3>
-      <p>We are looking for collaborators to reproduce EcoCompute measurements across additional GPUs, cloud instances, model families and quantization backends. If you operate NVIDIA, AMD or other accelerator infrastructure and want to contribute comparable energy-per-token data, please get in touch — a run that <em>contradicts</em> the published curve is the most valuable thing you can send. Start from <a href="/container/">the container page</a>, then open an issue or pull request on <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">ecocompute-mlcube</a> with your <code>energy.json</code>.</p>
-
-      <h3>Build on it</h3>
-      <ul>
-        <li>Measurement container: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the same code that produced the RTX 4090 dataset runs on your GPU (<a href="/container/">what it does and how to run it</a>)</li>
-        <li>Dataset &amp; code: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a></li>
-        <li>Also contributed as an energy-efficiency FAQ to the <a href="https://github.com/bitsandbytes-foundation/bitsandbytes/pull/1882" target="_blank" rel="noopener">bitsandbytes</a> docs.</li>
-      </ul>
-
-      <h3>For developers</h3>
-      <p class="sub">The same engine that powers this page is available programmatically — build EcoCompute checks into your own tooling or agents. <b>The API is optional</b>: this page computes every number locally from the fitted curves, so nothing here depends on the API being reachable.</p>
-      <ul class="dev">
-        <li><b>REST API</b> — <code>GET /v1/estimate</code> · <code>GET|POST /v1/optimize</code> at <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/architectures" target="_blank" rel="noopener">ecocompute-estimator…workers.dev</a> (CORS open) <span class="tag" id="apiStatus">checking…</span></li>
-        <li><b>OpenAPI</b> — self-describing schema at <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/openapi.json" target="_blank" rel="noopener">/openapi.json</a> for auto tool discovery</li>
-        <li><b>MCP tool</b> — <code>recommend_config</code> for Claude Desktop / Cursor</li>
-      </ul>
-      <p class="sub" id="apiNote" style="display:none"></p>
-
-      <p class="modal-foot">EcoCompute is an independent research project. Our goal is honesty over hype: we show what the measurements say — including when quantization is the wrong choice.</p>
-    </div>
-  </div>
 
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">"Weight-Only Quantization Does Not Always Save Energy"</a>
@@ -1169,9 +1092,27 @@ function renderHint(m){
   else{ h.innerHTML=`Your model is <b>above</b> the crossover — NF4 already saves energy, so go ahead and quantize.`; }
 }
 
+function renderAnchorCount(gpuKey){
+  const el=document.getElementById("crossAnchors"); if(!el) return;
+  const ms=DATA[gpuKey].models;
+  // How many anchors this one card actually contributes, and at which replication level.
+  const parts=["NF4","INT8"].map(p=>{
+    const pts=ms.filter(m=>dPct(m,p)!=null);
+    if(!pts.length) return null;
+    const rep=pts.filter(m=>trials(m)>=2).length;
+    const lvl = rep===pts.length ? "n\u00a0=\u00a02" : (rep===0 ? "n\u00a0=\u00a01" : rep+"\u00a0of\u00a0"+pts.length+" repeated");
+    return "<b>"+p+"</b> "+pts.length+" ("+lvl+")";
+  }).filter(Boolean);
+  const pooled = DATA[gpuKey].models.length && (gpuKey==="RTX 4090"||gpuKey==="RTX 4090D")
+    ? " The fitted <b>Ada</b> curve on the <em>Your model</em> tab pools this card with the other Ada card (RTX 4090 and RTX 4090D differ by roughly 20 points at the same size); every other architecture curve comes from a single card."
+    : "";
+  el.innerHTML="Anchors measured on <b>"+DATA[gpuKey].label.split(" \u00b7 ")[0]+"</b>: "+parts.join(" \u00b7 ")+
+    ". Sizes with no marker were not measured on this card \u2014 nothing is interpolated into this chart."+pooled;
+}
+
 function render(){
   const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
-  renderBars(m, DATA[g].models); renderCross(g,i); renderHint(m);
+  renderBars(m, DATA[g].models); renderCross(g,i); renderHint(m); renderAnchorCount(g);
 }
 
 gpuSel.addEventListener("change",()=>{ fillModels(); render(); track("explore",ctx()); });
@@ -1562,42 +1503,6 @@ decorate(document.getElementById("repoCta"));
   const el=document.getElementById(id);
   if(el) el.addEventListener("click",()=>track(ev,ctx()));
 });
-
-// About modal
-(function(){
-  const modal=document.getElementById("about"), open=document.getElementById("aboutLink"), close=document.getElementById("aboutClose");
-  if(!modal||!open) return;
-  const API="https://ecocompute-estimator.zhanghongping1982.workers.dev";
-  let probed=false;
-  /* Probe the optional REST API the first time the modal is opened, so a reader
-     never sees an advertised endpoint without knowing whether it answers. */
-  function probeApi(){
-    if(probed) return; probed=true;
-    const badge=document.getElementById("apiStatus"), note=document.getElementById("apiNote");
-    if(!badge) return;
-    const ctl=typeof AbortController!=="undefined" ? new AbortController() : null;
-    const timer=setTimeout(()=>{ if(ctl) ctl.abort(); },6000);
-    fetch(API+"/v1/architectures",{cache:"no-store",signal:ctl?ctl.signal:undefined})
-      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
-      .then(()=>{ badge.textContent="live"; badge.classList.add("measured"); })
-      .catch(()=>{
-        badge.textContent="not reachable from your network";
-        badge.classList.add("estimated");
-        if(note){
-          note.style.display="";
-          note.innerHTML="The API is hosted on <code>*.workers.dev</code>, which some networks (notably mainland China) block at the TLS layer — a failed handshake there means <b>blocked in transit, not retired</b>. Every number on this page is computed locally, so the tool is unaffected; for programmatic access from such a network, use <a href=\"https://github.com/hongping-zh/quant-energy/blob/main/estimate.js\" target=\"_blank\" rel=\"noopener\">estimate.js</a> directly (same engine, no network).";
-        }
-      })
-      .finally(()=>clearTimeout(timer));
-  }
-  function show(e){ if(e) e.preventDefault(); modal.classList.add("open"); document.body.style.overflow="hidden"; probeApi(); track("about_open",{}); }
-  function hide(){ modal.classList.remove("open"); document.body.style.overflow=""; }
-  document.querySelectorAll('a[href="#about"]').forEach(a=>a.addEventListener("click",show));
-  if(close) close.addEventListener("click",hide);
-  modal.addEventListener("click",e=>{ if(e.target===modal) hide(); });
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modal.classList.contains("open")) hide(); });
-  if(location.hash==="#about") show();
-})();
 
 /* ----- hero: live count of independent replications (never a placeholder) ----- */
 (function(){
