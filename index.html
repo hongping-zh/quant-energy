@@ -663,8 +663,9 @@
       <h2>Fitted crossover curve · your model marked with its uncertainty</h2>
       <div class="legend">
         <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve</span>
+        <span><i class="swatch" style="background:var(--accent);opacity:.28;width:14px;height:10px;border-radius:2px"></i>95% band (fit instability)</span>
         <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors (n&nbsp;≥&nbsp;2)</span>
-        <span><i class="swatch" style="background:transparent;border:2px solid var(--nf4);width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1)</span>
+        <span><i class="swatch" style="background:transparent;border:2px dashed var(--nf4);opacity:.6;width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1, provisional)</span>
         <span><i class="swatch" style="background:#ef4444;width:10px;height:10px;border-radius:50%"></i>Your model ± CI</span>
         <span>Above zero = penalty · below = savings</span>
       </div>
@@ -799,8 +800,9 @@
         <div id="rrVerdict" class="verdict" style="margin-top:12px"></div>
         <div class="legend" style="margin-top:14px">
           <span><i class="swatch" style="background:var(--accent)"></i>Fitted curve (your GPU arch)</span>
+          <span><i class="swatch" style="background:var(--accent);opacity:.28;width:14px;height:10px;border-radius:2px"></i>95% band (fit instability)</span>
           <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors (n&nbsp;≥&nbsp;2)</span>
-          <span><i class="swatch" style="background:transparent;border:2px solid var(--nf4);width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1)</span>
+          <span><i class="swatch" style="background:transparent;border:2px dashed var(--nf4);opacity:.6;width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1, provisional)</span>
           <span><i class="swatch" style="background:#fbbf24;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);display:inline-block"></i>Your energy.json</span>
         </div>
         <div id="runCross"></div>
@@ -1046,9 +1048,9 @@ function renderCross(gpuKey, selIdx){
     const path=pts.map((o,i)=>(i?"L":"M")+X(o.x).toFixed(1)+" "+Y(o.d).toFixed(1)).join(" ");
     const allSingle=pts.every(o=>o.n<2);
     const dots=pts.map(o=>{
-      const t=`<title>${o.name} · ${p} · ${o.d>0?"+":""}${o.d.toFixed(1)}% · n = ${o.n}${o.n<2?" (single trial, no measured spread)":" repeated trials, CV < 2%"}</title>`;
+      const t=`<title>${o.name} · ${p} · ${o.d>0?"+":""}${o.d.toFixed(1)}% · n = ${o.n}${o.n<2?" (single trial, provisional \u2014 no measured spread)":" repeated trials, CV < 2%"}</title>`;
       return o.n<2
-        ? `<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="4" fill="var(--bg)" fill-opacity=".9" stroke="${col}" stroke-width="2">${t}</circle>`
+        ? `<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="4" fill="var(--bg)" fill-opacity=".9" stroke="${col}" stroke-width="1.6" stroke-opacity=".5" stroke-dasharray="2.2 2">${t}</circle>`
         : `<circle cx="${X(o.x).toFixed(1)}" cy="${Y(o.d).toFixed(1)}" r="3.5" fill="${col}">${t}</circle>`;
     }).join("");
     return `<path d="${path}" fill="none" stroke="${col}" stroke-width="2.5" stroke-opacity="${allSingle?.55:1}" ${dash?'stroke-dasharray="5 4"':''}/>${dots}`;
@@ -1266,9 +1268,11 @@ function renderEstimate(){
    (main dataset v1.1.0, CV < 2%), hollow = n = 1 single trial (RTX 4090 deep dive). */
 function anchorDot(a, X, Y){
   const n=(a.n==null?2:a.n);
-  const t=`<title>${a.model||""} · ${a.gpu||""} · ${a.dE>0?"+":""}${a.dE}% · n = ${n}${n<2?" (single trial)":" repeated trials"}</title>`;
+  const t=`<title>${a.model||""} · ${a.gpu||""} · ${a.dE>0?"+":""}${a.dE}% · n = ${n}${n<2?" (single trial — provisional)":" repeated trials"}</title>`;
+  // A single-trial anchor is drawn hollow AND faded: evidence strength has to be visible
+  // at a glance, not only in the tooltip.
   return n<2
-    ? `<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4.5" fill="var(--bg)" fill-opacity=".9" stroke="var(--nf4)" stroke-width="2">${t}</circle>`
+    ? `<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4.5" fill="var(--bg)" fill-opacity=".9" stroke="var(--nf4)" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="2.2 2">${t}</circle>`
     : `<circle cx="${X(a.N).toFixed(1)}" cy="${Y(a.dE).toFixed(1)}" r="4" fill="var(--nf4)">${t}</circle>`;
 }
 
@@ -1284,13 +1288,23 @@ function renderEstCurve(arch, precision, N, r){
   const lg=v=>Math.log(v);
   const X=v=> pad.l + (lg(v)-lg(xmin))/(lg(xmax)-lg(xmin))*iw;
   const samples=[]; const steps=64;
-  for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let d=modelCurve(v,c); d=Math.max(d,-sCap); samples.push({x:v,d}); }
-  const yvals=samples.map(s=>s.d).concat(c.anchors.map(a=>a.dE)).concat([r.ci[0],r.ci[1],0]);
+  for(let i=0;i<=steps;i++){
+    const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin)));
+    let d=modelCurve(v,c); d=Math.max(d,-sCap);
+    // band from the same function the API uses, so the shading cannot drift from the numbers
+    const b=curveBand(src,precision,v);
+    samples.push({x:v,d,lo:b?b.lo:d,hi:b?b.hi:d});
+  }
+  const yvals=samples.map(s=>s.d).concat(samples.map(s=>s.lo)).concat(samples.map(s=>s.hi))
+    .concat(c.anchors.map(a=>a.dE)).concat([r.ci[0],r.ci[1],0]);
   let ymin=Math.min(...yvals), ymax=Math.max(...yvals);
   const padY=(ymax-ymin)*0.12||10; ymin-=padY; ymax+=padY;
   const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih;
   const y0=Y(0);
   const path=samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" ");
+  const bandPath=samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.hi).toFixed(1)).join(" ")+" "+
+    samples.slice().reverse().map(s=>"L"+X(s.x).toFixed(1)+" "+Y(s.lo).toFixed(1)).join(" ")+" Z";
+  const band=`<path d="${bandPath}" fill="var(--accent)" fill-opacity=".13" stroke="none"/>`;
   const dots=c.anchors.map(a=>anchorDot(a,X,Y)).join("");
   const qx=X(N);
   const qbar=`<line x1="${qx.toFixed(1)}" x2="${qx.toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[0]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
@@ -1319,10 +1333,28 @@ function renderEstCurve(arch, precision, N, r){
     <line x1="${pad.l}" x2="${W-pad.r}" y1="${y0}" y2="${y0}" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2 3"/>
     <text x="${W-pad.r}" y="${y0-6}" fill="#fb7185" font-size="10" text-anchor="end">↑ penalty</text>
     <text x="${W-pad.r}" y="${y0+14}" fill="#34d399" font-size="10" text-anchor="end">↓ savings</text>
+    ${band}
     <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
     ${dots}${qbar}${xlabels}
     <text x="${pad.l+iw/2}" y="${H-4}" fill="var(--muted)" font-size="11" text-anchor="middle">Model size (parameters, B, log scale)</text>
-  </svg>`;
+  </svg>
+  <p class="meta" style="margin:6px 0 0;line-height:1.55">${fitCaption(c)}</p>`;
+}
+
+/* What the shaded band is, stated next to it: a fit this thin has to say how thin. */
+function fitCaption(c){
+  const n=c.anchors.length;
+  const single=c.anchors.filter(a=>(a.n==null?2:a.n)<2).length;
+  const cards=[...new Set(c.anchors.map(a=>a.gpu).filter(Boolean))];
+  const src_txt = c.loo_mae ? `leave-one-out error of this fit (\u00b1${c.loo_mae.toFixed(0)} pts: refit without each anchor, how far the curve moves)`
+                            : `residual spread of the fit (\u00b1${c.resid_std.toFixed(0)} pts; too few anchors for leave-one-out)`;
+  return `<b>Fit:</b> ${n} anchor${n===1?"":"s"} on ${cards.join(" + ")||"one card"}, `+
+    `${single===n?"all n\u00a0=\u00a01 (single trial)":(single?single+" of "+n+" n\u00a0=\u00a01":"replicated, n\u00a0\u2265\u00a02")}. `+
+    `Shaded band = \u00b11.96\u03c3 from the ${src_txt}. `+
+    `It reflects <b>how unstable this curve is under its own anchors</b> \u2014 not run-to-run sampling noise `+
+    `(CV\u00a00.6\u20133.9%, far narrower) and <b>not between-user variance</b>: two of our own sessions on the same card `+
+    `differed by 100\u2013140 points, which no band fitted to one session can cover. `+
+    `<a href="/method/#band">How the band is built \u2192</a>`;
 }
 
 /* ----- mode toggle (3-way) ----- */
@@ -1636,8 +1668,8 @@ function drawRunCross(){
   const xmax=Math.max(Math.max(...allN)*1.2, 16);
   const lg=v=>Math.log(v);
   const X=v=> pad.l + (lg(v)-lg(xmin))/(lg(xmax)-lg(xmin))*iw;
-  let samples=[]; if(c){ const steps=64; for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let dd=Math.max(modelCurve(v,c),-sCap); samples.push({x:v,d:dd}); } }
-  const yvals=samples.map(s=>s.d).concat(anchorXs.map((n,i)=>c.anchors[i].dE)).concat(uploadedPoints.map(p=>p.dE)).concat([0]);
+  let samples=[]; if(c){ const steps=64; for(let i=0;i<=steps;i++){ const v=Math.exp(lg(xmin)+(i/steps)*(lg(xmax)-lg(xmin))); let dd=Math.max(modelCurve(v,c),-sCap); const bb=curveBand(src,prec,v); samples.push({x:v,d:dd,lo:bb?bb.lo:dd,hi:bb?bb.hi:dd}); } }
+  const yvals=samples.map(s=>s.d).concat(samples.map(s=>s.lo)).concat(samples.map(s=>s.hi)).concat(anchorXs.map((n,i)=>c.anchors[i].dE)).concat(uploadedPoints.map(p=>p.dE)).concat([0]);
   let ymin=Math.min(...yvals), ymax=Math.max(...yvals); const padY=(ymax-ymin)*0.14||10; ymin-=padY; ymax+=padY;
   const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih; const y0=Y(0);
   const path=c?samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.d).toFixed(1)).join(" "):"";
@@ -1656,7 +1688,9 @@ function drawRunCross(){
   const ylabels=yticks.map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c2742" stroke-width="1"/><text x="${pad.l-8}" y="${Y(t)+4}" fill="var(--muted)" font-size="11" text-anchor="end">${t>0?"+":""}${t}%</text>`).join("");
   const xt=[...new Set(anchorXs.concat(uploadedPoints.map(p=>p.N)))].sort((a,b)=>a-b);
   const xlabels=xt.map(v=>`<text x="${X(v).toFixed(1)}" y="${H-pad.b+18}" fill="var(--muted)" font-size="11" text-anchor="middle">${fmtNum(v)}B</text>`).join("");
-  const curveEls=c?`<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>${dots}`:`<text x="${pad.l+iw/2}" y="${pad.t+ih/2}" fill="var(--muted)" font-size="12" text-anchor="middle">No fitted curve for ${ref.arch||"this GPU arch"} · ${prec} — point(s) shown on the ΔE% axis</text>`;
+  const bandPath=c?samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.hi).toFixed(1)).join(" ")+" "+
+    samples.slice().reverse().map(s=>"L"+X(s.x).toFixed(1)+" "+Y(s.lo).toFixed(1)).join(" ")+" Z":"";
+  const curveEls=c?`<path d="${bandPath}" fill="var(--accent)" fill-opacity=".13" stroke="none"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>${dots}`:`<text x="${pad.l+iw/2}" y="${pad.t+ih/2}" fill="var(--muted)" font-size="12" text-anchor="middle">No fitted curve for ${ref.arch||"this GPU arch"} · ${prec} — point(s) shown on the ΔE% axis</text>`;
   document.getElementById("runCross").innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="your energy.json on the crossover chart">
     <rect x="${pad.l}" y="${pad.t}" width="${iw}" height="${(y0-pad.t).toFixed(1)}" fill="rgba(244,63,94,.07)"/>
@@ -1667,7 +1701,8 @@ function drawRunCross(){
     <text x="${W-pad.r}" y="${y0+14}" fill="#34d399" font-size="10" text-anchor="end">↓ savings</text>
     ${curveEls}${marks}${xlabels}
     <text x="${pad.l+iw/2}" y="${H-4}" fill="var(--muted)" font-size="11" text-anchor="middle">Model size (parameters, B, log scale)</text>
-  </svg>`;
+  </svg>
+  ${c?`<p class="meta" style="margin:6px 0 0;line-height:1.55">${fitCaption(c)}</p>`:""}`;
 }
 function ingestEnergyJson(text){
   let obj; try{ obj=JSON.parse(text); }catch(_){ return runUploadError("That file isn't valid JSON."); }

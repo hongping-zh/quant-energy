@@ -146,6 +146,28 @@
     power, i.e. purely a throughput effect. One caveat on the repeats: the perplexity column is bit-identical
     across replicates because teacher forcing is deterministic, so the quality axis has CV&nbsp;=&nbsp;0 by
     construction and is not independently replicated.</p>
+    <h3 id="band">What the shaded band around a fitted curve is</h3>
+    <p>Every estimate carries a 95% band, and the curve chart shades it. It is <b>not</b> a bootstrap over
+    replicates — most anchors are n&nbsp;=&nbsp;1, so there are no replicates to resample, and a band built from the
+    within-session CV (0.6–3.9%) would be about a tenth as wide as our own sessions disagree. It is built from how
+    unstable the fit is under its own anchors:</p>
+    <ul>
+      <li><b>σ floor = max(residual spread of the fit, leave-one-out error, 2&nbsp;pts).</b> The leave-one-out
+      error refits the curve with each anchor withheld and measures how far it moves at that anchor — the honest
+      answer to “how wrong is this curve about a point it has not seen”. Current values:
+      Ada&nbsp;NF4 <b>16.1</b>, Ada&nbsp;INT8 <b>47.5</b>, Blackwell&nbsp;NF4 <b>4.8</b>, Turing&nbsp;NF4 <b>5.3</b> points
+      (Ampere has 3 anchors per precision, below the 4 needed for leave-one-out, so its residual spread is used).</li>
+      <li><b>Extrapolation term</b>, growing with log-distance outside the measured size range.</li>
+      <li><b>Borrowed-curve and batch/context terms</b> when the answer leans on another architecture or on the
+      modelled batch effect.</li>
+      <li>For a size that <em>is</em> measured, the band instead covers the disagreement between the cards in that
+      class rather than a fitted σ.</li>
+    </ul>
+    <p class="meta">What the band does <b>not</b> cover: <b>between-user and between-session variance</b>. Two of our
+    own sessions on the same card, same protocol, different torch build differ by 100–140 points — far outside any
+    band fitted to one of them. Read the band as the precision of the curve, not as a prediction interval for your
+    machine; the only way to close that gap is <a href="/replications/">independent runs</a>.</p>
+
     <p class="meta">The fitted curves and the estimator are open: see <a href="/estimate.js">estimate.js</a>, <a href="/optimize.js">optimize.js</a> and the <code>build/</code> scripts in <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">the site repository</a>.</p>
 
     <h2>3 · The finding this protocol produced</h2>

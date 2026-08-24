@@ -41,6 +41,11 @@ def weight_gb(N, precision):
     return round(N * bits / 8.0, 2)
 
 
+def base_sigma(c):
+    """Predictive sigma floor for a fitted curve: max(in-sample residual, LOO error)."""
+    return max(c["resid_std"], c.get("loo_mae") or 0.0, 2.0)
+
+
 def savings_factor(batch=1, ctx=CTX_BASE):
     """Factor in (0,1] shrinking savings toward zero as batch/context grow.
     1.0 at batch=1 and ctx<=baseline (reproduces the measured curve)."""
@@ -95,8 +100,11 @@ def estimate(N, arch, precision, data=None, batch=1, ctx=CTX_BASE):
     else:
         basis = "estimated"
 
-    # uncertainty: residual floor + extrapolation distance (log) + borrowed penalty
-    base = max(c["resid_std"], 2.0)
+    # uncertainty: residual floor + extrapolation distance (log) + borrowed penalty.
+    # The in-sample residual is optimistic on a fit with a handful of anchors, so the
+    # leave-one-out error (how far the curve moves when one anchor is withheld) sets
+    # the floor: that is the scale at which a *new* measurement disagrees with us.
+    base = base_sigma(c)
     if N < c["n_min"]:
         dd = math.log(c["n_min"] / N)
     elif N > c["n_max"]:
