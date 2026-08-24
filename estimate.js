@@ -74,6 +74,31 @@
   function g(x) { return x / (1 + x); }
   function modelCurve(N, c) { return c.A - c.S * g(N / c.Nstar); }
 
+  // Predictive sigma floor for a fitted curve. The in-sample residual is optimistic on
+  // a fit with a handful of anchors, so the leave-one-out error (how far the curve moves
+  // when one anchor is withheld) sets the floor: that is the scale at which a *new*
+  // measurement disagrees with the curve. Run-to-run sampling noise (CV 0.6-3.9%) is an
+  // order of magnitude smaller and would produce a band that flatters the fit.
+  function baseSigma(c) { return Math.max(c.resid_std, c.loo_mae || 0, 2); }
+  function extrapTerm(c, N) {
+    var dd = 0;
+    if (N < c.n_min) dd = Math.log(c.n_min / N); else if (N > c.n_max) dd = Math.log(N / c.n_max);
+    return (baseSigma(c) + 4) * dd * 1.2;
+  }
+  // Band around the fitted curve itself (no measured-anchor or batch/context special
+  // cases), so a chart can shade exactly the uncertainty the API reports.
+  function curveBand(arch, precision, N) {
+    var curves = CURVES.curves, src = arch;
+    if (!curves[arch] || !curves[arch][precision]) { src = CURVES.borrow[arch]; }
+    var c = curves[src] && curves[src][precision];
+    if (!c) return null;
+    var sCap = CURVES.s_cap[precision] || 75;
+    var b = baseSigma(c), e = extrapTerm(c, N);
+    var sigma = Math.sqrt(b * b + e * e);
+    var d = Math.max(modelCurve(N, c), -sCap);
+    return { delta: d, lo: Math.max(d - Z * sigma, -sCap), hi: d + Z * sigma, sigma: sigma, base: b };
+  }
+
   // Measured FP16 absolute decode energy baseline (J / 1k tokens == mJ / token) for a
   // given size+arch, from the NVML-measured fp16_energy anchors. Log-log interpolation
   // inside the measured range ("measured"/"interpolated"), extrapolation outside ("estimated").
@@ -150,9 +175,9 @@
     var deltaBase = delta;
     if (modelled && delta < 0) { delta = delta * factor; }   // only shrink savings
 
-    var base = Math.max(c.resid_std, 2);
+    var base = baseSigma(c);
     var dd = 0; if (N < c.n_min) dd = Math.log(c.n_min / N); else if (N > c.n_max) dd = Math.log(N / c.n_max);
-    var extrap = (base + 4) * dd * 1.2, bterm = borrowedFrom ? 10 : 0;
+    var extrap = extrapTerm(c, N), bterm = borrowedFrom ? 10 : 0;
     var mterm = modelled ? Math.abs(deltaBase) * (1 - factor) * 0.5 : 0;
     var sigma = Math.sqrt(base * base + extrap * extrap + bterm * bterm + mterm * mterm);
     if (basis === "measured" && !modelled) sigma = Math.max(base * 0.5, spread / 2);
@@ -216,10 +241,10 @@
     return out;
   }
 
-  var API = { estimate: estimate, parseQuery: parseQuery, weightGB: weightGB, savingsFactor: savingsFactor, modelCurve: modelCurve, fmtNum: fmtNum, fp16BaselineJ1k: fp16BaselineJ1k, CURVES: CURVES };
+  var API = { estimate: estimate, parseQuery: parseQuery, weightGB: weightGB, savingsFactor: savingsFactor, modelCurve: modelCurve, curveBand: curveBand, fmtNum: fmtNum, fp16BaselineJ1k: fp16BaselineJ1k, CURVES: CURVES };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   root.EcoEstimator = API;
   // convenience globals for the demo page
   root.CURVES = CURVES; root.estimate = estimate; root.parseQuery = parseQuery; root.weightGB = weightGB;
-  root.modelCurve = modelCurve; root.fmtNum = fmtNum; root.fp16BaselineJ1k = fp16BaselineJ1k;
+  root.modelCurve = modelCurve; root.curveBand = curveBand; root.fmtNum = fmtNum; root.fp16BaselineJ1k = fp16BaselineJ1k;
 })(typeof globalThis !== "undefined" ? globalThis : this);
