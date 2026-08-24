@@ -103,8 +103,8 @@
 
   <p>Run the open <a href="/container/">MLCube container</a> on your card, drop the resulting
   <code>energy.json</code> below, and see your point land on — or off — the published crossover curve. The file is parsed
-  <b>in your browser</b>; this site has no upload endpoint, so nothing is submitted until you open and send the
-  pre-filled GitHub issue yourself.</p>
+  <b>in your browser</b>; this site has no upload endpoint, so nothing is submitted until you paste the summary into a
+  GitHub issue and send it yourself.</p>
 
   <div class="cta">
     <a class="btn" href="#gallery">See replications ▼</a>
@@ -146,9 +146,9 @@
   point appears on.</p>
 
   <h2 id="submit">Submit a replication</h2>
-  <p class="meta">Parsing happens entirely in your browser. When you are ready, the button below opens a GitHub issue
-  <b>pre-filled with the summary you see here</b> — you read it, attach your <code>energy.json</code>, and send it. Nothing
-  leaves this page on its own.</p>
+  <p class="meta">Parsing happens entirely in your browser. When you are ready, the button below <b>copies the summary you
+  see here, plus your raw report, to your clipboard</b> and opens an empty GitHub issue — you paste it, read it, and send
+  it. Nothing leaves this page on its own.</p>
 
   <div class="dropzone" id="dz" tabindex="0" role="button" aria-label="Choose your energy.json">
     ⬇ Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
@@ -185,6 +185,9 @@
       <input type="text" id="link" placeholder="repo / blog / paper" autocomplete="off" />
     </div>
   </div>
+  <p class="meta" style="margin-top:8px">The submission text carries your whole <code>energy.json</code>, which is more than a GitHub
+  URL can hold, so the button puts it on your clipboard and opens an <em>empty</em> issue — paste it there with Ctrl+V.
+  Nothing is prefilled through the URL, so there is no length limit to hit.</p>
   <p class="meta" style="margin-top:8px">GPU, model, precision, ΔE% and <code>basis</code> are read from the file — we do
   not let you retype them. <b>n is not in the report</b>: the container records <code>measurement.iterations</code>
   (decode iterations inside one run), which is not the same as repeating the whole measurement. If you ran the container
@@ -197,9 +200,16 @@
   </div>
 
   <div class="cta">
-    <button class="btn" id="issueBtn" type="button" disabled>Open pre-filled GitHub issue →</button>
-    <button class="ghost" id="copyBtn" type="button" disabled>Copy the summary</button>
+    <button class="btn" id="issueBtn" type="button" disabled>Copy submission &amp; open GitHub issue →</button>
+    <button class="ghost" id="copyBtn" type="button" disabled>Copy only</button>
+    <button class="ghost" id="dlBtn" type="button" disabled>Download the submission (.md)</button>
     <span class="meta">Requires a file, a handle, and the first two boxes.</span>
+  </div>
+  <p class="meta" id="subStatus" style="display:none"></p>
+  <div id="manualCopy" style="display:none;margin-top:8px">
+    <p class="meta">Your browser blocked the clipboard (this happens without HTTPS or with clipboard permissions off).
+    Select the text below, copy it with Ctrl+C, then paste it into the GitHub issue.</p>
+    <textarea id="manualText" rows="8" readonly style="width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#0a0f22;color:#cfe0ff;border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
   </div>
 
   <div class="callout">
@@ -255,7 +265,7 @@
 
 <script>
 var REPO_ISSUE = "https://github.com/hongping-zh/ecocompute-mlcube/issues/new";
-var CURVES = null, GALLERY = [], FILTER = "all", POINT = null;
+var CURVES = null, GALLERY = [], FILTER = "all", POINT = null, RAW = "", RAW_NAME = "energy.json";
 
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function num(v){ return typeof v === "number" && isFinite(v); }
@@ -430,9 +440,53 @@ function issueText(){
   L.push("- [x] I understand this submission will be public and credited to my handle.");
   L.push("- [" + (document.getElementById("c3").checked ? "x" : " ") + "] Reviewers may follow up in this issue.");
   L.push("");
-  L.push("**Please attach the raw `energy.json` to this issue before sending** — the summary above was generated in the");
-  L.push("browser from that file and is not a substitute for it.");
+  L.push("The summary above was generated in the browser from the report; the report itself is below, and attaching");
+  L.push("the `energy.json` file to this issue as well is welcome but not required.");
+  if(RAW && RAW.length <= 200000){
+    L.push("");
+    L.push("<details><summary>" + RAW_NAME + " (pasted verbatim, in case the attachment does not go through)</summary>");
+    L.push("");
+    L.push("```json");
+    L.push(RAW.replace(/```/g, "``\u200b`").trim());
+    L.push("```");
+    L.push("");
+    L.push("</details>");
+  }
   return L.join("\n");
+}
+
+/* ---------- clipboard, with the two fallbacks browsers actually need ----------
+   The issue body carries the raw report, which is far past what a GitHub
+   ?body= URL will accept, so the text goes through the clipboard and the issue
+   page is opened clean. Returns true only if the text is demonstrably copied. */
+function copyText(t){
+  var ta = document.createElement("textarea");
+  ta.value = t;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, t.length);
+  var ok = false;
+  try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+function showManual(t){
+  var box = document.getElementById("manualCopy"), area = document.getElementById("manualText");
+  area.value = t; box.style.display = "";
+  area.focus(); area.select();
+}
+function status(msg){
+  var el = document.getElementById("subStatus");
+  el.innerHTML = msg; el.style.display = "";
+}
+/* async clipboard first (it is the only one Safari/Firefox honour reliably from a
+   click), execCommand second, visible textarea last. then(cb) always runs. */
+function copyThen(t, cb){
+  var done = function(ok){ if(!ok && !copyText(t)){ showManual(t); ok = false; } cb(ok); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ cb(true); }, function(){ done(false); });
+  } else { done(false); }
 }
 
 function refreshButtons(){
@@ -440,6 +494,7 @@ function refreshButtons(){
     document.getElementById("c1").checked && document.getElementById("c2").checked;
   document.getElementById("issueBtn").disabled = !ready;
   document.getElementById("copyBtn").disabled = !POINT;
+  document.getElementById("dlBtn").disabled = !POINT;
 }
 
 function ingest(txt, name){
@@ -451,7 +506,7 @@ function ingest(txt, name){
     refreshButtons(); return;
   }
   err.style.display = "none";
-  POINT = out.point;
+  POINT = out.point; RAW = txt; RAW_NAME = name || "energy.json";
   showParsed(POINT, out.missing);
   document.getElementById("parsed").insertAdjacentHTML("afterbegin", chip("file", name));
   drawPreview(POINT);
@@ -541,14 +596,29 @@ function renderStats(){
     if(!POINT) return;
     var title = "Replication: " + POINT.gpu + " · " + POINT.model + " · " + POINT.precision +
       " · " + (POINT.dE > 0 ? "+" : "") + POINT.dE.toFixed(1) + "%";
-    var url = REPO_ISSUE + "?title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(issueText());
-    window.open(url, "_blank", "noopener");
+    var url = REPO_ISSUE + "?title=" + encodeURIComponent(title);
+    copyThen(issueText(), function(ok){
+      status(ok
+        ? "Submission copied. GitHub is opening in a new tab — paste with <b>Ctrl+V</b> (⌘V on a Mac) into the empty issue body, then send. Attaching the <code>" + esc(RAW_NAME) + "</code> file itself is still welcome."
+        : "Could not reach the clipboard. Copy the text below by hand, then paste it into the GitHub tab that just opened.");
+      window.open(url, "_blank", "noopener");
+    });
   });
   document.getElementById("copyBtn").addEventListener("click", function(){
-    var t = issueText(); var btn = document.getElementById("copyBtn");
-    if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){
-      btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = "Copy the summary"; }, 1600);
+    var btn = document.getElementById("copyBtn");
+    copyThen(issueText(), function(ok){
+      if(!ok) return;
+      btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = "Copy only"; }, 1600);
     });
+  });
+  document.getElementById("dlBtn").addEventListener("click", function(){
+    if(!POINT) return;
+    var blob = new Blob([issueText()], { type: "text/markdown;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ecocompute-replication-" + (POINT.precision || "report").toLowerCase() + ".md";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
   });
   document.getElementById("filters").addEventListener("click", function(e){
     var b = e.target.closest("button"); if(!b) return;
