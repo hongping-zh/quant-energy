@@ -134,11 +134,12 @@
     token rose 1.41–1.58× with <em>unchanged package power</em> (74–91&nbsp;W against July's ~76&nbsp;W)
     — so it is entirely a throughput effect — and at the small sizes the August FP16 baseline was also
     lower (0.5B: 0.78×), which is what stretches that size's ratio to 2.0×. The leading hypothesis is
-    the <code>LLM.int8()</code> kernel path differing between the container image, which pins
-    <code>torch==2.13.0</code>, and the native path used in August, which must build against the host
-    driver and got <code>torch 2.5.1+cu121</code>. That hypothesis is <em>untested</em>: the rented
-    instance cannot nest Docker, so the image cannot be run there as a control. Testing it costs one
-    1.1B INT8 run on any Docker-capable RTX 4090 — back near +146% confirms the kernel explanation,
+    the <code>LLM.int8()</code> kernel path, which changes with the torch build: July's anchors were
+    recorded with <code>torch 2.4.1+cu121</code> (Python 3.8), the native path used in August got
+    <code>torch 2.5.1+cu121</code>, and the container image pins <code>torch 2.13.0</code> — three
+    different builds, no two sessions alike. That hypothesis is <em>untested</em>. Testing it costs one
+    1.1B INT8 run pinned back to the July build, or one run of the image on any Docker-capable RTX 4090
+    (the rented instance cannot nest Docker) — back near +146% confirms the kernel explanation,
     still near +300% moves suspicion to the instance.</p>
 
     <p>We are stating it rather than quietly picking the nicer session, because it has a consequence

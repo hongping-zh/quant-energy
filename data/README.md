@@ -81,10 +81,12 @@ The `.summary.csv` carries mean, SD and CV per size.
   this shows the pipeline replays exactly, it is **not** independent evidence that the quality result
   replicates.
 - **What causes the July–August gap is still open.** The leading hypothesis is the `LLM.int8()`
-  kernel path differing between the image's pinned `torch==2.13.0` and the native path's
-  `torch 2.5.1+cu121` (`matches_reference_pins` deliberately excludes torch, which must match the
-  host driver). It is untested: the instance cannot nest Docker, so the image cannot be run there as
-  a control. What any explanation has to account for: at every size
+  kernel path, which changes with the torch build — and no two sessions here ran the same one: the
+  2026-07-24 anchors were recorded with `torch 2.4.1+cu121` (Python 3.8), the August native path got
+  `torch 2.5.1+cu121`, and the container image pins `torch 2.13.0` (`matches_reference_pins`
+  deliberately excludes torch, which must match the host driver). It is untested; the cheapest
+  control is one 1.1B INT8 run pinned back to the July build, since the instance cannot nest Docker
+  and so cannot run the image as a control. What any explanation has to account for: at every size
   INT8 energy rose 1.41–1.58× with **unchanged package power** (74–91 W vs July's ~76 W), i.e. it is
   a throughput effect (0.63–0.72×), and at small sizes the August FP16 baseline was also lower
   (0.5B: 0.78×), which is what pushes that size's ratio to 2.0×.
