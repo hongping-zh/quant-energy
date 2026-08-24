@@ -348,6 +348,58 @@
       <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
       <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
     </div>
+
+    <div class="card" id="repro" style="border-left:3px solid var(--accent);margin-top:20px">
+      <h2 style="margin:0 0 2px">Replicate this number · 复现环境</h2>
+      <p class="meta" style="margin:0 0 12px">Hardware, software versions, DOIs and the command — as plain text, so Ctrl+F finds them.</p>
+      <p class="badge" style="margin:0 0 14px">The stacks below are <b>not identical to each other</b>, and saying so is the point. The published
+      Ada curves were measured in the <b>2026-07-24</b> session; the container image you would pull today pins a
+      <b>different torch</b>; and a native (non-Docker) install pins a third one, on which the same INT8 configurations
+      measured <b>about twice</b> the energy penalty. Which of these you run changes the INT8 number you get.
+      <a href="/blog/how-repeatable-is-a-quantization-energy-number.html" style="color:var(--accent);text-decoration:underline">Run-to-run vs cross-session, with the CVs →</a></p>
+      <div class="stackgrid">
+        <div>
+          <h3>Hardware · 硬件</h3>
+          <p><b>NVIDIA GeForce RTX 4090</b> · Ada Lovelace · 24 GB · compute capability 8.9 · CUDA build
+          <code>12.1</code> · NVIDIA driver <code>535.146.02</code> in the August sessions (the July driver is in
+          <code>run_metadata/gpu_summary.csv</code> of that session's raw archive). Rented AutoDL instances.<br>
+          Other anchors in the fit: RTX 4090D (Ada), RTX 5090 (Blackwell), A800 (Ampere), T4 (Turing).<br>
+          Power: <b>NVML</b> <code>nvmlDeviceGetPowerUsage</code> at <b>10 Hz</b>, integrated over the decode loop —
+          GPU-package power only, not wall power.</p>
+        </div>
+        <div>
+          <h3>Software · 软件</h3>
+          <p><b>Container image (what you get today):</b> Python 3.10 · <code>torch 2.13.0</code> ·
+          <code>transformers 4.57.6</code> · <code>bitsandbytes 0.43.3</code> · <code>accelerate 1.14.0</code> ·
+          <code>nvidia-ml-py 13.610.43</code>, base <code>nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04</code>
+          (<a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/requirements.lock.txt" target="_blank" rel="noopener">requirements.lock.txt</a>).<br>
+          <b>2026-07-24 session — the anchors the Ada curves are fitted on:</b> Python 3.8 ·
+          <code>torch 2.4.1+cu121</code> · <code>transformers 4.46.3</code> · <code>bitsandbytes 0.45.5</code> ·
+          <code>accelerate 1.0.1</code>. Older than the current pins.<br>
+          <b>2026-08-19 / 08-20 native sessions:</b> Python 3.10.20 · <code>torch 2.5.1+cu121</code>, the other four
+          matching the pins above.</p>
+        </div>
+        <div>
+          <h3>Data · 数据</h3>
+          <p><b>Main dataset v1.1.0</b> — DOI <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>, n = 2 per configuration, CV &lt; 2%.<br>
+          <b>RTX 4090 deep dive</b> — DOI <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>
+          (concept 10.5281/zenodo.22019741): 2026-07-24 energy, n = 1; 2026-08-19 energy + same-run perplexity, n = 1;
+          2026-08-20 INT8 <b>n = 3</b> per size, CV of ΔE% <b>0.6–3.9%</b>.<br>
+          <b>Protocol:</b> batch size 1 · context 2048 · 256 generated tokens per run · 10 decode iterations after 2
+          warmups · greedy · each model's own FP16 baseline in the same session.<br>
+          Quality probe corpus SHA-256 <code>22ac091a6383740d30f8e41ae144032c873c772db5e1c901112c1c330fdc5504</code>.</p>
+        </div>
+        <div>
+          <h3>Container · 容器</h3>
+          <p>Image <code>ghcr.io/hongping-zh/ecocompute-mlcube:latest</code>, rebuilt by CI on every merge to
+          <code>main</code>. One INT8 run of TinyLlama-1.1B:</p>
+          <p style="margin-top:8px"><code>docker run --rm --gpus all -v "$PWD/out:/workspace/outputs" ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 --precision INT8 --gpu_arch auto --output_dir /workspace/outputs</code></p>
+          <p style="margin-top:8px">Writes <code>out/energy.json</code>, schema <code>ecocompute-energy/1.1</code>, carrying
+          <code>results.vs_fp16_energy_pct</code>, <code>results.basis</code> and the <code>software</code> block that
+          recorded the versions above. Drop it into <a href="/replications/">/replications/</a> to overlay it on the curve.</p>
+        </div>
+      </div>
+    </div>
   </header>
 
   <div class="modetabs" role="tablist">

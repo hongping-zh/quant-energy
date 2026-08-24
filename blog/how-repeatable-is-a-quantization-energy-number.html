@@ -116,13 +116,15 @@
       8.23&nbsp;J/tok), and the schema and quality probe both pass.</li>
     </ul>
 
-    <p>The leading hypothesis is still the <code>LLM.int8()</code> kernel path: the container image
-    pins <code>torch==2.13.0</code>, while the native path we had to use in August must build against
-    the host driver and got <code>torch 2.5.1+cu121</code>. It is a hypothesis, not an attribution —
-    that rented instance cannot nest Docker, so the image cannot be run there as a control. One 1.1B
-    INT8 run of the image on any Docker-capable RTX 4090 settles it: back near +146% and the kernel
-    path explains it, still near +300% and suspicion moves to the instance. If you have such a card,
-    that single run is the most useful contribution anyone could make to this dataset right now.</p>
+    <p>The leading hypothesis is still the <code>LLM.int8()</code> kernel path, which changes with the
+    torch build — and no two of these sessions ran the same build. July's anchors were recorded with
+    <code>torch 2.4.1+cu121</code> on Python 3.8; the native path we had to use in August got
+    <code>torch 2.5.1+cu121</code>; the container image pins <code>torch 2.13.0</code>. It is a
+    hypothesis, not an attribution. The cheapest control is one 1.1B INT8 run pinned back to the July
+    build on the August instance; the other is one run of the image on any Docker-capable RTX 4090
+    (that rented instance cannot nest Docker). Back near +146% and the kernel path explains it, still
+    near +300% and suspicion moves to the instance. If you have such a card, that single run is the
+    most useful contribution anyone could make to this dataset right now.</p>
 
     <h2>The finding we did not expect: absolute joules drift overnight</h2>
     <p>Between 2026-08-19 and 2026-08-20, on the <em>same</em> host, absolute energy per token came out

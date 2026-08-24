@@ -138,10 +138,11 @@
     </ul>
     <p class="meta">Consequence for anyone using or citing energy deltas, ours included: <b>a quantization
     penalty measured once on one rented instance can be off by a factor of two</b>, and the run-to-run CV does not
-    warn you about it. The leading hypothesis for our own gap is the <code>LLM.int8()</code> kernel path differing
-    between the image (which pins <code>torch==2.13.0</code>) and the native path (which must build against the host
-    driver, here <code>torch 2.5.1+cu121</code>) — untested, because the instance cannot nest Docker and so cannot
-    run the image as a control. The decomposition constrains it: INT8 energy rose 1.41–1.58× at unchanged package
+    warn you about it. The leading hypothesis for our own gap is the <code>LLM.int8()</code> kernel path, which changes
+    with the torch build — and <b>no two of our sessions ran the same one</b>: the 2026-07-24 anchors were recorded
+    with <code>torch 2.4.1+cu121</code> (Python 3.8), the August native path got <code>torch 2.5.1+cu121</code>, and
+    the container image pins <code>torch 2.13.0</code>. It is untested; the control is a repeat of one 1.1B INT8 run
+    with the July build (or with the image, on a host that can nest Docker — ours cannot). The decomposition constrains it: INT8 energy rose 1.41–1.58× at unchanged package
     power, i.e. purely a throughput effect. One caveat on the repeats: the perplexity column is bit-identical
     across replicates because teacher forcing is deterministic, so the quality axis has CV&nbsp;=&nbsp;0 by
     construction and is not independently replicated.</p>
