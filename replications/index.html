@@ -468,7 +468,8 @@ function issueText(){
   L.push("| independent trials (n) | " + n + " |");
   L.push("| decode iterations per run | " + (p.iterations == null ? "not reported" : p.iterations) + " |");
   L.push("| sampling | " + (p.sample_rate_hz == null ? "not reported" : p.sample_rate_hz + " Hz") + (p.method ? " · " + p.method : "") + " |");
-  if(p.energy_per_token_mj != null) L.push("| energy per token | " + p.energy_per_token_mj + " mJ |");
+  if(p.energy_per_token_mj != null) L.push("| energy per token | " + p.energy_per_token_mj + " mJ (" +
+    (p.energy_per_token_mj > 0 ? (1000 / p.energy_per_token_mj).toPrecision(3) : "—") + " tokens/J, GPU package \u2014 not comparable to a wall-power figure) |");
   if(p.fp16_energy_per_token_mj != null) L.push("| FP16 baseline | " + p.fp16_energy_per_token_mj + " mJ/token |");
   if(p.throughput != null) L.push("| decode throughput | " + p.throughput + " tok/s |");
   L.push("| schema_version | " + (p.schema_version || "—") + " |");

@@ -585,6 +585,11 @@
         <td>We report <b>GPU-package power only</b> and run our own warmup/iteration loop, so our numbers are a supplementary energy methodology — explicitly <code>certified_benchmark_result: false</code>, never an MLPerf result</td>
       </tr>
       <tr>
+        <td><a href="https://github.com/mlcommons/mlperf_client" target="_blank" rel="noopener">MLPerf Client v2.0</a></td>
+        <td>Client-machine <b>performance</b> (geomean TTFT and 2nd+ token rate) of the models vendors ship — all of them already quantized (Q4_0, int4, MLX q4, NVFP4/FP8). Its <b>tokens/Joule</b> path is wall power via a Yokogawa analyzer, SPEC PTDaemon and a second host</td>
+        <td>We measure the <b>FP16 baseline alongside the quantized model in the same session</b>, in software, on one machine — so the difference quantization made is a number rather than an inference. Different boundary (GPU package, not wall) and not a certified result: <a href="/mlperf-client/">how the two map onto each other →</a></td>
+      </tr>
+      <tr>
         <td><a href="https://top500.org/lists/green500/" target="_blank" rel="noopener">Green500</a></td>
         <td>Ranks whole supercomputers by <b>GFLOPS/watt</b> on HPL-class numerical workloads</td>
         <td>Different unit and scope: one accelerator, LLM <b>decode</b> phase, joules per generated token — and a comparison between precisions rather than a league table</td>
@@ -829,6 +834,7 @@
       <a href="/replications/">Public replications</a>
       <a href="/method/">Methodology</a>
       <a href="/cite/">Artifacts &amp; citation</a>
+      <a href="/mlperf-client/">MLPerf Client v2.0</a>
       <a href="/blog/">Blog / notes</a>
       <a href="/blog/zh-guide.html" hreflang="zh-Hans" lang="zh-Hans">中文说明</a>
       <a href="/blog/zh-container-guide.html" hreflang="zh-Hans" lang="zh-Hans">容器中文手册</a>
@@ -1217,7 +1223,10 @@ function renderEstimate(){
   const fb=window.fp16BaselineJ1k?window.fp16BaselineJ1k(N, pArch.value):null;
   if(fb){ const q=fb.e_j1k*(1+r.delta_pct/100);
     const eb=(fb.basis!=="estimated"&&(r.basis==="measured"||r.basis==="interpolated"))?"measured-anchored":"estimated";
-    enEl.innerHTML="Est. energy: <b>~"+fmtNum(q)+" mJ/token</b> ("+pPrec.value+") vs <b>~"+fmtNum(fb.e_j1k)+" mJ/token</b> (FP16) <span class=\"tag "+(eb==="measured-anchored"?"measured":"estimated")+"\">"+eb+"</span> <span style=\"color:var(--muted)\">· FP16 decode baseline from NVML, at batch 1 / 2k ctx</span>";
+    /* tokens/J is MLPerf Client's unit for the same quantity; ours is GPU-package only, so it is
+       an upper bound on a wall-power tokens/J, never comparable to a PTDaemon figure. */
+    const tpj=v=>{ if(!(v>0)) return "—"; const t=1000/v; return t>=100?t.toFixed(0):(t>=10?t.toFixed(1):(t>=1?t.toFixed(2):t.toFixed(3))); };
+    enEl.innerHTML="Est. energy: <b>~"+fmtNum(q)+" mJ/token</b> ("+pPrec.value+") vs <b>~"+fmtNum(fb.e_j1k)+" mJ/token</b> (FP16) <span class=\"tag "+(eb==="measured-anchored"?"measured":"estimated")+"\">"+eb+"</span> <span style=\"color:var(--muted)\">· <b>"+tpj(q)+"</b> vs <b>"+tpj(fb.e_j1k)+"</b> tokens/J, <a href=\"/mlperf-client/\">GPU package, not wall power</a> · FP16 decode baseline from NVML, at batch 1 / 2k ctx</span>";
   } else { enEl.innerHTML=""; }
   const ico=r.recommendation==="quantize"?"↓":(r.recommendation==="do_not_quantize"?"↑":"≈");
   const cfgSnippet=pPrec.value==="INT8"

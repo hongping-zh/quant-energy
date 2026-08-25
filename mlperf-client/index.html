@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MLPerf Client v2.0 measures speed. Here is how to measure the energy — EcoCompute</title>
+<meta name="description" content="MLPerf Client v2.0 lets you benchmark quantized LLMs on your own Windows or macOS machine, in tokens per second. Its power path needs a Yokogawa analyzer, SPEC PTDaemon and a second PC. This page maps the two: tokens/Joule vs mJ/token, wall power vs GPU package, and why a suite of Q4/int4 models cannot tell you what quantization cost." />
+<link rel="canonical" href="https://quantenergy.tech/mlperf-client/" />
+<meta property="og:title" content="MLPerf Client v2.0 measures speed. Here is how to measure the energy." />
+<meta property="og:description" content="tokens/Joule vs mJ/token, wall power vs GPU package — and the question a suite of already-quantized models cannot answer: what did quantizing cost?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/mlperf-client/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"TechArticle",
+  "headline":"MLPerf Client v2.0 measures speed. Here is how to measure the energy.",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/mlperf-client/",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+  h2{font-size:20px;margin:34px 0 6px}
+  h3{font-size:16px;margin:22px 0 4px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .callout.warn{border-color:rgba(244,63,94,.45);background:rgba(244,63,94,.07)}
+  .meta{font-size:13px;color:var(--muted)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+  .col{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px}
+  .col h3{margin:0 0 6px}
+  footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · MLPerf Client</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/replications/">Replications</a><a href="/method/">Methodology</a><a href="/cite/">Cite</a><a href="/about/">About</a></nav>
+    </div>
+
+    <h1>MLPerf Client v2.0 measures speed. Here is how to measure the energy of the same run.</h1>
+    <p class="sub">Last updated 2026-08-26 · written against
+      <a href="https://github.com/mlcommons/mlperf_client" target="_blank" rel="noopener">mlcommons/mlperf_client</a> at
+      <code>version.json = 2.0.0</code> · announcement:
+      <a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">mlcommons.org</a> ·
+      <a href="https://github.com/mlcommons/mlperf_client/releases" target="_blank" rel="noopener">signed downloads</a></p>
+
+    <p><a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">MLPerf Client v2.0</a>
+      is a good release: signed Windows and macOS applications, a CLI as well as a GUI, agentic and image-generation
+      tests, and far broader hardware coverage. Its headline is that you can now generate results on your own machine
+      instead of in a lab.</p>
+
+    <p>Those results are <b>performance</b> results — geomean time to first token and 2nd+ token generation rate. This
+      page exists because two questions are left over, and people arrive here asking them:</p>
+
+    <div class="callout">
+      <p style="margin:0 0 8px"><b>1 · What did quantization cost in energy?</b> Every LLM configuration shipped in v2.0
+        runs an <em>already quantized</em> model — <code>Llama-3.1-8B-Instruct-Q4_0.gguf</code> on the llama.cpp CUDA
+        path, <code>*_ov-int4-*</code> on OpenVINO, <code>*-mlx-q4</code> on Apple MLX, and <code>nvfp4</code> /
+        <code>fp8</code> / <code>quanto_int8</code> for image generation. There is no FP16 configuration anywhere in the
+        suite, which is reasonable — it benchmarks what vendors actually ship — but it means the difference between
+        quantized and unquantized is not a quantity the suite produces.</p>
+      <p style="margin:0"><b>2 · What did it cost in quality, in that same run?</b> v2.0 has accuracy harnesses
+        (<code>tools/accuracy/ifeval</code>, <code>tools/accuracy/mmlu</code>), but they score a model, not a delta
+        against that model's own FP16 baseline on the same machine in the same session.</p>
+    </div>
+
+    <p>Both are exactly what the <a href="/container/">EcoCompute container</a> measures, in software, on hardware you
+      already own. Neither project replaces the other: MLPerf Client is a benchmark with certified results and a
+      submission process; this is a research protocol with none of that.</p>
+
+    <h2>The energy axis of MLPerf Client is real — and it is not available at home</h2>
+    <p>v2.0 <em>does</em> define power measurement, and defines it well:
+      <code>tools/power/README_MLPerf-client_Power-measurements.md</code> specifies a Yokogawa-class power analyzer, the
+      SPEC PTDaemon interface, a second "director" machine on the same network, NTP-synchronised clocks, and an EULA you
+      request by email. <code>tools/power/power_log_parser.py</code> then computes <b>tokens/Joule</b> per prompt
+      category with a bootstrap 95% CI, pools them, and reports the geometric mean, with warmup iterations excluded.
+      That is a rigorous, auditable, wall-power number.</p>
+    <p>It is also a bench setup. The people the signed applications just enabled — someone with one laptop and no
+      analyzer — can produce the tok/s figure and not the tokens/J figure. That gap is the only reason this page exists.</p>
+
+    <h2>Mapping the two, honestly</h2>
+    <table>
+      <tr><th></th><th>MLPerf Client v2.0 power</th><th>EcoCompute</th></tr>
+      <tr><td><b>Unit</b></td><td>tokens/Joule</td><td>mJ/token — the same quantity, <code>tokens/J = 1000 / (mJ/token)</code>; the site now prints both</td></tr>
+      <tr><td><b>Measurement boundary</b></td><td><b>Wall AC, whole system</b>: CPU, DRAM, display, fans, PSU losses included</td><td><b>GPU package only</b> (<code>nvmlDeviceGetPowerUsage</code>) — a <em>lower bound</em> on system energy, so our tokens/J is an <em>upper bound</em> on a wall-power tokens/J</td></tr>
+      <tr><td><b>Instrument</b></td><td>Yokogawa analyzer + SPEC PTDaemon + director host</td><td>NVML software telemetry @ 10 Hz, integrated over the decode loop</td></tr>
+      <tr><td><b>Barrier to entry</b></td><td>Hardware, a second machine, an EULA</td><td>One command, one machine</td></tr>
+      <tr><td><b>Precisions covered</b></td><td>Whatever the vendor ships: Q4_0, int4, q4, NVFP4, FP8</td><td><b>FP16 baseline plus NF4 / INT8 in the same session</b>, which is the whole point</td></tr>
+      <tr><td><b>Quality</b></td><td>IFEval, MMLU/TinyMMLU as separate harnesses</td><td>Teacher-forcing perplexity of the quantized model <em>and</em> its FP16 baseline, same run, fixed corpus</td></tr>
+      <tr><td><b>Statistics</b></td><td>Bootstrap CI per prompt category, geomean across categories, warmup excluded</td><td>Warmup excluded; repeats where we have them (same-machine CV 0.6–3.9%)</td></tr>
+      <tr><td><b>Status</b></td><td>An official MLCommons benchmark with certified results</td><td>An independent research protocol. <code>certified_benchmark_result: false</code>. Not an MLPerf result.</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <b>Do not compare the two numbers directly.</b> A GPU-package joule and a wall-plug joule are different physical
+      quantities, and on a laptop the gap is large — display, CPU and fans are not in ours. If you have both, report them
+      as two rows, not as one ratio. Anyone presenting our number as an MLPerf Client power result is misreporting it,
+      and so would we be.
+    </div>
+
+    <h2>Running both on the same machine</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>1 · Speed, from MLPerf Client</h3>
+        <p class="meta" style="margin:0 0 8px">Signed app, GUI or CLI. NVIDIA GPUs on Windows x64 use the llama.cpp CUDA
+          execution provider.</p>
+        <pre>mlperf-windows.exe -c NVIDIA_llamacpp-CUDA_GPU.json</pre>
+        <p class="meta" style="margin:8px 0 0">Gives geomean TTFT and 2nd+ token rate for
+          <code>Llama-3.1-8B-Instruct-Q4_0</code>.</p>
+      </div>
+      <div class="col">
+        <h3>2 · Energy and quality, from the container</h3>
+        <p class="meta" style="margin:0 0 8px">Same machine. Measures the quantized model <em>and</em> its FP16 baseline,
+          then scores both for perplexity.</p>
+        <pre>docker run --rm --gpus all \
+  -v "$PWD/out:/workspace/outputs" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  energy_estimate \
+  --model meta-llama/Llama-3.1-8B-Instruct \
+  --params_b 8 --precision NF4 \
+  --gpu_arch auto \
+  --output_dir /workspace/outputs</pre>
+        <p class="meta" style="margin:8px 0 0">Writes <code>out/energy.json</code>. No Docker? The
+          <a href="/container/">native path</a> works on Windows — the first independent replication of this project came
+          from a Windows laptop.</p>
+      </div>
+    </div>
+    <p class="meta">One difference you must keep in view when reading the two side by side: the runtimes are not the same.
+      MLPerf Client's NVIDIA path is llama.cpp with a GGUF <code>Q4_0</code> file; our container is
+      transformers + bitsandbytes <code>NF4</code>. Same idea (4-bit weight-only), different kernels, so the energy
+      deltas are not interchangeable. Adding a GGUF <code>F16</code> vs <code>Q4_0</code> path to the container, so the
+      comparison is within one runtime, is the next thing on our list.</p>
+
+    <h2>Why this matters more on a laptop than in a datacentre</h2>
+    <p>Our published curves say the crossover — the model size above which 4-bit weight-only quantization starts to
+      <em>save</em> energy rather than cost it — sits in the low single-digit billions of parameters on the cards we have
+      measured, because at small sizes the throughput loss outweighs the memory-traffic saving. An 8B model on a client
+      GPU sits close enough to that boundary that the sign of the effect is a measurement question, not a theory
+      question. Which is why we would rather have your measurement than our extrapolation.</p>
+    <p>The first independent replication of this project makes the point: on an <b>RTX 3050 Ti Laptop GPU</b> running
+      TinyLlama-1.1B in NF4, the contributor measured <b>16.2% less</b> energy per token, where every card we own spends
+      between 4.6% and 33% <em>more</em> at that size. Our own curve had nothing useful to say there — it is fitted on
+      7–14B data. See <a href="/blog/first-independent-replication.html">the write-up</a>, or
+      <a href="/replications/">the gallery</a>.</p>
+
+    <div class="callout">
+      <b>If you just installed MLPerf Client v2.0:</b> you already have a machine that can produce the missing axis.
+      Sixty seconds of container time turns "how fast is it" into "what did it cost".
+      <a href="/replications/">Submit an energy.json →</a>
+    </div>
+
+    <h2>A note on what we would like to see upstream</h2>
+    <p>Nothing in the above is a criticism of the power methodology — a PTDaemon-audited wall-power number is strictly
+      better evidence than software telemetry, and it should stay the standard for submitted results. The gap is that
+      there is currently <em>no</em> tier below it, so the home user gets nothing. An explicitly informative-only,
+      non-submittable software-telemetry tier (NVML on Windows and Linux, <code>powermetrics</code> on macOS), labelled
+      as not comparable to PTD, would let the population v2.0 just enabled see an energy figure at all.</p>
+    <p>We would bring a warning with that suggestion rather than only enthusiasm. In our own record, repeated runs on one
+      machine agree to within a coefficient of variation of 0.6–3.9%, but the <em>same five INT8 configurations measured
+      on the same card in two different sessions differed by 100 to 140 percentage points</em> — 30 to 50 times the
+      run-to-run noise — and absolute joules per token drifted 12–17% between two consecutive days.
+      <a href="/blog/how-repeatable-is-a-quantization-energy-number.html">The numbers are here.</a> Any at-home energy
+      tier has to be designed around that, which is an argument for reporting deltas against a same-session baseline
+      rather than absolute joules.</p>
+
+    <h2>Sources</h2>
+    <ul>
+      <li>Announcement — <a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">MLPerf Client v2.0, MLCommons blog</a></li>
+      <li>Signed applications — <a href="https://github.com/mlcommons/mlperf_client/releases" target="_blank" rel="noopener">github.com/mlcommons/mlperf_client/releases</a></li>
+      <li>Power methodology — <code>tools/power/README_MLPerf-client_Power-measurements.md</code> and <code>tools/power/power_log_parser.py</code> in that repository</li>
+      <li>Model configurations quoted above — <code>data/configs/vendors_default/</code> in that repository</li>
+      <li>Our protocol — <a href="/method/">methodology</a>; our data — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></li>
+    </ul>
+
+    <footer>
+      Trademark note: MLCommons, MLPerf and MLCube are trademarks of MLCommons Association, referenced here
+      nominatively. The maintainer is an individual observer member of MLCommons, writing in a personal capacity;
+      EcoCompute is independently developed and is neither an official MLCommons benchmark nor endorsed by MLCommons.
+      Nothing on this page is an MLPerf result.
+      <br>EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
+      <br><a href="/">← Back to the tool</a> · <a href="/container/">Measurement container</a> · <a href="/replications/">Replications</a> · <a href="/method/">Methodology</a> · <a href="/about/">About</a>
+    </footer>
+  </div>
+</body>
+</html>
