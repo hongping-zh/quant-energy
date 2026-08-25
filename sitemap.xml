@@ -25,6 +25,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://quantenergy.tech/mlperf-client/</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://quantenergy.tech/about/</loc>
     <lastmod>2026-08-23</lastmod>
     <changefreq>monthly</changefreq>
