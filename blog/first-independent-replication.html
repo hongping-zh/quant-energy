@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The first independent replication: NF4 saved 16% on a laptop GPU — EcoCompute</title>
+<meta name="description" content="The first energy.json measured by someone else: TinyLlama-1.1B in NF4 on an RTX 3050 Ti Laptop GPU saves 16.2% energy, where every card we own spends 4.6-33% more at that size. The paired perplexity reproduced ours to four decimals — quality travels between machines, energy does not." />
+<link rel="canonical" href="https://quantenergy.tech/blog/first-independent-replication.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="The first independent replication: NF4 saved 16% on a laptop GPU" />
+<meta property="og:description" content="Same model, same corpus, different machine: the perplexity matched ours to four decimals while the energy went the other way. An independent run on an RTX 3050 Ti Laptop GPU." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/first-independent-replication.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"The first independent replication: NF4 saved 16% on a laptop GPU",
+  "datePublished":"2026-08-25",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "contributor":{"@type":"Person","name":"gkgoing","url":"https://github.com/gkgo"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/first-independent-replication.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>The first independent replication: NF4 saved 16% on a laptop GPU</h1>
+    <div class="date">2026-08-25 · Hongping Zhang · run contributed by <a href="https://github.com/gkgo" target="_blank" rel="noopener">@gkgoing</a></div>
+
+    <p>Every number on this site so far was measured by one person on rented cards. On 23 August 2026
+    that stopped being true: <a href="https://github.com/gkgo" target="_blank" rel="noopener">@gkgoing</a>
+    ran the container on a <strong>laptop</strong> — an RTX 3050 Ti Laptop GPU under Windows 10 — and
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/15" target="_blank" rel="noopener">submitted the
+    report</a>. Thank you. The raw file is
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/replications/2026-08-23-gkgoing-rtx3050ti-tinyllama-nf4.energy.json" target="_blank" rel="noopener">in the repository verbatim</a>
+    and the point is now drawn on the fitted chart and in
+    <a href="/replications/">the gallery</a>.</p>
+
+    <p>It disagrees with us, in the most useful direction possible.</p>
+
+    <h2>What the run says</h2>
+    <table>
+      <tr><th>field</th><th>value</th></tr>
+      <tr><td>GPU</td><td>NVIDIA GeForce RTX 3050 Ti Laptop GPU · 39.8 W average package power</td></tr>
+      <tr><td>Model / precision</td><td>TinyLlama-1.1B-Chat-v1.0 · NF4 (bitsandbytes)</td></tr>
+      <tr><td>Energy</td><td class="num">1212.9 mJ/token vs an FP16 baseline of 1448.2 mJ/token</td></tr>
+      <tr><td>ΔE vs FP16</td><td class="num neg">−16.2%</td></tr>
+      <tr><td>Perplexity</td><td class="num">10.1016 vs FP16 9.6201 → +5.005%</td></tr>
+      <tr><td>Throughput</td><td class="num">32.8 tok/s</td></tr>
+      <tr><td>Stack</td><td>Windows 10 · driver 576.52 · Python 3.13 · torch 2.6.0+cu124 · transformers 4.57.6 · bitsandbytes 0.43.3</td></tr>
+      <tr><td>Protocol</td><td>direct NVML @ 10 Hz · batch 1 · 256 tokens · 10 decode iterations · 2 warmup · <strong>n = 1</strong></td></tr>
+    </table>
+
+    <h2>Nothing we own behaves like this at 1.1B</h2>
+    <p>TinyLlama-1.1B in NF4 is the single configuration we have measured on the most cards. On every
+    one of them, quantizing it <em>costs</em> energy:</p>
+    <table>
+      <tr><th>Card</th><th>ΔE vs FP16 at 1.1B, NF4</th><th>NF4 energy</th><th>n</th></tr>
+      <tr><td>RTX 4090D (Ada)</td><td class="num pos">+33.4%</td><td class="num">2134 mJ/token</td><td class="num">2</td></tr>
+      <tr><td>RTX 5090 (Blackwell)</td><td class="num pos">+26.5%</td><td class="num">2098 mJ/token</td><td class="num">2</td></tr>
+      <tr><td>RTX 4090 (Ada, July)</td><td class="num pos">+16.3%</td><td class="num">1884 mJ/token</td><td class="num">1</td></tr>
+      <tr><td>RTX 4090 (Ada, 19 Aug session)</td><td class="num pos">+5.5%</td><td class="num">1696 mJ/token</td><td class="num">1</td></tr>
+      <tr><td>T4 (Turing)</td><td class="num pos">+4.6%</td><td class="num">4445 mJ/token</td><td class="num">2</td></tr>
+      <tr><td><strong>RTX 3050 Ti Laptop (Ampere) — contributed</strong></td><td class="num neg">−16.2%</td><td class="num">1213 mJ/token</td><td class="num">1</td></tr>
+    </table>
+    <p>Read the third column again: the laptop is not only the one card where NF4 pays off at this
+    size, it is also the <strong>lowest absolute energy per token</strong> in the set — below a 4090,
+    at a third of the power and a fraction of the price. That is one run on one machine, so treat it
+    as a lead, not a law. But it is the kind of lead that would never have come out of our own
+    hardware budget.</p>
+
+    <h2>Does it break the published curve? No — the curve had nothing to say there</h2>
+    <p>The submission page told the contributor his point was “outside the band by 9.9 pts”. That was
+    our bug, and this run exposed it. The fitted Ampere NF4 curve rests on three A800 anchors at
+    <strong>7B, 9B and 14B</strong>. At 1.1B it is extrapolated more than six-fold below anything it
+    ever saw, so its honest 95% band there is roughly <strong>±30 points</strong> — wide enough to
+    swallow almost any result. The page was comparing against the in-sample residual spread (±5.3)
+    and calling an untested region a contradiction.</p>
+    <p>It now uses the same band as the rest of the site — the fit's own instability, widened by
+    log-distance outside the measured range (<a href="/method/#band">how the band is built</a>) — and
+    when a point lands in a region that wide it says so, instead of claiming either a confirmation or
+    a refutation:</p>
+    <div class="callout">
+      <b>within the band, but the band is ±30 pts here.</b> Which means: our curve does not predict
+      anything useful at 1.1B for this class. This run is the measurement there. Ours is the guess.
+    </div>
+
+    <h2>What we are not doing with it</h2>
+    <p>We are not folding it into the fit. Two reasons, both worth stating out loud:</p>
+    <ul>
+      <li><strong>n = 1.</strong> Same standard we hold our own single trials to — drawn faded and
+      labelled provisional.</li>
+      <li><strong>It would pool a 4 GB laptop card with an 80 GB datacenter card</strong> under the
+      label “Ampere”. We already flag the one place we pool two cards (Ada: RTX 4090 + 4090D, which
+      disagree by about 20 points at the same size). Adding a third, far more extreme pooling to hide
+      an inconvenient point would be worse than leaving the point unfitted and visible.</li>
+    </ul>
+    <p>So contributed points are drawn on the charts as violet diamonds and <em>never</em> enter
+    <code>curves.json</code> or <code>build/measured.csv</code>. The curve does not move to meet them.
+    If a second and third laptop-class run agree with this one, the honest response is a new
+    architecture class fitted to laptop cards — not a quietly nudged Ampere curve.</p>
+
+    <h2>The quality axis replicated to four decimal places. The energy axis did not replicate at all.</h2>
+    <p>This is the part we did not expect to get for free. The container scores perplexity on a fixed
+    vendored text after the power sampler stops. Our RTX 4090 measured TinyLlama-1.1B in NF4 at
+    <strong>10.1014</strong> against an FP16 baseline of 9.6199. The laptop, on a different operating
+    system, a different torch build and hardware two orders of magnitude apart in price, measured
+    <strong>10.1016</strong> against 9.6201 — the same +5.005% penalty.</p>
+    <p>Two axes, measured in the same run, behaving in opposite ways:</p>
+    <ul>
+      <li><strong>Quality is a property of the weights and the corpus.</strong> It travels. A
+      perplexity delta measured on a laptop is a perplexity delta on an H100.</li>
+      <li><strong>Energy is a property of the hardware and the kernel path.</strong> It does not
+      travel — not between cards, and, as we found in <a href="/blog/how-repeatable-is-a-quantization-energy-number.html">our
+      own two sessions</a>, not always between days on the same card.</li>
+    </ul>
+    <p>Which means a paper claiming “4-bit quantization saves X% energy” without naming the card is
+    not making a weaker claim than it should — it is making no claim at all. We had asserted that.
+    Now there is evidence from someone else's hardware.</p>
+
+    <h2>Why a laptop might flip the sign — a hypothesis, and how to kill it</h2>
+    <p>Decode at batch 1 reads the whole weight matrix per token. NF4 cuts that traffic roughly
+    four-fold and pays for it in dequantization work. On a 4090, at 1.1B, there is bandwidth to spare
+    and the dequantization overhead dominates, so the model gets slower and the energy goes up. On a
+    ~40 W laptop part, the same 1.1B model is comparatively bandwidth-starved, so the traffic saved
+    should be worth more than the overhead costs.</p>
+    <p>That is a hypothesis, <strong>untested</strong>, and it is not the only candidate. This run
+    carries the fourth distinct torch build in this record — 2.6.0+cu124 here, against 2.4.1+cu121
+    and 2.5.1+cu121 in our sessions and 2.13.0 pinned in the container image — and we already suspect
+    the kernel path of causing a 100–140 point swing between two of our <em>own</em> sessions. Part of
+    the −16.2% may be the stack rather than the card. What narrows it usefully: the contributor's
+    <code>transformers 4.57.6</code> and <code>bitsandbytes 0.43.3</code> are the exact versions of our
+    19 August 4090 session, the +5.5% row above. Same quantization library, same inference library,
+    opposite sign.</p>
+    <p>Both are cheap to separate, and neither needs our hardware:</p>
+    <ul>
+      <li>Run <strong>0.5B, 1.5B and 3B NF4 on the same laptop</strong>. If the bandwidth story is
+      right, the savings grow with size and the laptop's crossover sits <em>below</em> 1.1B, where
+      every desktop card's crossover sits above 3B.</li>
+      <li>Run <strong>INT8 on the same laptop</strong>. Our data says INT8 never saves energy on any
+      card, at any size. If a laptop breaks that too, the claim needs rewriting, not defending.</li>
+      <li>Run the same NF4 configuration on a 4090 with <strong>torch 2.6.0+cu124</strong> — the only
+      version that differs from our 19 August session. If our 4090 number moves toward the laptop's,
+      the stack is doing part of the work.</li>
+    </ul>
+
+    <h2>Caveats we are not hiding behind</h2>
+    <ul>
+      <li><strong>n = 1</strong>, so there is no measured spread. Our own repeated runs put run-to-run
+      CV at 0.6–3.9%, which is nowhere near 16 points — but that CV was measured on a datacenter card
+      in a rack, not on a laptop with thermal and battery management we cannot see.</li>
+      <li><strong>GPU package power only</strong>, via NVML — no CPU, DRAM, PSU losses, PUE or CO₂e.
+      On a laptop the package share of system power is smaller than on a desktop card, so this number
+      is even further from a wall-plug measurement than ours.</li>
+      <li>We <strong>moderate for schema, never for results</strong>. Nothing in this report was
+      re-run, corrected or checked against a second machine by us. It is published as submitted,
+      and @gkgoing can withdraw it at any time by saying so in the issue.</li>
+    </ul>
+
+    <h2>Be the second</h2>
+    <p>One command, then drop the file on <a href="/replications/">the replications page</a> — it is
+    parsed in your browser and nothing is sent until you send it yourself:</p>
+<pre>docker run --rm --gpus all -v "$PWD/out:/out" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --precision NF4 \
+  --output_dir /out</pre>
+    <p>Points that contradict the curve are the valuable ones, and they are published exactly as
+    prominently as the ones that confirm it. This one already changed a chart, a band calculation and
+    a claim about what quantization does on small hardware — on its first day.</p>
+
+    <footer>
+      Contributed report:
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/15" target="_blank" rel="noopener">ecocompute-mlcube#15</a>
+      · in-repo copy:
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/replications/2026-08-23-gkgoing-rtx3050ti-tinyllama-nf4.energy.json" target="_blank" rel="noopener">2026-08-23-gkgoing-rtx3050ti-tinyllama-nf4.energy.json</a>
+      · gallery: <a href="/replications/">quantenergy.tech/replications</a>.
+      <br>Our comparison data: main dataset v1.1.0 —
+      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> ·
+      RTX 4090 deep dive —
+      <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> ·
+      paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> ·
+      previous note: <a href="/blog/how-repeatable-is-a-quantization-energy-number.html">how repeatable is a quantization energy number?</a>
+      <br>Not a certified benchmark result. MLCOMMONS, MLPERF and MLCUBE are trademarks of MLCommons
+      Association, referenced nominatively.
+    </footer>
+  </div>
+</body>
+</html>

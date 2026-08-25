@@ -78,6 +78,9 @@
   .flag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);margin-right:6px;display:inline-block}
   .flag.confirm{border-color:rgba(16,185,129,.55);color:#34d399}
   .flag.dispute{border-color:rgba(251,191,36,.6);color:#fbbf24}
+  .flag.untested{border-color:rgba(148,163,184,.6);color:#cbd5e1}
+  .first{border:1px solid rgba(167,139,250,.55);background:rgba(167,139,250,.08);border-radius:14px;padding:16px 18px;margin:18px 0}
+  .first h3{margin:0 0 6px;font-size:16px;color:#c4b5fd}
   .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
   .filters button{font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;font-family:inherit}
   .filters button.on{border-color:var(--accent);color:var(--accent)}
@@ -222,12 +225,26 @@
   </div>
 
   <h2 id="gallery">Replications gallery</h2>
+
+  <div class="first">
+    <h3>First independent replication — thank you, <a href="https://github.com/gkgo" target="_blank" rel="noopener">@gkgoing</a></h3>
+    <p style="margin:0 0 8px">On 23 August 2026 the first energy.json measured by somebody other than the maintainer arrived:
+    <b>TinyLlama-1.1B in NF4 on an RTX 3050 Ti Laptop GPU</b>, Windows, 39.8&nbsp;W average package power — and it
+    <b>saved 16.2% of the energy</b> at a model size where every card in our own set spends 4.6–33% more.
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/15" target="_blank" rel="noopener">Submission →</a>
+    · <a href="/blog/first-independent-replication.html">what it changes →</a></p>
+    <p class="meta" style="margin:0">It also carried a paired perplexity — 10.1016 against an FP16 baseline of 9.6201 — which
+    reproduces our own RTX 4090 measurement of the same model to four decimal places. The quality axis replicated exactly;
+    the energy axis did not replicate at all. That contrast is the point of the whole project, and we did not have
+    independent evidence for it until this run.</p>
+  </div>
   <div class="stats" id="stats"></div>
   <p class="meta" id="statsNote"></p>
   <div class="filters" id="filters" style="display:none">
     <button class="on" data-f="all" type="button">All</button>
     <button data-f="confirm" type="button">Consistent with the curve</button>
     <button data-f="dispute" type="button">Outside the band</button>
+    <button data-f="untested" type="button">In untested territory</button>
     <button data-f="NF4" type="button">NF4</button>
     <button data-f="INT8" type="button">INT8</button>
   </div>
@@ -243,9 +260,13 @@
       published as prominently as one that confirms it — and, if it holds up, it changes the curve.</li>
     <li>Non-measured points (<code>interpolated</code> / <code>extrapolated</code>) are labelled and never presented as
       measurements — the same rule as the rest of the site.</li>
-    <li>“Consistent” / “outside the band” is computed here from the fitted curve's residual spread
-      (<code>curves.json</code>), not from anyone's judgement, and it is a statement about <em>our</em> fit, not about
-      whose measurement is right.</li>
+    <li>“Consistent” / “outside the band” is computed here from the same 95% band the estimator uses — the fit's own
+      instability (residual spread and leave-one-out error, <code>curves.json</code>), widened outside the fitted size
+      range — not from anyone's judgement, and it is a statement about <em>our</em> fit, not about whose measurement is
+      right. Where that band is very wide, the entry says so instead of claiming a confirmation.</li>
+    <li>A contributed point is <b>drawn on the charts but never fitted</b>: the published curves move only after review,
+      and never silently. Nothing in <code>curves.json</code> or <code>build/measured.csv</code> changes when a
+      replication is published.</li>
     <li><b>Not yet built:</b> signed reports. The container has no <code>--sign</code> task today, so there is no
       cryptographic “verified” badge — we would rather have no badge than a decorative one. Attach a link to a signed or
       logged run if you have one and we will link it.</li>
@@ -280,14 +301,35 @@ function curveFor(arch, precision){
 }
 function predict(c, N){ var x = N / c.Nstar; return c.A - c.S * (x / (1 + x)); }
 
+/* Same sigma the estimator and the fitted chart use (estimate.js): the fit's own instability,
+   widened by log-distance outside the measured size range. A band that ignored the
+   extrapolation would call a point "outside" where the curve in fact predicts nothing. */
+function sigmaAt(c, N){
+  var base = Math.max(c.resid_std || 0, c.loo_mae || 0, 2);
+  var dd = 0;
+  if(N < c.n_min) dd = Math.log(c.n_min / N);
+  else if(N > c.n_max) dd = Math.log(N / c.n_max);
+  var extrap = (base + 4) * dd * 1.2;
+  return Math.sqrt(base * base + extrap * extrap);
+}
 function classify(p){
   var f = curveFor(p.arch, p.precision);
   if(!f || !num(p.N) || !num(p.dE)) return null;
   var pred = predict(f.c, p.N);
-  var band = Math.max(1.96 * (f.c.resid_std || 0), 5);
+  var band = Math.max(1.96 * sigmaAt(f.c, p.N), 5);
   var diff = p.dE - pred;
+  var outRange = p.N < f.c.n_min || p.N > f.c.n_max;
   return { arch:f.arch, pred:pred, band:band, diff:diff, agrees:Math.abs(diff) <= band,
-           outside:Math.max(0, Math.abs(diff) - band) };
+           outside:Math.max(0, Math.abs(diff) - band), extrapolated:outRange,
+           n_min:f.c.n_min, n_max:f.c.n_max };
+}
+
+/* A point outside the fitted size range sits under a band so wide that "consistent" would
+   overstate the test. Say which of the three it is. */
+function flagFor(cls){
+  if(cls.extrapolated && cls.agrees)
+    return '<span class="flag untested">within the band, but the band is ±' + cls.band.toFixed(0) + ' pts here</span>';
+  return '<span class="flag ' + (cls.agrees ? 'confirm">consistent with the curve' : 'dispute">outside the band') + '</span>';
 }
 
 /* ---------- energy.json parsing (identical field contract to the Run-it-yourself tab) ---------- */
@@ -385,7 +427,7 @@ function drawPreview(p){
     '</svg>' +
     '<div class="parsed" style="margin-top:6px">' +
       '<span class="chip">— fitted ' + esc(p.precision) + ' curve</span>' +
-      '<span class="chip">shaded = ±' + cls.band.toFixed(1) + ' pt residual band</span>' +
+      '<span class="chip">shaded = ±' + cls.band.toFixed(1) + ' pt 95% band' + (cls.extrapolated ? ', extrapolated' : '') + '</span>' +
       '<span class="chip">● / ○ our anchors (n ≥ 2 / n = 1)</span>' +
       '<span class="chip" style="border-color:#ef4444;color:#ef4444">○ your run</span>' +
     '</div>';
@@ -394,7 +436,10 @@ function drawPreview(p){
     (cls.pred > 0 ? "+" : "") + cls.pred.toFixed(1) + "% at " + p.N + "B, with a ±" + cls.band.toFixed(1) +
     " pt residual band (shaded). Your run reads " + (p.dE > 0 ? "+" : "") + p.dE.toFixed(1) + "% — " +
     (cls.agrees
-      ? "<b>consistent with the published curve</b>."
+      ? (cls.extrapolated
+        ? "<b>inside the band</b> — but only because at " + p.N + "B this curve is extrapolated outside its measured range (" +
+          cls.n_min + "–" + cls.n_max + "B) and the band is ±" + cls.band.toFixed(0) + " pts wide. Your run is the measurement there, not a test of ours: please submit it."
+        : "<b>consistent with the published curve</b>.")
       : "<b>outside the band by " + cls.outside.toFixed(1) + " pts</b>. That is the interesting case: please submit it.") +
     (p.arch && cls.arch !== p.arch ? " (No fitted curve for <code>" + esc(p.arch) + "</code> yet — compared against the borrowed <code>" + esc(cls.arch) + "</code> curve.)" : "");
   box.style.display = "";
@@ -432,8 +477,9 @@ function issueText(){
   L.push("");
   if(cls){
     L.push("Compared against the fitted " + p.precision + " curve for " + (CURVES.arch_label[cls.arch] || cls.arch) +
-      ": predicted " + cls.pred.toFixed(1) + "%, residual band ±" + cls.band.toFixed(1) + " pts → " +
-      (cls.agrees ? "consistent with the published curve." : "outside the band by " + cls.outside.toFixed(1) + " pts."));
+      ": predicted " + cls.pred.toFixed(1) + "%, 95% band ±" + cls.band.toFixed(1) + " pts" +
+      (cls.extrapolated ? " (extrapolated outside the fitted range " + cls.n_min + "-" + cls.n_max + "B)" : "") + " → " +
+      (cls.agrees ? "inside the band." : "outside the band by " + cls.outside.toFixed(1) + " pts."));
     L.push("");
   }
   L.push("- [x] This is a real run on the hardware named above.");
@@ -521,7 +567,9 @@ function renderGallery(){
     if(FILTER === "NF4" || FILTER === "INT8") return e.precision === FILTER;
     var cls = classify({ arch:e.arch, precision:e.precision, N:e.params_b, dE:e.dE });
     if(!cls) return false;
-    return FILTER === "confirm" ? cls.agrees : !cls.agrees;
+    if(FILTER === "untested") return cls.agrees && cls.extrapolated;
+    if(FILTER === "confirm") return cls.agrees && !cls.extrapolated;
+    return !cls.agrees;
   });
   if(!GALLERY.length){
     document.getElementById("filters").style.display = "none";
@@ -541,7 +589,7 @@ function renderGallery(){
       '<div class="num">ΔE vs FP16: <b>' + (e.dE > 0 ? "+" : "") + e.dE + '%</b> · basis: ' + esc(e.basis) +
         ' · n = ' + n + (e.cv_pct != null ? ' · CV ' + e.cv_pct + '%' : ' (single trial, no measured spread)') + '</div>' +
       '<div class="foot">' +
-        (cls ? '<span class="flag ' + (cls.agrees ? 'confirm">consistent with the curve' : 'dispute">outside the band') + '</span>' : '') +
+        (cls ? flagFor(cls) : '') +
         esc(e.date || "") +
         (e.report ? ' · <a href="' + esc(e.report) + '" target="_blank" rel="noopener">view energy.json</a>' : '') +
         (e.link ? ' · <a href="' + esc(e.link) + '" target="_blank" rel="noopener">context</a>' : '') +
@@ -551,17 +599,20 @@ function renderGallery(){
 }
 
 function renderStats(){
-  var archs = {}, conf = 0, disp = 0;
+  var archs = {}, conf = 0, disp = 0, untested = 0;
   GALLERY.forEach(function(e){
     if(e.arch) archs[e.arch] = 1;
     var cls = classify({ arch:e.arch, precision:e.precision, N:e.params_b, dE:e.dE });
-    if(cls){ if(cls.agrees) conf++; else disp++; }
+    /* A point where our curve is extrapolating is neither a confirmation nor a refutation:
+       counting it as "consistent" would let a wide band buy us credit. */
+    if(cls){ if(!cls.agrees) disp++; else if(cls.extrapolated) untested++; else conf++; }
   });
+  var n = GALLERY.length;
   var cards = [
-    [GALLERY.length, "independent replications"],
-    [Object.keys(archs).length, "GPU architectures"],
+    [n, "independent replication" + (n === 1 ? "" : "s")],
+    [Object.keys(archs).length, "GPU architecture" + (Object.keys(archs).length === 1 ? "" : "s")],
     [conf + " / " + disp, "consistent / outside band"],
-    [disp, "open disagreements"]
+    [untested, "in untested territory"]
   ];
   var html = cards.map(function(c){
     return '<div class="stat"><div class="v">' + c[0] + '</div><div class="k">' + c[1] + '</div></div>';
@@ -569,7 +620,7 @@ function renderStats(){
   document.getElementById("stats").innerHTML = html;
   document.getElementById("heroStats").innerHTML = html;
   document.getElementById("statsNote").innerHTML = GALLERY.length
-    ? "Counted from <code>replications.json</code>; “outside band” compares each point with the fitted curve's residual spread."
+    ? "Counted from <code>replications.json</code>; a point is compared with the fitted curve's own 95% band (<a href=\"/method/#band\">how it is built</a>). “In untested territory” means the point sits outside the model sizes that curve was fitted on, where the band is too wide for the comparison to mean anything."
     : "Nothing here is a placeholder: these counters read <code>replications.json</code>, which is empty until the first real submission lands. Submit one that breaks our curve and it will be published just as prominently — disagreement is the mechanism, not the enemy.";
 }
 

@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Fri, 21 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>The first independent replication: NF4 saved 16% on a laptop GPU</title>
+      <link>https://quantenergy.tech/blog/first-independent-replication.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/first-independent-replication.html</guid>
+      <pubDate>Tue, 25 Aug 2026 00:00:00 GMT</pubDate>
+      <description>The first energy.json contributed by someone other than the maintainer: TinyLlama-1.1B in NF4 on an RTX 3050 Ti Laptop GPU, direct NVML, n=1. It saves 16.2% energy at a size where every card in our own set spends 4.6-33% more, and it is the lowest absolute energy per token we have on record for that model. The fitted Ampere curve is extrapolated six-fold below its 7-14B anchors there, so its honest band is about +/-30 points - the submission page now says that instead of claiming a contradiction. The paired perplexity, 10.1016 against an FP16 9.6201, reproduces our own RTX 4090 measurement to four decimals: quality travels between machines, energy does not. Contributed points are drawn but never fitted.</description>
+    </item>
     <item>
       <title>How repeatable is a quantization energy number?</title>
       <link>https://quantenergy.tech/blog/how-repeatable-is-a-quantization-energy-number.html</link>

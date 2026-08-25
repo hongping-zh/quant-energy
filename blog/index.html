@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-08-25</div>
+      <h2><a href="/blog/first-independent-replication.html">The first independent replication: NF4 saved 16% on a laptop GPU</a></h2>
+      <p>Someone else ran the container. On an RTX 3050 Ti Laptop GPU, TinyLlama-1.1B in NF4 <em>saves</em> 16.2% energy — where every card we own spends 4.6–33% more at that size, and where our own fitted curve was extrapolating six-fold beyond its anchors. The paired perplexity, meanwhile, reproduced our RTX 4090 measurement to four decimal places: quality travels between machines, energy does not.</p>
+      <p><a href="/blog/first-independent-replication.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-08-21</div>
       <h2><a href="/blog/how-repeatable-is-a-quantization-energy-number.html">How repeatable is a quantization energy number?</a></h2>
       <p>Five INT8 configurations re-run three times each on the same RTX 4090: the coefficient of variation of the energy delta is 0.6–3.9% — 30–50× smaller than the 100–140 point gap between two of our own sessions, so that gap is not sampling. Also, absolute joules drifted 12–17% lower overnight on the same host while the FP16-normalised delta held.</p>

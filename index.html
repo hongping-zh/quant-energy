@@ -666,6 +666,7 @@
         <span><i class="swatch" style="background:var(--accent);opacity:.28;width:14px;height:10px;border-radius:2px"></i>95% band (fit instability)</span>
         <span><i class="swatch" style="background:var(--nf4);width:10px;height:10px;border-radius:50%"></i>Measured anchors (n&nbsp;≥&nbsp;2)</span>
         <span><i class="swatch" style="background:transparent;border:2px dashed var(--nf4);opacity:.6;width:10px;height:10px;border-radius:50%"></i>Anchors measured once (n&nbsp;=&nbsp;1, provisional)</span>
+        <span><i class="swatch" style="background:#a78bfa;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);display:inline-block"></i>Independent replication (not fitted)</span>
         <span><i class="swatch" style="background:#ef4444;width:10px;height:10px;border-radius:50%"></i>Your model ± CI</span>
         <span>Above zero = penalty · below = savings</span>
       </div>
@@ -1264,6 +1265,20 @@ function renderEstimate(){
   track("estimate",{ params_b:N, arch:pArch.value, precision:pPrec.value, batch, ctx, delta_pct:r.delta_pct, basis:r.basis });
 }
 
+/* Independently contributed runs, loaded from the replications gallery. They are drawn on the
+   fitted chart but never fitted: a contributed point changes the curve only after review. */
+let REPLS=[];
+function replDiamonds(arch, precision, X, Y){
+  return replFor(arch, precision).map(e=>{
+    const x=X(e.params_b), y=Y(e.dE), s=6.5;
+    const t=`<title>${esc(e.handle||"community")} · ${esc(e.gpu||"")} · ${esc(e.model||"")} · ${e.dE>0?"+":""}${e.dE}% · n = ${e.n||1} · independent replication, not fitted</title>`;
+    return `<path d="M${x.toFixed(1)} ${(y-s).toFixed(1)}L${(x+s).toFixed(1)} ${y.toFixed(1)}L${x.toFixed(1)} ${(y+s).toFixed(1)}L${(x-s).toFixed(1)} ${y.toFixed(1)}Z" fill="#a78bfa" stroke="#ede9fe" stroke-width="1.2">${t}</path>`;
+  }).join("");
+}
+function replFor(arch, precision){
+  return REPLS.filter(e=>e && e.arch===arch && e.precision===precision && typeof e.params_b==="number" && typeof e.dE==="number");
+}
+
 /* Anchor markers carry their replication tier: filled = n >= 2 repeated trials
    (main dataset v1.1.0, CV < 2%), hollow = n = 1 single trial (RTX 4090 deep dive). */
 function anchorDot(a, X, Y){
@@ -1295,8 +1310,9 @@ function renderEstCurve(arch, precision, N, r){
     const b=curveBand(src,precision,v);
     samples.push({x:v,d,lo:b?b.lo:d,hi:b?b.hi:d});
   }
+  const repls=replFor(src,precision);
   const yvals=samples.map(s=>s.d).concat(samples.map(s=>s.lo)).concat(samples.map(s=>s.hi))
-    .concat(c.anchors.map(a=>a.dE)).concat([r.ci[0],r.ci[1],0]);
+    .concat(c.anchors.map(a=>a.dE)).concat(repls.map(e=>e.dE)).concat([r.ci[0],r.ci[1],0]);
   let ymin=Math.min(...yvals), ymax=Math.max(...yvals);
   const padY=(ymax-ymin)*0.12||10; ymin-=padY; ymax+=padY;
   const Y=d=> pad.t+(ymax-d)/(ymax-ymin)*ih;
@@ -1305,7 +1321,7 @@ function renderEstCurve(arch, precision, N, r){
   const bandPath=samples.map((s,i)=>(i?"L":"M")+X(s.x).toFixed(1)+" "+Y(s.hi).toFixed(1)).join(" ")+" "+
     samples.slice().reverse().map(s=>"L"+X(s.x).toFixed(1)+" "+Y(s.lo).toFixed(1)).join(" ")+" Z";
   const band=`<path d="${bandPath}" fill="var(--accent)" fill-opacity=".13" stroke="none"/>`;
-  const dots=c.anchors.map(a=>anchorDot(a,X,Y)).join("");
+  const dots=c.anchors.map(a=>anchorDot(a,X,Y)).join("")+replDiamonds(src,precision,X,Y);
   const qx=X(N);
   const qbar=`<line x1="${qx.toFixed(1)}" x2="${qx.toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[0]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
     <line x1="${(qx-5).toFixed(1)}" x2="${(qx+5).toFixed(1)}" y1="${Y(r.ci[1]).toFixed(1)}" y2="${Y(r.ci[1]).toFixed(1)}" stroke="#ef4444" stroke-width="2"/>
@@ -1338,7 +1354,17 @@ function renderEstCurve(arch, precision, N, r){
     ${dots}${qbar}${xlabels}
     <text x="${pad.l+iw/2}" y="${H-4}" fill="var(--muted)" font-size="11" text-anchor="middle">Model size (parameters, B, log scale)</text>
   </svg>
-  <p class="meta" style="margin:6px 0 0;line-height:1.55">${fitCaption(c)}</p>`;
+  <p class="meta" style="margin:6px 0 0;line-height:1.55">${fitCaption(c)}${replCaption(src,precision)}</p>`;
+}
+
+/* Credit every contributed point that appears on this chart, by name, next to it. */
+function replCaption(arch, precision){
+  const es=replFor(arch,precision);
+  if(!es.length) return "";
+  const who=es.map(e=>`<b>${esc(e.handle)}</b> · ${esc(e.gpu)} · ${esc(e.model)} · ${e.dE>0?"+":""}${e.dE}%`).join(" · ");
+  return `<br><span style="color:#a78bfa">◆</span> <b>Independent replication${es.length>1?"s":""}:</b> ${who}. `+
+    `Contributed, verified only for schema, and <b>deliberately not fitted</b> — the curve above does not move to meet them. `+
+    `<a href="/replications/">See the gallery →</a>`;
 }
 
 /* What the shaded band is, stated next to it: a fit this thin has to say how thin. */
@@ -1548,9 +1574,14 @@ decorate(document.getElementById("repoCta"));
         el.innerHTML='<b>0</b> independent replications so far \u00b7 <b>0</b> GPU architectures \u2014 be the first: <a href="/replications/#submit">publish your run \u2192</a>';
         return;
       }
+      REPLS=e;
+      if(document.getElementById("estCross").innerHTML) renderEstimate();
       const archs=new Set(e.map(x=>x.arch).filter(Boolean)).size;
+      /* Name the contributors here, not only in the gallery: they paid for the electricity. */
+      const who=e.map(x=>esc(x.handle||"")).filter(Boolean).slice(0,4).join(", ");
       el.innerHTML='<b>'+e.length+'</b> independent replication'+(e.length===1?"":"s")+
         ' \u00b7 <b>'+archs+'</b> GPU architecture'+(archs===1?"":"s")+
+        (who?' \u00b7 thanks to '+who:"")+
         ' \u2014 <a href="/replications/">see them against the curve \u2192</a>';
     })
     .catch(()=>{});

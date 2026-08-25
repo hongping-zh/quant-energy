@@ -17,5 +17,23 @@
     "link": "repo / blog / paper URL, or null",
     "note": "maintainer's one-line reading of the point, or null"
   },
-  "entries": []
+  "entries": [
+    {
+      "handle": "@gkgoing",
+      "affiliation": null,
+      "gpu": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+      "arch": "ampere",
+      "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "params_b": 1.1,
+      "precision": "NF4",
+      "dE": -16.2,
+      "basis": "measured",
+      "n": 1,
+      "cv_pct": null,
+      "date": "2026-08",
+      "report": "https://github.com/hongping-zh/quant-energy/blob/main/data/replications/2026-08-23-gkgoing-rtx3050ti-tinyllama-nf4.energy.json",
+      "link": "https://github.com/hongping-zh/ecocompute-mlcube/issues/15",
+      "note": "First independent replication - thank you. NF4 saves 16.2% here, while every card we own spends 4.6-33% more at this size; the fitted Ampere curve is extrapolated ~6x below its measured range (7-14B) at 1.1B, so its band there is too wide to test anything. The paired perplexity, 10.1016 against an FP16 9.6201, matches our own RTX 4090 measurement of the same model to four decimals - same weights, same corpus, different machine and OS."
+    }
+  ]
 }
