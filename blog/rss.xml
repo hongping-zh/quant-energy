@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Tue, 25 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 31 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>It was never the format. It's the kernel.</title>
+      <link>https://quantenergy.tech/blog/it-was-never-the-format.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/it-was-never-the-format.html</guid>
+      <pubDate>Mon, 31 Aug 2026 00:00:00 GMT</pubDate>
+      <description>MLPerf Client v2.0 ships an already-quantized suite, so it cannot tell you what quantization cost. We measured the missing FP16 baseline inside one runtime: on an RTX 4090, llama.cpp GGUF Q4_0 decoding Llama-3.1-8B-Instruct costs 63.6% less energy per token than GGUF F16 for +5.60% perplexity (n=3, decode-only by differencing 576- and 64-token runs). All three arms draw 296-310 W while decoding, so the saving is entirely throughput (2.6-2.7x), not lower power. On the same card, bitsandbytes LLM.int8() costs 106% MORE energy per token and NF4 saves 39%: three weight-only quantizations of a 7-8B model spanning +106% to -64%, so the bit width does not predict the sign, the kernel does. Our own Q4_0 file and the one MLPerf Client v2.0 ships are indistinguishable (final PPL 7.7364 vs 7.7366, max per-chunk difference 0.0003 over 564 chunks), which is published as a zero result, not as a win. Provisional: not an MLPerf result, n=3 on one card, a fixed run order with two cold-start outliers, and llama.cpp's token counts were not captured - the F16 arm's implied memory bandwidth exceeds the card's, so 63.6% is probably an overestimate.</description>
+    </item>
     <item>
       <title>The first independent replication: NF4 saved 16% on a laptop GPU</title>
       <link>https://quantenergy.tech/blog/first-independent-replication.html</link>

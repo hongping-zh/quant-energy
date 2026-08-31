@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
+      <div class="date">2026-08-31</div>
+      <h2><a href="/blog/it-was-never-the-format.html">It was never the format. It's the kernel.</a></h2>
+      <p>MLPerf Client v2.0 shipped an already-quantized suite, so we measured the FP16 baseline it cannot produce. Inside one llama.cpp build on one RTX 4090, GGUF <code>Q4_0</code> costs <b>63.6% less</b> decode energy per token than GGUF <code>F16</code> for +5.60% perplexity — and all three arms draw 296–310 W while decoding, so the saving is throughput, not power. On the same card bitsandbytes <code>LLM.int8()</code> costs <b>106% more</b>. Three weight-only quantizations of a 7–8B model, spanning +106% to −64%: the bit width does not predict the sign. Provisional, n=3, with the cold-start and token-count caveats stated.</p>
+      <p><a href="/blog/it-was-never-the-format.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-08-25</div>
       <h2><a href="/blog/first-independent-replication.html">The first independent replication: NF4 saved 16% on a laptop GPU</a></h2>
       <p>Someone else ran the container. On an RTX 3050 Ti Laptop GPU, TinyLlama-1.1B in NF4 <em>saves</em> 16.2% energy — where every card we own spends 4.6–33% more at that size, and where our own fitted curve was extrapolating six-fold beyond its anchors. The paired perplexity, meanwhile, reproduced our RTX 4090 measurement to four decimal places: quality travels between machines, energy does not.</p>

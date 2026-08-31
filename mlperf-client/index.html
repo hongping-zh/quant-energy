@@ -4,10 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MLPerf Client v2.0 measures speed. Here is how to measure the energy — EcoCompute</title>
-<meta name="description" content="MLPerf Client v2.0 lets you benchmark quantized LLMs on your own Windows or macOS machine, in tokens per second. Its power path needs a Yokogawa analyzer, SPEC PTDaemon and a second PC. This page maps the two: tokens/Joule vs mJ/token, wall power vs GPU package, and why a suite of Q4/int4 models cannot tell you what quantization cost." />
+<meta name="description" content="MLPerf Client v2.0 benchmarks quantized LLMs on your own Windows or macOS machine, in tokens per second; its power path needs a Yokogawa analyzer, SPEC PTDaemon and a second PC. This page maps the two — tokens/Joule vs mJ/token, wall power vs GPU package — and now carries the FP16 baseline the suite cannot produce: on one RTX 4090, llama.cpp Q4_0 cost 63.6% less decode energy per token than llama.cpp F16, for +5.6% perplexity." />
 <link rel="canonical" href="https://quantenergy.tech/mlperf-client/" />
 <meta property="og:title" content="MLPerf Client v2.0 measures speed. Here is how to measure the energy." />
-<meta property="og:description" content="tokens/Joule vs mJ/token, wall power vs GPU package — and the question a suite of already-quantized models cannot answer: what did quantizing cost?" />
+<meta property="og:description" content="tokens/Joule vs mJ/token, wall power vs GPU package — plus the FP16 baseline a suite of already-quantized models cannot give you: −63.6% decode energy for +5.6% perplexity on one RTX 4090, n=3, provisional." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://quantenergy.tech/mlperf-client/" />
 <meta property="og:image" content="https://quantenergy.tech/preview.png" />
@@ -19,6 +19,7 @@
   "@context":"https://schema.org",
   "@type":"TechArticle",
   "headline":"MLPerf Client v2.0 measures speed. Here is how to measure the energy.",
+  "dateModified":"2026-08-31",
   "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
   "mainEntityOfPage":"https://quantenergy.tech/mlperf-client/",
   "image":"https://quantenergy.tech/preview.png",
@@ -65,7 +66,7 @@
     </div>
 
     <h1>MLPerf Client v2.0 measures speed. Here is how to measure the energy of the same run.</h1>
-    <p class="sub">Last updated 2026-08-26 · written against
+    <p class="sub">Last updated 2026-08-31 · written against
       <a href="https://github.com/mlcommons/mlperf_client" target="_blank" rel="noopener">mlcommons/mlperf_client</a> at
       <code>version.json = 2.0.0</code> · announcement:
       <a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">mlcommons.org</a> ·
@@ -94,6 +95,49 @@
     <p>Both are exactly what the <a href="/container/">EcoCompute container</a> measures, in software, on hardware you
       already own. Neither project replaces the other: MLPerf Client is a benchmark with certified results and a
       submission process; this is a research protocol with none of that.</p>
+
+    <h2>Update, 2026-08-31: we ran the missing FP16 baseline</h2>
+    <p>The earlier version of this page said that closing the runtime gap — measuring GGUF <code>F16</code> against GGUF
+      <code>Q4_0</code> inside <em>one</em> runtime, rather than comparing our bitsandbytes numbers to llama.cpp's — was
+      the next thing on our list. It is done, against the same <code>Llama-3.1-8B-Instruct-Q4_0.gguf</code> that v2.0
+      itself pulls.</p>
+
+    <div class="callout">
+      <p style="margin:0 0 10px"><b>One RTX 4090, one llama.cpp build (<code>b10643-192067b72</code>),
+        Llama-3.1-8B-Instruct, decode-only, n&nbsp;=&nbsp;3:</b></p>
+      <table style="margin:0">
+        <tr><th>llama.cpp arm</th><th>mJ/token</th><th>tokens/J</th><th>tok/s</th><th>decode power</th><th>Δenergy</th><th>Δperplexity</th></tr>
+        <tr><td><code>F16</code></td><td>4815</td><td>0.208</td><td>63.8</td><td>307&nbsp;W</td><td>—</td><td>—</td></tr>
+        <tr><td><code>Q4_0</code> (ours)</td><td>1754</td><td>0.570</td><td>168.6</td><td>296&nbsp;W</td><td style="color:var(--good);font-weight:700">−63.6%</td><td style="color:var(--bad);font-weight:700">+5.60%</td></tr>
+        <tr><td><code>Q4_0</code> (the v2.0 file)</td><td>1795</td><td>0.557</td><td>172.6</td><td>310&nbsp;W</td><td style="color:var(--good);font-weight:700">−62.7%</td><td style="color:var(--bad);font-weight:700">+5.61%</td></tr>
+      </table>
+      <p style="margin:12px 0 0"><b>The saving is throughput, not lower power.</b> All three arms draw 296–310&nbsp;W
+        while decoding; <code>Q4_0</code> simply produces 2.6–2.7× as many tokens in that time. And on this same card,
+        bitsandbytes <code>LLM.int8()</code> costs <em>106% more</em> energy per token than its FP16 baseline. Same idea,
+        opposite sign — which is the point:
+        <a href="/blog/it-was-never-the-format.html">it was never the format, it's the kernel</a>.</p>
+    </div>
+
+    <div class="callout warn">
+      <b>Read this as provisional, not as a result.</b> It is <b>not an MLPerf result</b> and carries no MLCommons review
+      or endorsement — it is an independent measurement that happens to use the same model file, with GPU-package power
+      rather than wall AC power. n&nbsp;=&nbsp;3 on one card in one session. The energy window covers the whole
+      <code>llama-cli</code> process, so the figures above are obtained by <em>differencing</em> a 576-token run against a
+      64-token one to cancel weight loading (16&nbsp;GB for F16 against 4.7&nbsp;GB for <code>Q4_0</code>). The sweep ran
+      in fixed order with no cooldown and two runs began from a cold GPU; those are flagged in the CSV and excluded here.
+      Most importantly, the wrapper failed to capture llama.cpp's own token counts, and the F16 arm's implied memory
+      bandwidth exceeds the card's, so F16 probably stopped early on EOS and the 63.6% is likely an
+      <em>over</em>estimate. A rerun with cooldowns, randomized order and captured <code>n_eval</code> is queued.
+      Full caveats and the raw rows are in <a href="/blog/it-was-never-the-format.html">the write-up</a>.
+    </div>
+
+    <a href="/assets/rtx4090-kernel-decides-the-sign.png" target="_blank" rel="noopener" title="Open full size">
+      <img src="/assets/rtx4090-kernel-decides-the-sign.png" loading="lazy"
+           alt="Three weight-only quantizations of a 7-8B model on one RTX 4090: bitsandbytes LLM.int8() costs 105.8% more decode energy per token than FP16, bitsandbytes NF4 saves 39.0%, and llama.cpp GGUF Q4_0 saves 63.6%. Their perplexity costs, +1.19%, +12.06% and +5.60%, rank them differently again."
+           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px" /></a>
+    <p class="meta">Each delta is against an FP16 baseline measured in its own session on an RTX 4090. The card is held
+      constant; the model, runtime and generated-token count are not. Read the sign and the mechanism from this, not the
+      exact magnitudes.</p>
 
     <h2>The energy axis of MLPerf Client is real — and it is not available at home</h2>
     <p>v2.0 <em>does</em> define power measurement, and defines it well:
@@ -153,10 +197,12 @@
       </div>
     </div>
     <p class="meta">One difference you must keep in view when reading the two side by side: the runtimes are not the same.
-      MLPerf Client's NVIDIA path is llama.cpp with a GGUF <code>Q4_0</code> file; our container is
+      MLPerf Client's NVIDIA path is llama.cpp with a GGUF <code>Q4_0</code> file; the container is
       transformers + bitsandbytes <code>NF4</code>. Same idea (4-bit weight-only), different kernels, so the energy
-      deltas are not interchangeable. Adding a GGUF <code>F16</code> vs <code>Q4_0</code> path to the container, so the
-      comparison is within one runtime, is the next thing on our list.</p>
+      deltas are <b>not</b> interchangeable — the measurement at the top of this page is exactly how far apart they can
+      land (−63.6% against +106% on one card). The llama.cpp numbers were produced by a standalone NVML wrapper around
+      <code>llama-cli</code>, not by the container; folding a GGUF backend into the container, so that one command
+      reproduces the whole table, is now the next thing on our list.</p>
 
     <h2>Why this matters more on a laptop than in a datacentre</h2>
     <p>Our published curves say the crossover — the model size above which 4-bit weight-only quantization starts to
@@ -197,6 +243,7 @@
       <li>Power methodology — <code>tools/power/README_MLPerf-client_Power-measurements.md</code> and <code>tools/power/power_log_parser.py</code> in that repository</li>
       <li>Model configurations quoted above — <code>data/configs/vendors_default/</code> in that repository</li>
       <li>Our protocol — <a href="/method/">methodology</a>; our data — <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></li>
+      <li>The llama.cpp F16 / Q4_0 session quoted above — <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_gguf_2026-08-31.csv" target="_blank" rel="noopener">rtx4090_llamacpp_gguf_2026-08-31.csv</a> (18 runs) and its <code>.summary.csv</code>; write-up: <a href="/blog/it-was-never-the-format.html">It was never the format. It's the kernel.</a></li>
     </ul>
 
     <footer>
