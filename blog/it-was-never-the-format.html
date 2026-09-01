@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>It was never the format. It's the kernel. — EcoCompute</title>
+<meta name="description" content="MLPerf Client v2.0 shipped today. We ran the FP16 baseline it cannot give you: on one RTX 4090, llama.cpp Q4_0 costs 63.6% less decode energy per token than llama.cpp F16 — while bitsandbytes INT8 costs 106% more on the same card. Same idea, opposite sign. The kernel decides, not the bit width." />
+<link rel="canonical" href="https://quantenergy.tech/blog/it-was-never-the-format.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="It was never the format. It's the kernel." />
+<meta property="og:description" content="Three weight-only quantizations of a 7–8B model on one RTX 4090 span +106% to −64% energy per token. The bit width does not tell you the sign; the kernel does." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/it-was-never-the-format.html" />
+<meta property="og:image" content="https://quantenergy.tech/assets/rtx4090-kernel-decides-the-sign.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"It was never the format. It's the kernel.",
+  "datePublished":"2026-08-31",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/it-was-never-the-format.html",
+  "image":"https://quantenergy.tech/assets/rtx4090-kernel-decides-the-sign.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  figure{margin:22px 0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:8px}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>It was never the format. It's the kernel.</h1>
+    <div class="date">2026-08-31 · Hongping Zhang</div>
+
+    <p><a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">MLPerf
+    Client v2.0 shipped</a> with signed Windows and macOS builds, agentic tasks, and a much wider
+    hardware matrix — a lot of people can now benchmark a local LLM on their own machine without
+    building anything. What comes out is speed: time to first token, tokens per second. Its power
+    path is a different animal, needing a Yokogawa analyzer, SPEC PTDaemon and a second machine, so
+    in practice a home run gives you throughput and nothing about joules.</p>
+
+    <p>We <a href="/mlperf-client/">wrote a page about that gap</a> last week, and it ended with a
+    promise: our own energy numbers were measured with transformers + bitsandbytes <code>NF4</code>,
+    while MLPerf Client's NVIDIA path is llama.cpp with a GGUF <code>Q4_0</code> file, so the two
+    could not be read against each other; putting a GGUF path next to ours was "the next thing on our
+    list". This note is that measurement. It came back more interesting than we expected.</p>
+
+    <div class="callout">
+      <strong>The result.</strong> On one RTX 4090, decoding Llama-3.1-8B-Instruct, GGUF
+      <code>Q4_0</code> under llama.cpp costs <strong class="neg">63.6% less energy per token</strong>
+      than GGUF <code>F16</code> under the same binary, for <strong>+5.6% perplexity</strong>. On the
+      same card, bitsandbytes <code>LLM.int8()</code> costs <strong class="pos">106% more</strong>
+      energy per token than its FP16 baseline. Both are weight-only quantization of a 7–8B model on
+      one GPU. The bit width does not tell you the sign of the energy effect. The kernel does.
+    </div>
+
+    <h2>What we ran</h2>
+    <p>One rented RTX 4090 (Ada, 24&nbsp;GB, 450&nbsp;W limit), one llama.cpp build
+    (<code>b10643-192067b72</code>, CUDA 12.x), one model, three GGUF files:</p>
+    <ul>
+      <li><code>Llama-3.1-8B-Instruct-F16.gguf</code> — the FP16 baseline that a benchmark suite of
+      already-quantized models cannot give you;</li>
+      <li><code>ours-Q4_0.gguf</code> — quantized by us from the same weights;</li>
+      <li><code>Llama-3.1-8B-Instruct-Q4_0.gguf</code> — <strong>the file MLPerf Client v2.0 itself
+      pulls</strong> for its NVIDIA llama.cpp path.</li>
+    </ul>
+    <p>Each file was run at <code>-n 64</code> and <code>-n 576</code>, three times each, batch 1,
+    <code>-ngl 99 -fa 1 --no-mmap -c 2048 --temp 0 --seed 1234</code>, with GPU package power sampled
+    from NVML at 10&nbsp;Hz around the whole <code>llama-cli</code> process. Eighteen runs. Quality is
+    a separate llama.cpp <code>perplexity</code> pass over the WikiText-2 raw test set, 564 chunks at
+    context 512, which touches the energy figure not at all.</p>
+
+    <p>The two token counts are the point. A raw process energy total includes loading the weights —
+    16&nbsp;GB for F16 against 4.7&nbsp;GB for <code>Q4_0</code> — which hands the quantized arm a
+    structural head start that has nothing to do with decoding. Subtracting the 64-token run from the
+    576-token run leaves the energy of exactly <strong>512 additional decoded tokens</strong>, with
+    load and prefill cancelling out. Every number below is that difference.</p>
+
+    <h2>The numbers</h2>
+    <table>
+      <tr><th>llama.cpp arm</th><th>mJ / token</th><th>tokens / J</th><th>tok/s</th><th>decode power</th><th>Δenergy vs F16</th><th>perplexity</th><th>Δppl</th></tr>
+      <tr><td><code>F16</code></td><td class="num">4815</td><td class="num">0.208</td><td class="num">63.8</td><td class="num">307&nbsp;W</td><td class="num">—</td><td class="num">7.3260</td><td class="num">—</td></tr>
+      <tr><td><code>Q4_0</code> (ours)</td><td class="num">1754</td><td class="num">0.570</td><td class="num">168.6</td><td class="num">296&nbsp;W</td><td class="num neg">−63.6%</td><td class="num">7.7364</td><td class="num pos">+5.60%</td></tr>
+      <tr><td><code>Q4_0</code> (MLPerf Client v2.0 file)</td><td class="num">1795</td><td class="num">0.557</td><td class="num">172.6</td><td class="num">310&nbsp;W</td><td class="num neg">−62.7%</td><td class="num">7.7366</td><td class="num pos">+5.61%</td></tr>
+    </table>
+    <p class="meta">Decode-only, by differencing the 576- and 64-token runs; n&nbsp;=&nbsp;3 per cell.
+    SD of the differenced energy is 7–52&nbsp;J (0.8–2.1% of the value). Perplexity is
+    <code>±0.047–0.050</code> (1σ) on 564 WikiText-2 chunks; absolute values depend on the corpus and
+    tokenizer and are <em>not</em> comparable with published WikiText numbers — only the within-row
+    delta is. Raw rows:
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_gguf_2026-08-31.csv" target="_blank" rel="noopener">rtx4090_llamacpp_gguf_2026-08-31.csv</a>,
+    aggregates in the <code>.summary.csv</code> beside it.</p>
+
+    <h2>The saving is throughput. It is not lower power.</h2>
+    <p>Look at the decode power column before the energy column. All three arms pull
+    <strong>296–310&nbsp;W</strong> while decoding — within a few percent of each other, on a card
+    capped at 450&nbsp;W. The GPU is about equally busy in all three cases. What changes is that
+    <code>Q4_0</code> moves a quarter of the bytes per token and runs at
+    <strong>2.6–2.7× the tokens per second</strong>. Energy per token is power divided by throughput,
+    so the entire 63.6% is the throughput term.</p>
+
+    <p>That is the same mechanism, running the other way, that we
+    <a href="/blog/how-repeatable-is-a-quantization-energy-number.html">reported for INT8</a>: there
+    too package power barely moved (74–91&nbsp;W), and throughput fell to 0.63–0.72× of FP16, so
+    energy per token went <em>up</em>. Which is the whole argument of this note:</p>
+
+    <figure>
+      <a href="/assets/rtx4090-kernel-decides-the-sign.png" target="_blank" rel="noopener" title="Open full size">
+        <img src="/assets/rtx4090-kernel-decides-the-sign.png" loading="lazy"
+             alt="Three weight-only quantizations of a 7-8B model on one RTX 4090: bitsandbytes LLM.int8() costs 105.8% more decode energy per token than FP16, bitsandbytes NF4 saves 39.0%, and llama.cpp GGUF Q4_0 saves 63.6%. Their perplexity costs, +1.19%, +12.06% and +5.60%, rank them differently again." /></a>
+      <figcaption>Three weight-only quantizations of a 7–8B model, all on an RTX 4090 (Ada), each
+      against an FP16 baseline measured in its own session. Energy spans +106% to −64%; the quality
+      cost orders them differently again. Regenerate with
+      <code>python3 build/make_kernel_figure.py</code>.</figcaption>
+    </figure>
+
+    <p>Three implementations of "keep the activations, shrink the weights", one card, and the answer
+    to "does quantizing save energy?" is <strong>+106%, −39% and −64%</strong> depending only on which
+    kernel executes the result. <code>LLM.int8()</code> pays for its outlier-preserving mixed-precision
+    decomposition in decode throughput; llama.cpp's <code>Q4_0</code> path is a memory-bandwidth win on
+    a bandwidth-bound workload and collects nearly the full ratio. A number like "4-bit" or "8-bit"
+    predicts the memory footprint. It does not predict the sign of the energy effect, and anyone
+    quoting an energy saving without naming the runtime is quoting a property of their kernel.</p>
+
+    <p>The quality axis does not rescue the ranking either. Ordered by energy the winner is llama.cpp
+    <code>Q4_0</code>; ordered by perplexity damage it is <code>LLM.int8()</code> at +1.19%, which is
+    also the worst on energy. There is no single "efficiency" ordering here, which is why this site
+    publishes the two columns side by side and refuses to fuse them into one score.</p>
+
+    <h2>A zero result worth publishing: our Q4_0 and MLPerf Client's are the same file, in effect</h2>
+    <p>The two <code>Q4_0</code> arms differ by 0.0002 in final perplexity — 7.7364 against 7.7366.
+    Chunk by chunk across all 564, the largest absolute difference is 0.0003, and 472 of them agree to
+    three decimals. On energy they differ by 1.4–2.3%, which is inside our run-to-run spread, and the
+    sign of that gap <em>flips</em> depending on whether the cold-start runs discussed below are
+    excluded. Both variants are in the summary CSV, deliberately.</p>
+
+    <p>So: we are <strong>not</strong> claiming our quantization is more efficient than the one MLPerf
+    Client ships. It isn't, within this measurement. What the comparison buys is provenance — the
+    numbers in the table are not an artifact of one particular GGUF file, and anyone who quantizes
+    Llama-3.1-8B to <code>Q4_0</code> themselves should land where the shipped file lands.</p>
+
+    <h2>What this does <em>not</em> show</h2>
+    <ul>
+      <li><strong>This is not an MLPerf result</strong> and carries no MLCommons review or
+      endorsement. It is an independent research measurement that happens to use the same model file.
+      MLPerf Client's own power methodology measures <em>wall AC power</em> for the whole system with
+      external instrumentation; we measure <em>GPU package power</em> via NVML. Those two boundaries
+      are not interchangeable and the numbers must never be subtracted from each other.</li>
+      <li><strong>n&nbsp;=&nbsp;3, one card, one session.</strong> The site's own repeatability note
+      puts run-to-run CV at a few percent but the gap between two of our sessions at 100+ points; a
+      63% effect is far larger than either, but the third digit is not defensible.</li>
+      <li><strong>There is a real cold-start artifact in this sweep.</strong> The driving script runs
+      F16 → ours → MLPerf in a fixed order with no cooldown, so 16 of the 18 runs began at
+      145–248&nbsp;W of thermal and power tail left by the run before. The two that began near idle
+      (22&nbsp;W) are exactly the two low outliers in the short runs — <code>f16 n64 r1</code> at
+      550.9&nbsp;J against 679/766&nbsp;J, and <code>q4ours n64 r1</code> at 178.5&nbsp;J against
+      317/323&nbsp;J. The headline uses the warm runs only; the CSV flags every run with a
+      <code>cold_start</code> column and the summary carries the all-runs variant too (−62.5% and
+      −63.6%, i.e. the two Q4_0 arms swap places). A rerun with cooldowns and randomized order is
+      needed before these become anchors.</li>
+      <li><strong>We cannot yet prove the token counts.</strong> The wrapper captured
+      <code>stdout</code> into the report but every field came back empty, so llama.cpp's own
+      <code>llama_perf_context_print</code> — the actual <code>n_eval</code> — is missing. That
+      matters: against the RTX 4090's ~1008&nbsp;GB/s, the F16 arm's 63.8&nbsp;tok/s implies about
+      101% of theoretical memory bandwidth, which is impossible, so the F16 runs most likely stopped
+      early on EOS and generated fewer than the requested tokens. If so the true F16 mJ/token is
+      <em>lower</em> than 4815 and the 63.6% is an overestimate. The <code>Q4_0</code> arms sit at a
+      believable ~80% of bandwidth. This is the single reason the numbers here are labelled
+      provisional, and fixing it is the first item on the rerun.</li>
+      <li><strong>Decode phase, batch 1, single stream, one prompt length.</strong> No prefill-heavy
+      or agentic workload, no concurrency, no CPU, DRAM, PSU, PUE or CO₂e.</li>
+      <li>The cross-backend comparison in the figure holds the card constant but not the model
+      (Qwen2-7B against Llama-3.1-8B), the runtime, or the generated-token count. Read the sign and
+      the mechanism from it, not the exact magnitudes.</li>
+    </ul>
+
+    <h2>If you are running MLPerf Client v2.0 this week</h2>
+    <p>The two things measure different quantities and compose rather well on one machine. Run the
+    signed client for speed on the workloads MLCommons has defined; run the container for the joules
+    and the perplexity of a precision pair you choose, with the FP16 baseline measured in the same
+    session:</p>
+<pre>docker run --rm --gpus all -v "$PWD/out:/out" \
+  ghcr.io/hongping-zh/ecocompute-mlcube:latest \
+  --model Qwen/Qwen2-7B --precision NF4 --output_dir /out</pre>
+    <p>Keep the boundary in view when you put the two reports side by side: client tokens/second is a
+    whole-system, vendor-optimized number; our joules are GPU-package only. And the container's
+    current backend is transformers + bitsandbytes, so it reproduces the <em>method</em> of this note,
+    not the llama.cpp rows — a GGUF backend, which is what would let anyone reproduce the table above
+    with one command, is now the top of our list. All eighteen runs are in the per-run CSV linked above,
+    with the undifferenced process energy, the first and peak power sample and a
+    <code>cold_start</code> flag on each, so you can redo the arithmetic differently; drop your own result on
+    <a href="/replications/">the replications page</a>, especially if it disagrees.</p>
+
+    <footer>
+      Data: <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_gguf_2026-08-31.csv" target="_blank" rel="noopener">rtx4090_llamacpp_gguf_2026-08-31.csv</a>
+      (+ <code>.summary.csv</code>) · earlier sessions:
+      <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>,
+      main dataset v1.1.0 <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> ·
+      paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> ·
+      container: <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> ·
+      context: <a href="/mlperf-client/">MLPerf Client v2.0 measures speed; here is how to measure the energy</a>.
+      <br>Not a certified benchmark result. MLCOMMONS, MLPERF and MLCUBE are trademarks of MLCommons
+      Association, referenced nominatively; this work is not affiliated with, reviewed by or endorsed
+      by MLCommons.
+    </footer>
+  </div>
+</body>
+</html>

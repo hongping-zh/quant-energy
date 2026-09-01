@@ -469,6 +469,24 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2>New · 2026-08-31 · The kernel decides the sign, not the bit width</h2>
+    <p class="meta" style="margin:0 0 14px;line-height:1.6">
+      <a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">MLPerf Client v2.0</a>
+      ships an already-quantized suite, so it cannot tell you what quantizing cost. We measured the missing baseline
+      inside <b>one</b> runtime: on an RTX 4090, llama.cpp GGUF <code>Q4_0</code> decoding Llama-3.1-8B-Instruct costs
+      <b>63.6% less energy per token</b> than GGUF <code>F16</code>, for <b>+5.60% perplexity</b>. All three arms draw
+      296–310 W while decoding — the saving is throughput (2.6–2.7×), not lower power. On the same card,
+      bitsandbytes <code>LLM.int8()</code> costs <b>106% more</b>. Same idea, opposite sign.
+      <br><b>Provisional</b>: n&nbsp;=&nbsp;3, one card, decode-only by differencing, two cold-start outliers flagged,
+      and llama.cpp's token counts were not captured — so 63.6% is probably an overestimate. Not an MLPerf result.
+    </p>
+    <div class="cta">
+      <a class="btn" href="/blog/it-was-never-the-format.html">Read the note →</a>
+      <a class="ghost" href="/mlperf-client/">MLPerf Client v2.0 ↔ EcoCompute, mapped →</a>
+    </div>
+  </div>
+
   <div class="card" id="evidence">
     <h2>Latest run · RTX 4090 (Ada) · measured in our own open container</h2>
     <p class="meta" style="margin:0 0 14px;line-height:1.6">
