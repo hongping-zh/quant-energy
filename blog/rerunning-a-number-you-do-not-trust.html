@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Re-running a number we didn't trust: 89% of the session was cooldown — EcoCompute</title>
+<meta name="description" content="We published an energy measurement and said in the same breath that it was probably an overestimate. This is the rerun: what the four protocol fixes cost, what each one changed, and the one number that moved 1.7 points. Of the 50 minutes of GPU time, 45 were spent doing nothing." />
+<link rel="canonical" href="https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html" />
+<meta property="og:title" content="Re-running a number we didn't trust: 89% of the session was cooldown" />
+<meta property="og:description" content="Four protocol fixes on a 45-run llama.cpp energy measurement — forced cooldown, randomized order, --ignore-eos, a hardware energy counter — and what each one actually changed." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html" />
+<meta property="og:image" content="https://quantenergy.tech/assets/rtx4090-differencing-holds.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/assets/rtx4090-differencing-holds.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"Re-running a number we didn't trust: 89% of the session was cooldown",
+  "datePublished":"2026-09-07",
+  "dateModified":"2026-09-07",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html",
+  "image":"https://quantenergy.tech/assets/rtx4090-differencing-holds.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"},
+  "citation":"https://doi.org/10.5281/zenodo.22295184"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--bad);font-weight:700}
+  .neg{color:var(--good);font-weight:700}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  figure{margin:22px 0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:8px}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>Re-running a number we didn't trust: 89% of the session was cooldown</h1>
+    <div class="date">2026-09-07 · Hongping Zhang</div>
+
+    <p>A week ago we published an energy measurement and said, in the same note and in the
+    <a href="https://github.com/mlcommons/mlperf_client/issues/19" target="_blank" rel="noopener">upstream
+    feature request</a> that quoted it, that the headline was probably an overestimate. Three things were
+    wrong with the session: n&nbsp;=&nbsp;3, the runs went in a fixed order with no cooldown between them,
+    and we never checked how many tokens each run actually generated. That last one had a visible symptom
+    — the F16 arm implied it was reading memory at 101% of the card's physical bandwidth, which is
+    impossible, and the obvious explanation was that it hit an end-of-sequence token and stopped early.</p>
+
+    <p>Saying a number is provisional is cheap. This note is the rerun, and it is written for the person
+    who wants to measure inference energy at home rather than for the person who wants the answer: what
+    the four fixes cost, and which ones mattered.
+    <a href="/blog/it-was-never-the-format.html">The original note</a> carries the corrected figures and
+    the argument they support; here we are only interested in the protocol.</p>
+
+    <div class="callout">
+      <b>The short version.</b> 45 runs instead of 18. Forced cooldown to idle before every run, randomized
+      order, <code>--ignore-eos</code>, and the NVML hardware energy counter instead of an integrated power
+      trace. The headline moved from <b>−63.6%</b> to <b>−61.9%</b>, so the suspected overestimate was real
+      and small. One conclusion inverted: the quantized arms draw <em>more</em> power than F16, not the same.
+      The whole thing cost <b>50 minutes</b> of one rented RTX 4090, of which <b>5.4 minutes</b> was compute.
+    </div>
+
+    <h2>Fix 1 · Cooldown, which is 89% of the bill</h2>
+    <p>In the first session the runs went back to back. Sixteen of the eighteen therefore started on a GPU
+    that was still 145–248&nbsp;W warm from its predecessor, and — this is the part that should worry
+    anyone comparing arms — the only two runs that started genuinely cold were the two largest outliers.
+    Thermal history was correlated with position in the run order, and position in the run order was
+    correlated with the arm.</p>
+
+    <p>The rerun waits before every single run until the card is back at idle, and records the state it
+    started from. All 45 cooldowns converged; each run began between <b>24.2 and 27.8&nbsp;W</b> and
+    <b>27–30&nbsp;°C</b>, with peak temperatures of 39–46&nbsp;°C during decode. The GPU is now in the same
+    state at the start of every measurement, which is the entire point.</p>
+
+    <p>What it costs is time, and the ratio is worth internalising before you plan a session:</p>
+    <table>
+      <tr><th>Where the 50 minutes went</th><th class="num">minutes</th><th class="num">share</th></tr>
+      <tr><td>Actual inference (45 runs of <code>llama-cli</code>)</td><td class="num">5.4</td><td class="num">11%</td></tr>
+      <tr><td>Waiting for the card to cool down</td><td class="num">45.1</td><td class="num">89%</td></tr>
+    </table>
+    <p class="meta">Excludes model loading between runs and the one-off download and build. 60&nbsp;s of
+    cooldown per run was enough on this card at this power cap; a card in a hotter chassis will need more,
+    which is why <code>cooldown_converged</code> and <code>start_temp_c</code> are recorded per run rather
+    than assumed.</p>
+
+    <p>So an energy session is nine parts waiting to one part measuring. Budget for it — and if you are
+    renting by the hour, notice that a protocol you can defend costs about ten times the GPU-time of one
+    you cannot, and that this is still small money. Randomizing the run order (fixed seed, so the sequence
+    is reproducible) costs nothing at all and removes what cooldown cannot: any leftover correlation
+    between arm and position.</p>
+
+    <h2>Fix 2 · <code>--ignore-eos</code>, the one that actually moved the number</h2>
+    <p>If a run stops early on an end-of-sequence token, its energy is divided by a token count you assumed
+    rather than the one it produced, and the arm that stops earliest looks worst. Forcing decode to the
+    full requested length removes the failure mode entirely. F16 now lands at 54.7&nbsp;tok/s and a
+    believable fraction of the card's bandwidth, and the ratio it anchors dropped by 1.7 points.</p>
+
+    <p>What we still did not get is the token count read back <em>from the runtime</em>. llama.cpp prints a
+    timing line with the real <code>n_eval</code>; our wrapper's regex did not match it, so a run is
+    credited with the tokens it was asked for whenever <code>--ignore-eos</code> was set and the process
+    exited 0. Given the flag that is a sound inference, and it is what removed the impossible-bandwidth
+    artifact — but it is an inference, and the CSV and the write-ups all say <em>inferred</em> rather than
+    <em>captured</em>. It is the top item for the next session.</p>
+
+    <h2>Fix 3 · A third token length, so differencing stops being an assumption</h2>
+    <p>Every energy-per-token figure on this site is a difference: run the same model at two output lengths
+    and subtract, so that loading 16&nbsp;GB of F16 weights against 4.7&nbsp;GB of <code>Q4_0</code> weights
+    cancels instead of handing the quantized arm a free head start. That subtraction is only exact if
+    process energy is affine in the token count. With two lengths you cannot check it — two points always
+    fit a line.</p>
+
+    <p>Adding a 320-token cell makes it testable. Fitting <code>E = a + b·n</code> across all 15 runs of each
+    arm gives <b>R²&nbsp;≥&nbsp;0.9966</b>, a slope that matches the differenced value to the digits we print,
+    and an intercept of 171–378&nbsp;J sitting exactly where the weight load should be. This is the cheapest
+    of the four fixes — one extra cell per arm — and the one that converts a methodological objection into a
+    plotted line.</p>
+
+    <figure>
+      <a href="/assets/rtx4090-differencing-holds.png" target="_blank" rel="noopener" title="Open full size">
+        <img src="/assets/rtx4090-differencing-holds.png" loading="lazy"
+             alt="Left: process energy against decoded tokens for 45 runs on one RTX 4090, three arms, each fitting a straight line with R-squared of at least 0.9966; the fitted slopes are 4980 mJ/token for F16, 1898 for our Q4_0 and 1834 for the MLPerf Client Q4_0 file, and the intercepts of 171 to 378 J are the weight-loading term that differencing removes. Right: mean decode power against decode throughput, showing the quantized arms drawing more power, 296 and 319 W against 273 W, at 2.8 to 3.2 times the throughput." /></a>
+      <figcaption>Left: three points per arm, and the line they fall on. Right: the consequence — the arms
+      that cost less energy per token are the arms that draw more watts.</figcaption>
+    </figure>
+
+    <h2>Fix 4 · The hardware counter, which disagrees with the power trace by 15%</h2>
+    <p>The first session integrated a 10&nbsp;Hz power trace. The rerun reads NVML's hardware energy
+    accumulator, which integrates inside the GPU, and keeps a 100&nbsp;Hz trace alongside it purely as a
+    cross-check. They disagree, and by more than we expected: across the 45 runs the counter reads
+    <b>14.9% higher</b> on average than trapezoidal integration of the same run's trace, with a per-run
+    range of 2.5–31.8%.</p>
+
+    <p>That gap is the most useful thing in the dataset for anyone designing an at-home energy tier, so it is
+    published rather than tidied away. Two readings of it, and both are worth holding:</p>
+    <ul>
+      <li><b>Sampled telemetry is not the same instrument as a counter.</b> A 100&nbsp;Hz trace misses what
+      happens between samples, and on a bursty decode loop that is not a rounding error.</li>
+      <li><b>The headline survives it anyway.</b> After differencing — which cancels whatever is common to
+      the 576- and 64-token runs of the same arm — the two accountings agree to 0.2–4.3%. Both columns are in
+      the per-run CSV so you can redo the arithmetic the other way.</li>
+    </ul>
+
+    <p>This is also, incidentally, the argument for what we asked MLPerf Client for: an <em>informative-only</em>
+    software-telemetry tier that never enters the submission path. A number this soft has no business being
+    compared across vendors. It has every business being visible to the person running the benchmark on their
+    own machine.</p>
+
+    <h2>What the rerun did not fix</h2>
+    <ul>
+      <li><b>Perplexity was not re-measured.</b> The +5.6% quality cost is carried over from the first session,
+      on the same three files and the same build. It is a property of the weights rather than of the run
+      protocol, but it has not been repeated under the clean protocol and the CSV says so in a
+      <code>perplexity_session</code> column.</li>
+      <li><b>Still GPU-package power</b>, from software telemetry, on one card, in one session, at batch 1.
+      Not wall AC, no CPU, DRAM or PSU, no PUE, no CO₂e.</li>
+      <li><b>Still not an MLPerf result</b>, and carrying no MLCommons review or endorsement. It uses a model
+      file MLPerf Client v2.0 distributes; that is the whole of the relationship.</li>
+      <li><b>n&nbsp;=&nbsp;5 is not a large sample.</b> The within-cell SD is 1.3–1.8% of the differenced value,
+      which is fine against a 62% effect and useless for the third digit.</li>
+    </ul>
+
+    <h2>Everything is published</h2>
+    <p>All 45 raw run records, the measurement scripts, the environment snapshot and the model SHA-256 hashes
+    are archived at
+    <a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a>
+    (CC BY 4.0). The per-run and aggregate CSVs are in this site's repository, regenerable with one command:</p>
+<pre>python3 build/make_llamacpp_v2_csv.py &lt;archive_dir&gt; data</pre>
+    <p>The superseded 18-run session stays published beside them. That is the only thing that makes "we think
+    this is an overestimate" a statement with any weight: the first pass has to remain downloadable after the
+    correction lands, so anyone can check what moved and by how much.</p>
+
+    <p class="meta">One caveat when reading the Zenodo record against this site: the deposit's abstract quotes
+    <em>whole-process</em> energy at each output length (−55% to −61%, with the two <code>Q4_0</code> arms
+    within 1.2% of each other at 320 and 576 tokens), while everything here is decode-only after differencing
+    the load out (−61.9% / −63.2%, the two arms 3.5% apart, dominated by the 64-token cell where the constant
+    load term is largest). Same 45 runs, different denominator.</p>
+
+    <footer>
+      Data: <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_gguf_v2_2026-09-03.csv" target="_blank" rel="noopener">rtx4090_llamacpp_gguf_v2_2026-09-03.csv</a>
+      (+ <code>.summary.csv</code>) · archive: <a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a> ·
+      the result this protocol produced: <a href="/blog/it-was-never-the-format.html">It was never the format. It's the kernel.</a> ·
+      <a href="/mlperf-client/">MLPerf Client v2.0 ↔ EcoCompute</a>
+      <br>EcoCompute is independent research by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>). Not an MLPerf result; no MLCommons review or endorsement.
+    </footer>
+  </div>
+</body>
+</html>

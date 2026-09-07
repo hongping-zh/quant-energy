@@ -8,6 +8,13 @@
     <language>en</language>
     <lastBuildDate>Mon, 07 Sep 2026 00:00:00 GMT</lastBuildDate>
     <item>
+      <title>Re-running a number we didn't trust: 89% of the session was cooldown</title>
+      <link>https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html</guid>
+      <pubDate>Mon, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>A protocol note on redoing an energy measurement we had published as a probable overestimate. Four fixes: a forced cooldown to idle before every run (all 45 converged, each starting at 24-28 W and 27-29 C), randomized run order under a fixed seed, --ignore-eos so every run decodes its full target, and NVML's hardware energy counter in place of an integrated power trace. What each one changed: --ignore-eos moved the headline 1.7 points to -61.9%, the cooldown inverted the power conclusion (the quantized arms draw 296-319 W against F16's 273 W, not the same), a third output length turned the differencing assumption into a tested one (E = a + b*n fits at R2 above 0.9966 with intercepts of 171-378 J), and the counter reads 14.9% higher than trapezoidal integration of the same run's 100 Hz trace, range 2.5-31.8%, falling to 0.2-4.3% after differencing. Cost: 50 minutes of one rented RTX 4090, of which 5.4 were compute and 45.1 were waiting for the card to cool. Still open: token counts are inferred from --ignore-eos and rc=0 rather than read back from llama.cpp's timing line, and perplexity was not re-measured. Data archived at DOI 10.5281/zenodo.22295184.</description>
+    </item>
+    <item>
       <title>It was never the format. It's the kernel.</title>
       <link>https://quantenergy.tech/blog/it-was-never-the-format.html</link>
       <guid isPermaLink="true">https://quantenergy.tech/blog/it-was-never-the-format.html</guid>

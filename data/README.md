@@ -7,7 +7,7 @@ files; the protocol is what changed. One rented RTX 4090 (Ada, 450 W limit, driv
 llama.cpp build (`b10643-192067b72`, CUDA 12.4), Llama-3.1-8B-Instruct, three GGUF files × three
 output lengths (64, 320, 576 tokens) × five replicates = **45 runs**, batch 1,
 `-ngl 99 -fa 1 --no-mmap -c 2048 --temp 0 --seed 1234 --ignore-eos`, executed in randomized order,
-each preceded by a forced cooldown to idle (all 45 converged, starting at ~25 W and 27–29 °C), all
+each preceded by a forced cooldown to idle (all 45 converged, starting at ~25 W and 27–30 °C), all
 45 exiting 0. Energy is the **NVML hardware energy counter** over the whole `llama-cli` process; a
 100 Hz power trace is recorded and integrated alongside it as a cross-check only. Regenerate with
 `python3 build/make_llamacpp_v2_csv.py <archive_dir> data`.
