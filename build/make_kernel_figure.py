@@ -26,7 +26,7 @@ ACCENT = "#38bdf8"
 ROWS = [
     ("bitsandbytes LLM.int8()", "Qwen2-7B · transformers · 2026-08-19", 105.78, 1.193),
     ("bitsandbytes NF4", "Qwen2-7B · transformers · 2026-08-19", -39.04, 12.057),
-    ("llama.cpp GGUF Q4_0", "Llama-3.1-8B-Instruct · 2026-08-31", -63.57, 5.602),
+    ("llama.cpp GGUF Q4_0", "Llama-3.1-8B-Instruct · 2026-09-03", -61.87, 5.602),
 ]
 
 fig, (ax1, ax2) = plt.subplots(
@@ -71,7 +71,7 @@ ax2.set_title("Quality cost does not order them\nthe same way", color=TXT, fonts
               fontweight="bold", loc="left", pad=10)
 
 fig.text(0.008, 0.015,
-         "GPU-package power via direct NVML · batch 1, single stream · n=1 (bitsandbytes rows) and n=3 (llama.cpp row) · "
+         "GPU-package power via direct NVML · batch 1, single stream · n=1 (bitsandbytes rows) and n=5 (llama.cpp row) · "
          "each delta is against an FP16 baseline from its own session.\nDifferent models, runtimes and token counts: read "
          "the sign and the mechanism, not the exact magnitudes. The llama.cpp row is decode-only by differencing "
          "576- and 64-token runs. Not a certified benchmark result.",

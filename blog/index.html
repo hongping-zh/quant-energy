@@ -43,9 +43,9 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype.</p>
 
     <article class="post">
-      <div class="date">2026-08-31</div>
+      <div class="date">2026-08-31 · corrected 2026-09-03</div>
       <h2><a href="/blog/it-was-never-the-format.html">It was never the format. It's the kernel.</a></h2>
-      <p>MLPerf Client v2.0 shipped an already-quantized suite, so we measured the FP16 baseline it cannot produce. Inside one llama.cpp build on one RTX 4090, GGUF <code>Q4_0</code> costs <b>63.6% less</b> decode energy per token than GGUF <code>F16</code> for +5.60% perplexity — and all three arms draw 296–310 W while decoding, so the saving is throughput, not power. On the same card bitsandbytes <code>LLM.int8()</code> costs <b>106% more</b>. Three weight-only quantizations of a 7–8B model, spanning +106% to −64%: the bit width does not predict the sign. Provisional, n=3, with the cold-start and token-count caveats stated.</p>
+      <p>MLPerf Client v2.0 shipped an already-quantized suite, so we measured the FP16 baseline it cannot produce. Inside one llama.cpp build on one RTX 4090, GGUF <code>Q4_0</code> costs <b>61.9% less</b> decode energy per token than GGUF <code>F16</code> for +5.60% perplexity — while drawing <em>more</em> power, 296–319 W against 273 W, so the saving is throughput and nothing else. On the same card bitsandbytes <code>LLM.int8()</code> costs <b>106% more</b>. Three weight-only quantizations of a 7–8B model, spanning +106% to −62%: the bit width does not predict the sign. Re-run 2026-09-03 over 45 runs with cooldowns, randomized order and a hardware energy counter; the provisional −63.6% was an overestimate and the correction is documented in the note.</p>
       <p><a href="/blog/it-was-never-the-format.html">Read →</a></p>
     </article>
 
