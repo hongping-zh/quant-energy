@@ -116,7 +116,7 @@
     </ul>
     <p>Each file was run at <code>-n 64</code>, <code>-n 320</code> and <code>-n 576</code>, five times
     each, batch 1, <code>-ngl 99 -fa 1 --no-mmap -c 2048 --temp 0 --seed 1234 --ignore-eos</code>, in
-    randomized order, with the GPU forced back to idle (~25&nbsp;W, 27–29&nbsp;°C) before every single
+    randomized order, with the GPU forced back to idle (~25&nbsp;W, 27–30&nbsp;°C) before every single
     run. Forty-five runs, all of which exited 0 and all of whose cooldowns converged. Energy is the
     NVML <em>hardware</em> energy counter across the whole <code>llama-cli</code> process; a 100&nbsp;Hz
     power trace is recorded alongside it and integrated as a cross-check only. Quality is a separate
@@ -275,13 +275,15 @@
     <table>
       <tr><th>First pass, 2026-08-31</th><th>Clean rerun, 2026-09-03</th></tr>
       <tr><td>18 runs, n&nbsp;=&nbsp;3, two token lengths</td><td>45 runs, n&nbsp;=&nbsp;5, three token lengths, so the differencing assumption could be tested (R²&nbsp;≥&nbsp;0.9966)</td></tr>
-      <tr><td>Fixed F16&nbsp;→&nbsp;ours&nbsp;→&nbsp;MLPerf order, no cooldown; 16 of 18 runs inherited 145–248&nbsp;W of thermal tail and the two genuinely cold runs were the two largest outliers</td><td>Randomized order under a fixed seed, forced cooldown to ~25&nbsp;W and 27–29&nbsp;°C before every run; all 45 cooldowns converged</td></tr>
+      <tr><td>Fixed F16&nbsp;→&nbsp;ours&nbsp;→&nbsp;MLPerf order, no cooldown; 16 of 18 runs inherited 145–248&nbsp;W of thermal tail and the two genuinely cold runs were the two largest outliers</td><td>Randomized order under a fixed seed, forced cooldown to ~25&nbsp;W and 27–30&nbsp;°C before every run; all 45 cooldowns converged</td></tr>
       <tr><td>Token counts unknown; the F16 arm implied 101% of the card's memory bandwidth, i.e. it had stopped early on EOS, which inflated its mJ/token</td><td><code>--ignore-eos</code>, so every run decodes its full target; F16 lands at 54.7&nbsp;tok/s and a believable fraction of bandwidth</td></tr>
       <tr><td>Energy by integrating a 10&nbsp;Hz power trace</td><td>NVML hardware energy counter, with a 100&nbsp;Hz trace kept as a cross-check</td></tr>
       <tr><td><strong>−63.6%</strong>, flagged as a likely overestimate</td><td><strong>−61.9%</strong> (ours) and <strong>−63.2%</strong> (the shipped file) — the overestimate was real and worth about 1.7 points</td></tr>
       <tr><td>"All three arms draw 296–310&nbsp;W"</td><td>F16 draws 273&nbsp;W and the <code>Q4_0</code> arms draw 296–319&nbsp;W — the conclusion inverts, in favour of the argument</td></tr>
     </table>
-    <p>The correction was also posted to the upstream feature request it belongs to,
+    <p>How the rerun was run — what each protocol fix cost and which of them moved the number — is a
+    separate note: <a href="/blog/rerunning-a-number-you-do-not-trust.html">Re-running a number we didn't
+    trust</a>. The correction was also posted to the upstream feature request it belongs to,
     <a href="https://github.com/mlcommons/mlperf_client/issues/19" target="_blank" rel="noopener">mlcommons/mlperf_client#19</a>.
     The superseded CSV stays published; nothing here is quietly rewritten. The full archive of the
     rerun — all 45 raw run records, the measurement scripts, the environment snapshot and the model
