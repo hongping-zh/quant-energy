@@ -1,6 +1,60 @@
 # Measured sessions published alongside this site
 
-## `rtx4090_llamacpp_gguf_2026-08-31.csv` (+ `.summary.csv`)
+## `rtx4090_llamacpp_gguf_v2_2026-09-03.csv` (+ `.summary.csv`)
+
+The clean rerun of the session below, and the one to quote. Same card, same build, same three GGUF
+files; the protocol is what changed. One rented RTX 4090 (Ada, 450 W limit, driver 550.120), one
+llama.cpp build (`b10643-192067b72`, CUDA 12.4), Llama-3.1-8B-Instruct, three GGUF files × three
+output lengths (64, 320, 576 tokens) × five replicates = **45 runs**, batch 1,
+`-ngl 99 -fa 1 --no-mmap -c 2048 --temp 0 --seed 1234 --ignore-eos`, executed in randomized order,
+each preceded by a forced cooldown to idle (all 45 converged, starting at ~25 W and 27–29 °C), all
+45 exiting 0. Energy is the **NVML hardware energy counter** over the whole `llama-cli` process; a
+100 Hz power trace is recorded and integrated alongside it as a cross-check only. Regenerate with
+`python3 build/make_llamacpp_v2_csv.py <archive_dir> data`.
+
+| llama.cpp arm | mJ/token | tokens/J | tok/s | decode power | Δenergy vs F16 | perplexity | Δppl |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `F16` | 4980 | 0.201 | 54.7 | 273 W | — | 7.3260 | — |
+| `Q4_0`, ours | 1899 | 0.527 | 155.9 | 296 W | −61.9 % | 7.7364 | +5.60 % |
+| `Q4_0`, the v2.0 file | 1834 | 0.545 | 173.8 | 319 W | −63.2 % | 7.7366 | +5.61 % |
+
+### Read this before using the numbers
+
+- **Decode-only, by differencing `E(576) − E(64)`, and the third length exists to check that this is
+  allowed.** Fitting `E = a + b·n` over all 15 runs of an arm gives R² ≥ 0.9966 with intercepts of
+  171–378 J, i.e. the weight-load term differencing is meant to remove; the fitted slope
+  (`energy_mj_per_token_ols`) agrees with the differenced value to the printed digit.
+- **The quantized arms draw *more* power, not less.** F16 decodes at 273 W, the `Q4_0` arms at
+  296–319 W, and they are still 62–63 % cheaper per token because they emit 2.8–3.2× the tokens per
+  second. The provisional session below reported all three arms at 296–310 W; with cooldowns and
+  randomized order that conclusion inverts.
+- **Token counts are inferred, not read back.** llama.cpp's timing line did not parse in the wrapper,
+  so `decoded_tokens` is the requested count, credited whenever `--ignore-eos` was set and the
+  process exited 0. Sound, given the flag, but an assumption.
+- **The counter and the trace disagree by about 15 % per run** (`process_energy_j` against
+  `process_energy_trapezoid_j`; range 2.5–31.8 %). The counter integrates in hardware and is what the
+  summary reports. After differencing, which cancels the common part, the two accountings agree to
+  0.2–4.3 % (`counter_vs_trapezoid_pct`) — relevant to anyone designing an at-home energy tier out of
+  sampled telemetry.
+- **Perplexity was not re-measured**; the values are carried over from the 2026-08-31 session on the
+  same files and build, and `perplexity_session` in the summary says so.
+- **The two `Q4_0` arms remain a zero result.** They differ by 3.5 % in energy (1.8 % without a single
+  high 64-token run in the shipped-file arm) against a within-cell SD of 1.3–1.8 %, and by 0.0002 in
+  perplexity. Provenance evidence, not a ranking.
+- **Not an MLPerf result.** No MLCommons review or endorsement; GPU-package joules from software
+  telemetry, not the wall AC power MLPerf Client's own methodology measures. n = 5 per cell, one card,
+  one session, batch 1, single stream. Not pooled into `build/measured.csv`.
+- **Archived at [10.5281/zenodo.22295184](https://doi.org/10.5281/zenodo.22295184)** (CC BY 4.0;
+  concept DOI 10.5281/zenodo.22295183) with the raw run records, scripts, environment snapshot and
+  model hashes. Its abstract quotes *whole-process* energy per output length — −55 % to −61 %, the two
+  `Q4_0` arms within 1.2 % of each other at 320 and 576 tokens — while everything here is decode-only
+  after differencing the load out. Same runs, different denominator; both columns are in the per-run
+  CSV.
+
+## `rtx4090_llamacpp_gguf_2026-08-31.csv` (+ `.summary.csv`) — superseded
+
+**Superseded by the v2 session above; kept published so the correction is auditable.** Read the
+following as a record of the provisional first pass, not as current numbers.
 
 The first session on this site measured with **llama.cpp** rather than transformers +
 bitsandbytes, and the only one whose quantized file is the one
@@ -50,6 +104,7 @@ nothing. Both CSVs are regenerated from the raw archive by
   which is impossible; F16 most likely stopped early on EOS, in which case its true mJ/token is
   lower and the −63.6 % is an overestimate. The `Q4_0` arms sit at a believable ~80 %. **Treat this
   session as provisional** until a rerun with cooldowns, randomized order and captured `n_eval`.
+  That rerun is the v2 session above: the overestimate was real and worth about 1.7 points.
 - **n = 3 per cell, one card, one session**, batch 1, single stream, one prompt. SD of the
   differenced energy is 7–52 J (0.8–2.1 %). GPU-package power only: no CPU, DRAM, PSU, PUE or CO₂e.
 - **Perplexity absolutes are not comparable with published WikiText numbers** (corpus copy and

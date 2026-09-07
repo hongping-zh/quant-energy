@@ -185,6 +185,27 @@
 }</pre>
     </div>
 
+    <div class="card">
+      <h3>4 · llama.cpp GGUF F16 vs Q4_0 on RTX 4090 — the MLPerf Client comparison</h3>
+      <p class="kv"><b>Published</b> 2026-09-04 (measured 2026-09-03) · CC BY 4.0</p>
+      <p class="kv"><b>Contents</b> 45 runs on one RTX 4090: three llama.cpp GGUF arms (F16, our Q4_0, and the <code>Llama-3.1-8B-Instruct-Q4_0.gguf</code> that MLPerf Client v2.0 ships) × three output lengths (64/320/576) × n&nbsp;=&nbsp;5, randomized order, forced cooldown before every run, NVML hardware energy counter at 100&nbsp;Hz, with the measurement scripts, environment snapshot and model SHA-256 hashes</p>
+      <p class="kv"><b>Cite it for</b> the llama.cpp F16-vs-Q4_0 energy rows and anything on the <a href="/mlperf-client/">MLPerf Client page</a>. Not an MLPerf result.</p>
+<pre>@dataset{zhang_ecocompute_llamacpp_gguf_2026,
+  title     = {Independent replication of MLPerf-style energy measurement on
+               NVIDIA RTX 4090 --- Llama-3.1-8B-Instruct (FP16 vs Q4\_0)},
+  author    = {Zhang, Hongping},
+  year      = {2026},
+  publisher = {Zenodo},
+  note      = {45 runs, n=5 per cell, three output lengths, randomized order,
+               forced cooldown, NVML hardware energy counter; supersedes the
+               provisional 18-run session published on quantenergy.tech},
+  doi       = {10.5281/zenodo.22295184},
+  url       = {https://doi.org/10.5281/zenodo.22295184}
+}</pre>
+      <p class="meta">The concept DOI <a href="https://doi.org/10.5281/zenodo.22295183" target="_blank" rel="noopener">10.5281/zenodo.22295183</a>
+      always resolves to the latest version of this record.</p>
+    </div>
+
     <h2>Software, not data</h2>
     <ul>
       <li><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the measurement container that produced the RTX 4090 run (<a href="/container/">what it does and how to run it</a>)</li>
@@ -215,6 +236,7 @@
       <tr><td>Measurement container</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">github.com/hongping-zh/ecocompute-mlcube</a> (Apache-2.0)</td></tr>
       <tr><td>Main dataset (v1.1.0)</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0)</td></tr>
       <tr><td>RTX 4090 (Ada) deep dive</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (CC BY 4.0)</td></tr>
+      <tr><td>llama.cpp GGUF F16 vs Q4_0 (45 runs)</td><td><a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a> (CC BY 4.0)</td></tr>
       <tr><td>Preprint</td><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a></td></tr>
       <tr><td>Preview image</td><td><a href="/preview.png">quantenergy.tech/preview.png</a> (1200×630)</td></tr>
       <tr><td>Maintainer / contact</td><td>Hongping Zhang — <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">hongping-zh.github.io</a> · ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">open an issue</a></td></tr>
