@@ -106,6 +106,13 @@
     <h2>1 · Run it — one command, zero configuration</h2>
     <p><b>Prerequisite for a real measurement:</b> an NVIDIA GPU with NVML power telemetry. Docker is optional — see
     the two modes below. Without a GPU you can still verify the whole pipeline — see step 3.</p>
+    <p><b>No GPU at all?</b> The
+    <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+    (<a href="https://github.com/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">source</a>)
+    runs the same NVML measurement on a free T4 and emits the same schema-validated <code>energy.json</code>. It is a
+    re-implementation of <code>entrypoint.py</code>'s sampler rather than the container itself, so it is not pinned to
+    the image's dependency set, and it measures both arms in randomized order with a cooldown to idle before each — a
+    protocol the container does not enforce. On a 16&nbsp;GB T4 both arms fit up to about 3B parameters.</p>
 <pre>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</pre>
     <p>It measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated
     <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. The script prints every
@@ -285,6 +292,9 @@ cat workspace/outputs/energy.json</pre>
       <li><b>Backends beyond bitsandbytes</b> — AWQ, GPTQ, FP8, vendor runtimes.</li>
       <li><b>Wall-power implementations</b> for your BMC or PDU.</li>
     </ol>
+    <p>If you have no GPU to spare, the
+    <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+    produces a submittable report on a free T4 in well under an hour.</p>
     <p>How: use <a href="/replications/#submit">the submission form</a> — it parses your <code>energy.json</code> in your
     browser, previews your point against the fitted curve, then copies the submission to your clipboard and opens an issue you paste into and send yourself. You can also open
     an issue or pull request directly on
