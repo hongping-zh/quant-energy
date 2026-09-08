@@ -790,12 +790,25 @@
       Every number on this site is reproducible. The <b>EcoCompute energy MLCube</b> container runs the same
       measurement on <b>your</b> GPU — direct NVML power sampling, no TDP guesses — and writes an
       <code>energy.json</code> with the <b>exact same fields</b> the charts here use. Run it, then drop the result
-      below to overlay your measurement on the crossover curve.
+      below to overlay your measurement on the crossover curve. No GPU of your own? The
+      <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+      does the same measurement on a free T4.
       Full guide, output schema, scope and how to contribute a run: <a href="/container/">the container page</a>.
     </p>
 
     <div class="card">
-      <h2>1 · Run the container</h2>
+      <h2>1 · No GPU? Run the notebook in Colab</h2>
+      <p class="meta" style="margin:0 0 10px">A free Colab T4 is enough — no GPU of your own, no Docker, nothing installed locally. The notebook runs the same NVML measurement as the container and writes the same <code>energy.json</code>, then prints an overlay link and a block of text you can paste into an issue.</p>
+      <div class="cta" style="margin:0 0 10px">
+        <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Open the notebook in Colab →</a>
+        <a class="ghost" href="https://github.com/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Read it on GitHub</a>
+      </div>
+      <p class="chartnote" style="margin-top:0">It measures your chosen precision <b>and its own FP16 baseline</b>, in <b>randomized order</b>, waiting for the card to come back to idle before each arm — the two things we got wrong the first time and <a href="/blog/rerunning-a-number-you-do-not-trust.html">wrote up</a>. Both arms have to fit: on a 16&nbsp;GB T4 that means models up to about <b>3B</b>, and the notebook refuses to start rather than failing with an out-of-memory error twenty minutes in. Budget <b>20–35 minutes</b>; most of it is cooldown and the model download.</p>
+      <p class="chartnote">One pass is <b>n=1</b> and energy is integrated from sampled power — on our RTX&nbsp;4090 the GPU's hardware energy counter read on average <b>14.9% higher</b> than integrating the same traces, so read these figures at that resolution. The last cell repeats both arms 5× if you want a repeatability figure. Same scope as everything else here: GPU-package power, not wall AC; not a certified benchmark result.</p>
+    </div>
+
+    <div class="card">
+      <h2>2 · Have a GPU? Run the container</h2>
       <p class="meta" style="margin:0 0 10px">One command, nothing to configure. Needs an NVIDIA GPU. With Docker it runs the prebuilt image; on a rented GPU instance that cannot nest containers (AutoDL, vast.ai …) the same command installs into a venv instead and runs the identical code. No GPU? It still runs and returns dataset-derived reference values, clearly flagged (never faked).</p>
       <div class="codeblock" id="runCmd"><button class="copybtn" id="copyRunCmd" type="button">Copy</button>curl -fsSL https://raw.githubusercontent.com/hongping-zh/ecocompute-mlcube/main/quickstart.sh | bash</div>
       <p class="chartnote" style="margin-top:12px">Measures <b>NF4 and its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated <code>energy.json</code> to <code>./ecocompute-out/</code> and prints an overlay link. The measurement itself takes a few minutes; the first run is dominated by downloads — the one-time image pull (or dependency install) plus a ~2&nbsp;GB model download — and later runs reuse the caches. Our one timed end-to-end run took <b>57 minutes</b> on a China-hosted rented RTX&nbsp;4090 (mostly fetching torch/CUDA wheels; since fixed to use a domestic index, but not re-timed). No flags: the architecture comes from the NVML device name, so your card cannot be mislabelled. Other models/precisions and the plain <code>docker run</code> form: <a href="/container/">the container page</a>.</p>
@@ -803,14 +816,14 @@
     </div>
 
     <div class="card">
-      <h2>2 · What you get — the same structure as this site</h2>
+      <h2>3 · What you get — the same structure as this site</h2>
       <p class="meta" style="margin:0 0 6px">Example <code>energy.json</code>. The two fields the charts read are highlighted: <span class="tag estimated">vs_fp16_energy_pct</span> (ΔE% vs FP16) and <span class="tag interpolated">basis</span> (measured / interpolated / extrapolated).</p>
       <pre class="runjson" id="runExample"></pre>
       <p class="chartnote" style="margin-top:10px">Shown here is the shipped example (<code>examples/energy.measured.illustrative.json</code>): its power/throughput numbers are synthetic <b>only to illustrate the output shape</b>. When you run on a real GPU, the same fields carry your actual NVML measurement (<code>basis: "measured"</code>).</p>
     </div>
 
     <div class="card">
-      <h2>3 · Overlay your result on the crossover curve</h2>
+      <h2>4 · Overlay your result on the crossover curve</h2>
       <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload energy.json">
         Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
         <input type="file" id="fileInput" accept="application/json,.json" style="display:none" />
