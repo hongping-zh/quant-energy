@@ -321,6 +321,7 @@
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
       <a href="#evidence">29 measured anchors · RTX 4090 11 · A800 6 · RTX 4090D 4 · RTX 5090 4 · T4 4</a>
+      <a href="#matrix">Coverage matrix · 26 of 56 cells measured</a>
       <a href="/method/">NVML @ 10&nbsp;Hz · GPU package</a>
       <a href="/container/">MLCube-compatible</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener">Schema-validated</a>
@@ -435,6 +436,47 @@
     <div id="cross"></div>
     <p class="meta" id="crossAnchors" style="margin:6px 0 10px"></p>
     <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). <b>Marker fill encodes replication, not accuracy:</b> filled dots are points repeated at least twice in the main dataset (<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a>, n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); hollow dots on a faded line were measured <b>once</b> (n&nbsp;=&nbsp;1) — the July&nbsp;2026 <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep dive</a> and one early RTX 4090D point — so they carry no measured spread and should be read as a single observation, not as a distribution. INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
+  </div>
+
+  <div class="card" id="matrix">
+    <h2>Coverage matrix · what has been measured, and what nobody has measured yet</h2>
+    <p class="meta" style="margin:0 0 14px;line-height:1.6">
+      Every energy measurement published here, on one grid: quantization method × GPU architecture down the side,
+      model size across the top, and in each cell the change in energy per token against an FP16 baseline
+      <b>on the same card</b>. <b>26 of 56 cells have a measurement.</b> The empty ones are not an oversight —
+      they are the reason this page exists.
+    </p>
+    <a href="assets/coverage-matrix.png" target="_blank" rel="noopener" title="Open full size">
+      <img src="assets/coverage-matrix.png" loading="lazy"
+           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point moves with GPU architecture; llama.cpp Q4_0 has one cell at -63%. 26 of 56 cells are measured."
+           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
+    <p class="chartnote" style="margin-top:14px">
+      Three things the grid says that no single number does.
+      <b>1 · bitsandbytes <code>LLM.int8()</code> never saved energy</b> — eight measured cells, 0.5B to 14B,
+      Ada and Ampere, every one a penalty (+87% … +473%). It lowers instantaneous power and loses more than that
+      to collapsed decode throughput.
+      <b>2 · NF4 changes sign with model size, and the size at which it flips moves with the architecture</b> —
+      fitted crossings sit near <b>2.1B on Turing</b>, <b>3.7B on Ada</b> and <b>4.8B on Blackwell</b>.
+      "Does NF4 save energy?" has no answer that is not conditional on the card.
+      <b>3 · The largest effect in the whole grid sits in the emptiest row</b> — llama.cpp GGUF <code>Q4_0</code>
+      is −63% at 8B, and it is the <em>only</em> cell in that row. One point is not a trend; that row is a claim
+      waiting to be checked, including by anyone who wants to contradict it.
+    </p>
+    <p class="chartnote">
+      Read it with the same care as the rest of the site. Cells are the <b>unweighted mean</b> of the runs behind
+      them and most are n&nbsp;=&nbsp;1 or 2, so the printed range matters more than the mean where one is shown.
+      The llama.cpp row is drawn below a rule because its delta is <b>decode-only energy</b> obtained by differencing,
+      while every row above it is whole-process energy at a fixed output length — same sign, different denominator,
+      not interchangeable. All of it is GPU-package power, not wall AC, and none of it is a certified benchmark result.
+      The grid is generated from the published CSVs by
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/make_coverage_matrix.py" target="_blank" rel="noopener"><code>build/make_coverage_matrix.py</code></a>
+      — if you think a cell is wrong, the input files are in the repo.
+    </p>
+    <div class="cta" style="margin-top:14px">
+      <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Fill an empty cell on a free Colab T4 →</a>
+      <a class="ghost" href="https://github.com/hongping-zh/quant-energy/blob/main/data/coverage_matrix_2026-09-09.csv" target="_blank" rel="noopener">Download the matrix as CSV</a>
+      <span class="badge">A ? costs about half an hour of a free GPU. Contradictions are published as prominently as confirmations.</span>
+    </div>
   </div>
 
   <div class="card" id="stack">

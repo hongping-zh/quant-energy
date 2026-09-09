@@ -1,5 +1,20 @@
 # Measured sessions published alongside this site
 
+## `coverage_matrix_2026-09-09.csv`
+
+Not a session: a derived roll-up of every other file here plus `build/measured.csv` and
+`data/replications/*.json`, aggregated into (quantization method × GPU architecture) × model size.
+One row per non-empty cell, with the mean, the full min–max range, the number of measurements
+behind it, the cards involved, and mean Δperplexity where paired quality data exists. Regenerate
+with `python3 build/make_coverage_matrix.py`, which also renders `assets/coverage-matrix.png`.
+
+Two things to keep in mind when reading it. The mean is **unweighted** across the runs feeding a
+cell — those runs come from different sessions and protocols, so the range column carries more
+information than the mean wherever the two differ. And the `denominator` column is load-bearing:
+the llama.cpp rows are decode-only energy obtained by differencing `E(576) − E(64)`, every other
+row is whole-process energy at a fixed output length. Cells with different denominators are not
+comparable to each other, only within their own group.
+
 ## `rtx4090_llamacpp_gguf_v2_2026-09-03.csv` (+ `.summary.csv`)
 
 The clean rerun of the session below, and the one to quote. Same card, same build, same three GGUF
