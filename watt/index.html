@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ask Watt — quantization energy decisions in WorkBuddy</title>
+<meta name="description" content="Watt is a WorkBuddy expert built on the same measured dataset this site publishes. Give it a GPU, a model size and an accuracy target; it answers whether weight-only NF4 or INT8 will raise or lower your LLM inference energy — with a provenance label, a confidence rating and the boundary conditions. Search &quot;Watt&quot; or &quot;大模型能耗&quot; in the WorkBuddy expert center." />
+<link rel="canonical" href="https://quantenergy.tech/watt/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="EcoCompute" />
+<meta property="og:url" content="https://quantenergy.tech/watt/" />
+<meta property="og:title" content="Ask Watt — quantization energy decisions in WorkBuddy" />
+<meta property="og:description" content="Same measured data, but conversational: GPU + model size + accuracy target in, a provenance-labelled quantization decision out." />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Ask Watt — quantization energy decisions in WorkBuddy" />
+<meta name="twitter:description" content="Same measured data, but conversational: GPU + model size + accuracy target in, a provenance-labelled quantization decision out." />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<meta name="keywords" content="LLM inference energy, quantization energy, WorkBuddy expert, NF4, INT8, GPU power measurement, 大模型能耗, 量化能耗决策" />
+<style>
+:root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981}
+body { margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7 }
+.wrap { max-width:820px;margin:0 auto;padding:32px 20px 72px }
+.top { display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px }
+.brand { font-weight:800;font-size:18px }
+.brand span { color:var(--accent) }
+.nav { display:flex;gap:14px;flex-wrap:wrap;font-size:14px }
+h1 { font-size:28px;line-height:1.25;margin:0 0 8px }
+h2 { font-size:17px;margin:0 0 10px }
+.sub { font-size:13px;color:var(--muted);margin-bottom:24px }
+a { color:var(--accent);text-decoration:none }
+a:hover { text-decoration:underline }
+.callout { border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0 }
+.card { border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:18px 20px;margin:18px 0 }
+.card h3 { margin-top:0 }
+.meta { font-size:13px;color:var(--muted) }
+ol.steps { margin:0;padding-left:22px }
+ol.steps li { margin-bottom:8px }
+ul.plain { margin:0;padding-left:20px }
+ul.plain li { margin-bottom:8px }
+code { background:#0a1226;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;color:#a5d8ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace }
+.q { border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:0 0 12px }
+.chips { display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0 }
+.chips span { font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px }
+button.copy { font-family:inherit;font-size:14px;font-weight:600;color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer }
+button.copy:hover { border-color:var(--accent) }
+footer { margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Watt</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/replications/">Replications</a><a href="/method/">Methodology</a><a href="/cite/">Cite</a><a href="/blog/">Notes</a></nav>
+    </div>
+
+    <h1>Ask Watt — the decision, not just the curve</h1>
+    <p class="sub">The same measured data this site plots, as a conversation. Watt lives in the WorkBuddy expert center; this page is just how you get there.</p>
+
+    <div class="callout">
+      <p style="margin:0 0 12px">This site shows you <b>what was measured</b>. Watt turns that into <b>what you should do</b>: hand it a GPU, a model size and an accuracy target, and it says whether weight-only NF4 or INT8 will raise or lower your inference energy — labelled with where the number came from and how far to trust it.</p>
+      <p style="margin:0"><b>It is not a chatbot with opinions.</b> It answers from the published EcoCompute dataset, states its scope, and says “no data” instead of guessing.</p>
+      <div class="chips">
+        <button class="copy" id="copyWatt" type="button">⧉&nbsp; Copy the search term</button>
+        <span>Free</span>
+        <span>No GPU needed to ask</span>
+        <span>Works in English &amp; 中文</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How to open it · 如何打开</h3>
+      <ol class="steps">
+        <li>Open <b>WorkBuddy</b> and go to the <b>expert center</b> — the 专家 entry in the left sidebar.</li>
+        <li>Search <code>Watt</code>, or <code>大模型能耗</code>, or <code>LLM energy</code>.</li>
+        <li>Give it three inputs: <b>GPU model · model size · accuracy target</b>. That is the whole form.</li>
+      </ol>
+      <p class="meta" style="margin:14px 0 0">Nothing to install, no account beyond WorkBuddy. If the search box shows several experts, Watt is the one whose answers carry a <code>measured</code> / <code>estimated</code> label on every number.</p>
+    </div>
+
+    <div class="card">
+      <h3>What it does that this site does not</h3>
+      <ul class="plain">
+        <li><b>A provenance label on every number</b> — <code>measured</code>, <code>interpolated</code>, <code>estimated</code> or <code>extrapolated</code>. Never blended together.</li>
+        <li><b>A confidence rating</b> — n=1 anchor points are down-weighted; repeated trials with CV &lt; 2% are not.</li>
+        <li><b>Refusal over guessing</b> — outside the data it answers “no data”, then hands you a reproduction plan.</li>
+        <li><b>Boundary conditions attached</b> — GPU, driver, CUDA, framework, model revision, batch size, and the fact that this is GPU-package power, not wall power.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Three things worth asking it</h3>
+      <p class="q">“Will NF4 actually save energy on an RTX 4090 for a 3B model at batch size 1?”</p>
+      <p class="q">“Is <code>load_in_8bit=True</code> a trap on Ada for a 0.5B model — and what should I set instead?”</p>
+      <p class="q">“The crossover sits around 3.7B for me. What would it take to re-measure it on an A800?”</p>
+      <p class="meta" style="margin:14px 0 0">Submit a measurement Watt does not have and it walks you through the required fields — your point can join the published dataset under CC BY 4.0.</p>
+    </div>
+
+    <div class="card">
+      <h3>Scope of every number</h3>
+      <p class="meta" style="margin:0"><b>GPU-package power</b> (NVML), not whole-system draw — no PSU losses, no CPU, no DRAM, no PUE or CO₂e. <b>Single-stream decode, batch 1.</b> Some anchors are <b>n = 1</b>; the main dataset is n = 2 (CV &lt; 2%). This is a <b>reference methodology, not a certified benchmark</b> — no LoadGen, no accuracy target, <b>not an MLPerf result</b>.</p>
+      <p class="meta" style="margin:10px 0 0">Stating these limits is the point. A number without its scope is not evidence. <a href="/method/#limits">How to disprove us →</a></p>
+    </div>
+
+    <footer>
+      Watt is an expert on the <b>WorkBuddy</b> marketplace, built on the EcoCompute dataset by
+      <a href="/about/">Hongping Zhang</a> (ORCID 0009-0000-2529-4613).
+      Dataset and DOIs: <a href="/cite/">cite page</a> ·
+      container: <a href="https://github.com/hongping-zh/ecocompute-mlcube">ecocompute-mlcube</a> ·
+      independent, self-funded research; not affiliated with any energy-consulting company.
+    </footer>
+  </div>
+
+<script>
+/* Same analytics hook used across the site: fires only if Plausible or GA4 is present. */
+function track(event, props){ try{
+  if(window.plausible) window.plausible(event,{props:props||{}});
+  if(window.gtag) window.gtag("event",event,props||{});
+}catch(e){} }
+
+(function(){
+  var q=new URLSearchParams(location.search), u={};
+  ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach(function(k){
+    if(q.get(k)) u[k]=q.get(k);
+  });
+  track("watt_page_view",u);
+
+  var btn=document.getElementById("copyWatt");
+  if(btn) btn.addEventListener("click",function(){
+    var b=this;
+    track("watt_copy_term",u);
+    var done=function(){ b.innerHTML="✓&nbsp; Copied — paste it in the expert center";
+      setTimeout(function(){ b.innerHTML="⧉&nbsp; Copy the search term"; },2600); };
+    var fail=function(){ b.innerHTML="Search: Watt"; };
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText("Watt").then(done).catch(fail);
+    } else { fail(); }
+  });
+})();
+</script>
+</body>
+</html>

@@ -317,6 +317,7 @@
     <div class="cta hero">
       <a id="containerCta" class="btn" href="/container/">▶&nbsp; Reproduce in 60s</a>
       <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
+      <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
       <a href="#evidence">29 measured anchors · RTX 4090 11 · A800 6 · RTX 4090D 4 · RTX 5090 4 · T4 4</a>
@@ -1599,7 +1600,7 @@ const zen=document.getElementById("zenodoCta");
 if(zen) zen.addEventListener("click",()=>track("cta_zenodo_click",ctx()));
 
 decorate(document.getElementById("repoCta"));
-[["containerCta","cta_container_click"],["repoCta","cta_container_repo_click"]].forEach(([id,ev])=>{
+[["containerCta","cta_container_click"],["repoCta","cta_container_repo_click"],["wattCta","cta_watt_click"]].forEach(([id,ev])=>{
   const el=document.getElementById(id);
   if(el) el.addEventListener("click",()=>track(ev,ctx()));
 });
