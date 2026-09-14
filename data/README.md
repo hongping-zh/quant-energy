@@ -134,6 +134,10 @@ Ten measured configurations (five model sizes × NF4/INT8) from one RTX 4090 (Ad
 report schema `ecocompute-energy/1.1`. Every row is `basis = measured`,
 `measurement_source = direct-nvml`, `n_trials = 1`.
 
+These rows carry no `thermal` block — the field was added later, in schema
+`ecocompute-energy/1.2` / protocol `ecocompute-protocol/1.1`. Their thermal state is therefore
+**unknown**, not cold, and they should not be differenced against a `--thermal_mode steady` run.
+
 What makes this session different from the July 2026 one already summarised in `build/measured.csv`:
 each row carries, **from the same run**, its own FP16 energy baseline *and* a teacher-forcing
 perplexity for both the quantized model and its FP16 baseline. The quality probe runs after the NVML

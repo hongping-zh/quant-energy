@@ -4,19 +4,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy</title>
+<title>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy</title>
 <meta name="description" content="An open, community-run micro-benchmark protocol for LLM quantization energy: a fixed measurement method, an MLCube-compatible container and a free-Colab notebook that emit the same schema-validated energy.json, and the seed data they produced on five GPU architectures. bitsandbytes INT8 never saved energy in any cell measured; NF4 changes sign with model size. 26 of 56 cells in the coverage matrix are still empty — contribute one." />
 <link rel="canonical" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
 <meta property="og:url" content="https://quantenergy.tech/" />
-<meta property="og:title" content="EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy" />
+<meta property="og:title" content="EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy" />
 <meta property="og:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta property="og:image" content="https://quantenergy.tech/preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy" />
+<meta name="twitter:title" content="EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy" />
 <meta name="twitter:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
 <meta name="author" content="Hongping Zhang" />
@@ -312,7 +312,7 @@
       <a class="aboutlink" href="/about/">About</a>
     </nav>
     <h1>EcoCompute<span class="dot">.</span></h1>
-    <p>EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
+    <p>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Nobody measures <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
     <p class="badge" style="margin-top:12px;line-height:1.65"><b>Seed data.</b> 42 measurements on five GPU architectures — RTX 4090, RTX 4090D, RTX 5090, A800, T4, plus one contributed RTX 3050 Ti — across FP16, bitsandbytes NF4, bitsandbytes INT8 and llama.cpp GGUF <code>Q4_0</code>. bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>: +87% mean on a 7B on RTX 4090 (n&nbsp;=&nbsp;5, range +50…+106%), +131% on A800. NF4 <b>changes sign with model size</b>: +29% at 1.5B on RTX 5090, −34% at 7B on RTX 4090. <b>This is not a conclusion. It is a starting point.</b> <a href="#matrix" style="color:var(--accent);text-decoration:underline">See the whole grid, empty cells included →</a></p>
     <div class="cta hero">
@@ -368,19 +368,31 @@
           most load-bearing claim on this site.</p>
         </div>
         <div>
-          <h3>Protocol v1.0 · 协议</h3>
+          <h3>Protocol v1.1 · 协议</h3>
           <p>What makes two submissions comparable:</p>
-          <p>Single-stream decode, <b>batch 1</b>, <b>256 generated tokens</b>, 10 decode iterations after 2 warmups,
+          <p>Single-stream decode, <b>batch 1</b>, <b>256 generated tokens</b>, 10 decode iterations after a warmup,
           greedy.<br>
           An <b>FP16 baseline measured in the same session on the same card</b> — a quantized run on its own cannot
           produce a ΔE%.<br>
           <b>NVML</b> GPU-package power at ≥&nbsp;10&nbsp;Hz, integrated over the decode loop. Not wall power.<br>
           Required in the report: GPU and architecture, driver, runtime/engine and version, model and
           <code>params_b</code>, precision, batch size, context length, J/token, tok/s, mean package watts —
-          schema <code>ecocompute-energy/1.1</code>.<br>
-          <b>v1.1, planned:</b> steady-state temperature at the start of each arm, enforced cooldown between arms,
-          randomised arm order, and <em>achieved</em> (not requested) sample rate — the corrections we had to make to
-          our own numbers, <a href="/blog/rerunning-a-number-you-do-not-trust.html">written up here</a>.</p>
+          schema <code>ecocompute-energy/1.2</code>.<br>
+          <b>New in v1.1:</b> the report now records the <b>thermal state</b> it was taken in — a <code>thermal</code>
+          block with the warmup count and the temperature at the start, at steady state, at the end and at peak —
+          plus the <em>achieved</em> (not requested) sample rate, an enforced cooldown between arms and randomised arm
+          order. These are the corrections we had to make to our own numbers,
+          <a href="/blog/rerunning-a-number-you-do-not-trust.html">written up here</a>.<br>
+          <b>Cold and steady are two different measurements.</b> The container defaults to
+          <code>--thermal_mode cold</code>: cool to idle, fixed warmup, measure. <code>--thermal_mode steady</code>
+          instead keeps warming, one pass per second, until three consecutive readings fall within 2&nbsp;°C, then
+          measures a hot card — which clocks lower and reports <em>more</em> energy per token. Compare within a mode,
+          not across one. A run that never settles says <code>steady_state_reached: false</code> rather than
+          pretending it did, and a card with no temperature sensor says <code>basis: "unavailable"</code> rather than
+          inventing a number.<br>
+          <b>The 42 seed measurements have no <code>thermal</code> block at all</b>, because it did not exist when they
+          were taken. That means their thermal state is <em>unknown</em>, not cold — which is the honest reason the
+          default stayed <code>cold</code> instead of switching under them.</p>
         </div>
         <div>
           <h3>What you get · 署名</h3>
@@ -442,7 +454,7 @@
           <p>Image <code>ghcr.io/hongping-zh/ecocompute-mlcube:latest</code>, rebuilt by CI on every merge to
           <code>main</code>. One INT8 run of TinyLlama-1.1B:</p>
           <p style="margin-top:8px"><code>docker run --rm --gpus all -v "$PWD/out:/workspace/outputs" ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 --precision INT8 --gpu_arch auto --output_dir /workspace/outputs</code></p>
-          <p style="margin-top:8px">Writes <code>out/energy.json</code>, schema <code>ecocompute-energy/1.1</code>, carrying
+          <p style="margin-top:8px">Writes <code>out/energy.json</code>, schema <code>ecocompute-energy/1.2</code>, carrying
           <code>results.vs_fp16_energy_pct</code>, <code>results.basis</code> and the <code>software</code> block that
           recorded the versions above. Drop it into <a href="/replications/">/replications/</a> to overlay it on the curve.</p>
         </div>

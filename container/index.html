@@ -166,6 +166,19 @@ cat workspace/outputs/energy.json</pre>
     <p class="meta">Swap the run without editing defaults by pointing at another parameters file:
     <code>mlcube run --mlcube=. --task=energy_estimate parameters_file=parameters/bert_bs32.yaml output_dir=outputs_bert/</code>.</p>
 
+    <h3>Cold or steady: which card you measured</h3>
+    <p>A GPU measured straight off idle and the same GPU measured after ten minutes of load are two different
+    machines: the hot one clocks lower and draws more, so it reports more energy per token. Since protocol
+    <code>ecocompute-protocol/1.1</code> the report says which one you measured.</p>
+<pre>--thermal_mode cold     # default: a fixed warmup, then measure — matches every published EcoCompute number
+--thermal_mode steady   # warm up until the die temperature stops rising, then measure</pre>
+    <p><code>steady</code> runs warmup passes one second apart until three consecutive temperature readings fall
+    within 2&nbsp;°C, then starts sampling; warmup energy is never counted in the result. If the budget runs out
+    first the report says <code>steady_state_reached: false</code> and keeps the temperatures it did observe, rather
+    than claiming a steady state it never reached. <b>The two modes are comparable within a mode and not across
+    one</b> — and the 42 seed measurements predate the field entirely, so their thermal state is unknown, not cold.
+    That is why the default stayed <code>cold</code>.</p>
+
     <h3>Compare against this site straight from the terminal</h3>
 <pre>python3 entrypoint.py energy_estimate \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
@@ -189,7 +202,8 @@ cat workspace/outputs/energy.json</pre>
       <tr><th>Field</th><th>Meaning</th></tr>
       <tr><td><code>system_under_test.gpu</code> / <code>.gpu_arch</code></td><td>Card and architecture class (<code>turing</code>, <code>ampere</code>, <code>ada</code>, <code>blackwell</code>) — selects which fitted curve your point is compared against</td></tr>
       <tr><td><code>workload.*</code></td><td><code>model_name</code>, <code>params_b</code>, <code>precision</code> (FP16 / NF4 / INT8, weight-only), <code>batch_size</code>, <code>context_length</code></td></tr>
-      <tr><td><code>measurement.*</code></td><td><code>method</code> (NVML on-device power sampling), <code>sample_rate_hz</code>, <code>tokens_per_run</code>, <code>iterations</code></td></tr>
+      <tr><td><code>measurement.*</code></td><td><code>method</code> (NVML on-device power sampling), <code>sample_rate_hz</code> (requested) and <code>achieved_sample_rate_hz</code> (what the loop managed), <code>tokens_per_run</code>, <code>iterations</code>, <code>thermal_mode</code></td></tr>
+      <tr><td><code>thermal.*</code></td><td>The thermal state the number was taken in: <code>warmup_iterations</code>, <code>gpu_temp_at_start_c</code>, <code>gpu_temp_steady_c</code>, <code>gpu_temp_end_c</code>, <code>gpu_temp_max_c</code>, <code>steady_state_reached</code>. <code>basis: "unavailable"</code> on cards whose driver reports no temperature — never a guessed number</td></tr>
       <tr><td><code>measurement_source</code></td><td>Where the numbers actually came from — a direct NVML run, or a named dataset fallback</td></tr>
       <tr><td><code>results.total_energy_joules</code>, <code>energy_per_token_mj</code>, <code>avg_power_watts</code>, <code>throughput_tokens_per_s</code></td><td>Integrated over the generation window, per configuration</td></tr>
       <tr><td><code>results.vs_fp16_energy_pct</code></td><td>Signed ΔE% against the same model's own FP16 run on the same GPU. <b>Negative = quantization saves energy</b> — this is the value plotted on the crossover curve</td></tr>
