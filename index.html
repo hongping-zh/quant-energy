@@ -4,19 +4,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quantization doesn't always save energy — measured, not modelled · EcoCompute</title>
-<meta name="description" content="Open reproducibility project measuring how LLM quantization affects inference energy per token: an MLCube-compatible container doing direct NVML power sampling, the datasets it produced, and an interactive tool built on 360+ real GPU measurements. NF4/INT8 can increase energy on small models and only saves above a crossover point — run the container and check us." />
+<title>EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy</title>
+<meta name="description" content="An open, community-run micro-benchmark protocol for LLM quantization energy: a fixed measurement method, an MLCube-compatible container and a free-Colab notebook that emit the same schema-validated energy.json, and the seed data they produced on five GPU architectures. bitsandbytes INT8 never saved energy in any cell measured; NF4 changes sign with model size. 26 of 56 cells in the coverage matrix are still empty — contribute one." />
 <link rel="canonical" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
 <meta property="og:url" content="https://quantenergy.tech/" />
-<meta property="og:title" content="Quantization doesn't always save energy — measured, not modelled · EcoCompute" />
+<meta property="og:title" content="EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy" />
 <meta property="og:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta property="og:image" content="https://quantenergy.tech/preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Quantization doesn't always save energy — measured, not modelled · EcoCompute" />
+<meta name="twitter:title" content="EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy" />
 <meta name="twitter:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
 <meta name="author" content="Hongping Zhang" />
@@ -312,11 +312,13 @@
       <a class="aboutlink" href="/about/">About</a>
     </nav>
     <h1>EcoCompute<span class="dot">.</span></h1>
-    <p>"Quantization doesn't always save energy. See for yourself."</p>
-    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. We tell you <em>whether</em> you should — and ship the container that lets you check us.</p>
+    <p>EcoCompute Protocol v1.0 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
+    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Nobody measures <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
+    <p class="badge" style="margin-top:12px;line-height:1.65"><b>Seed data.</b> 42 measurements on five GPU architectures — RTX 4090, RTX 4090D, RTX 5090, A800, T4, plus one contributed RTX 3050 Ti — across FP16, bitsandbytes NF4, bitsandbytes INT8 and llama.cpp GGUF <code>Q4_0</code>. bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>: +87% mean on a 7B on RTX 4090 (n&nbsp;=&nbsp;5, range +50…+106%), +131% on A800. NF4 <b>changes sign with model size</b>: +29% at 1.5B on RTX 5090, −34% at 7B on RTX 4090. <b>This is not a conclusion. It is a starting point.</b> <a href="#matrix" style="color:var(--accent);text-decoration:underline">See the whole grid, empty cells included →</a></p>
     <div class="cta hero">
-      <a id="containerCta" class="btn" href="/container/">▶&nbsp; Reproduce in 60s</a>
-      <a id="crossoverCta" class="btn" href="#cross">📊&nbsp; Explore the crossover</a>
+      <a id="contributeCta" class="btn" href="#protocol">🧪&nbsp; Contribute a data point · ~30 min</a>
+      <a id="crossoverCta" class="btn" href="#matrix">📊&nbsp; See the coverage matrix</a>
+      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Reproduce in 60s</a>
       <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
@@ -335,6 +337,64 @@
       <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
       <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
       <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
+    </div>
+
+    <div class="card" id="protocol" style="border-left:3px solid var(--accent);margin-top:20px">
+      <h2 style="margin:0 0 2px">Contribute a measurement · 贡献一个数据点</h2>
+      <p class="meta" style="margin:0 0 12px">One GPU, one model, about half an hour. You do not need a GPU of your own: a free Colab T4 is enough.</p>
+      <div class="stackgrid">
+        <div>
+          <h3>Three steps · 三步</h3>
+          <p><b>1 ·</b> Pick a configuration nobody has measured — the
+          <a href="#matrix">coverage matrix</a> shows which ones (<b>26 of 56 cells</b> have data today).<br>
+          <b>2 ·</b> Run it. Either the
+          <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+          (no card needed) or the <a href="/container/">container</a> — both write the same
+          <code>energy.json</code>.<br>
+          <b>3 ·</b> Drop that file on <a href="/replications/#submit">/replications/</a>. It is parsed
+          <b>in your browser</b>, drawn against the published curve, and one button copies the submission and opens a
+          GitHub issue for you to send. There is no upload endpoint; nothing is submitted behind your back.</p>
+        </div>
+        <div>
+          <h3>Why we need you · 现在缺什么</h3>
+          <p>These are the gaps that could <b>change what this site says</b>, not just add rows:</p>
+          <p><b>Runtimes.</b> Almost everything here is bitsandbytes. llama.cpp has exactly <b>one</b> cell (8B
+          <code>Q4_0</code>, −63%) — the largest effect on the whole grid, resting on a single point. vLLM,
+          TensorRT-LLM, SGLang: <b>zero</b> measurements.<br>
+          <b>Quant formats.</b> <code>Q4_K_M</code>, GPTQ, AWQ, FP8 on Ada: none measured under this protocol.<br>
+          <b>Batch size.</b> Every point here is batch 1. Leaderboards that disagree with us run large batches.<br>
+          <b>Cards.</b> No 3090, A100, H100, L4, and no AMD at all.<br>
+          <b>Quality.</b> Only 13 of 42 rows carry a paired perplexity, and "energy ranking ≠ quality ranking" is the
+          most load-bearing claim on this site.</p>
+        </div>
+        <div>
+          <h3>Protocol v1.0 · 协议</h3>
+          <p>What makes two submissions comparable:</p>
+          <p>Single-stream decode, <b>batch 1</b>, <b>256 generated tokens</b>, 10 decode iterations after 2 warmups,
+          greedy.<br>
+          An <b>FP16 baseline measured in the same session on the same card</b> — a quantized run on its own cannot
+          produce a ΔE%.<br>
+          <b>NVML</b> GPU-package power at ≥&nbsp;10&nbsp;Hz, integrated over the decode loop. Not wall power.<br>
+          Required in the report: GPU and architecture, driver, runtime/engine and version, model and
+          <code>params_b</code>, precision, batch size, context length, J/token, tok/s, mean package watts —
+          schema <code>ecocompute-energy/1.1</code>.<br>
+          <b>v1.1, planned:</b> steady-state temperature at the start of each arm, enforced cooldown between arms,
+          randomised arm order, and <em>achieved</em> (not requested) sample rate — the corrections we had to make to
+          our own numbers, <a href="/blog/rerunning-a-number-you-do-not-trust.html">written up here</a>.</p>
+        </div>
+        <div>
+          <h3>What you get · 署名</h3>
+          <p>Stated as what actually happens today, not as a promise we cannot keep:</p>
+          <p>Every accepted submission is published in <a href="/replications/">/replications/</a> <b>credited by your
+          handle</b>, and your point is drawn on every chart it belongs on — including when it contradicts us. A run
+          that breaks the curve is published as prominently as one that confirms it.<br>
+          The first measurement on a GPU architecture not yet in the set is labelled as such.<br>
+          Accepted points go into the <b>next Zenodo release</b> of the dataset, which carries its own DOI and names
+          its contributors (current release: <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>).<br>
+          Submissions are reviewed by a human for schema and plausibility — <b>never for result</b> — so publication is
+          not instant and is not automatic.</p>
+        </div>
+      </div>
     </div>
 
     <div class="card" id="repro" style="border-left:3px solid var(--accent);margin-top:20px">
