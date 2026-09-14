@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Variable matrix — precision × batch size, bitsandbytes · EcoCompute</title>
+<meta name="description" content="Which quantization precision and batch size combinations anyone has actually measured. Every published EcoCompute number is batch 1, so twelve of fifteen cells are empty — and an empty cell is an invitation, not a gap in the write-up." />
+<link rel="canonical" href="https://quantenergy.tech/variables/" />
+<meta property="og:title" content="Variable matrix — what has been measured, and what nobody has measured yet" />
+<meta property="og:description" content="Precision × batch size under the bitsandbytes engine. Cells carry a real measurement count, date and contributor; empty cells are empty because nobody has run them." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://quantenergy.tech/variables/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+  h1{font-size:30px;line-height:1.22;margin:0 0 10px}
+  .sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+  h2{font-size:20px;margin:36px 0 6px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .stat{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px}
+  .stat .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+  .stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:18px 0 10px}
+  .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+  .grid{display:grid;grid-template-columns:74px repeat(5,1fr);gap:8px}
+  .colh,.rowh{font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center}
+  .rowh{background:var(--panel);border:1px solid var(--line);border-radius:8px}
+  .cell{border-radius:10px;padding:10px 8px;min-height:104px;display:flex;flex-direction:column;justify-content:space-between;text-align:center;border:1px solid var(--line);color:var(--txt)}
+  .cell:hover{text-decoration:none;border-color:var(--accent)}
+  .cell .count{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .cell .cmeta{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+  .nw{white-space:nowrap}
+  .cell .action{font-size:11px;font-weight:600;margin-top:6px}
+  .cell.empty{background:rgba(255,255,255,.02);border-style:dashed}
+  .cell.empty .count{color:#3d4a75}
+  .cell.empty .action{color:var(--accent)}
+  .cell.partial{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.45)}
+  .cell.full{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.5)}
+  .cell.full .action{color:var(--good)}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:22px 0}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 8px;align-items:center}
+  .btn{display:inline-block;background:var(--accent);color:#06223a;font-weight:700;font-size:14px;border-radius:8px;padding:10px 16px}
+  .btn:hover{text-decoration:none;filter:brightness(1.08)}
+  .ghost{display:inline-block;border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:14px;border-radius:8px;padding:10px 16px;background:var(--panel)}
+  .ghost:hover{text-decoration:none;border-color:var(--accent)}
+  footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  @media(max-width:640px){.grid{grid-template-columns:56px repeat(5,1fr);gap:5px}.cell{min-height:88px;padding:7px 4px}.cell .count{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Eco<span>Compute</span> · Variable matrix</div>
+    <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/replications/">Replications</a><a href="/method/">Methodology</a><a href="/cite/">Cite</a></nav>
+  </div>
+
+  <h1>12 of 15 cells have never been measured by anyone.</h1>
+  <p class="sub">Quantization precision × batch size, bitsandbytes engine. Generated from the published data, not hand-maintained.</p>
+
+  <p>Every EcoCompute number so far was taken at <b>batch 1</b>. That is not a rounding detail: batch size changes how
+  busy the GPU is between decode steps, and utilisation is the thing that decides whether a quantized kernel pays for
+  itself. So the whole right-hand side of this grid is <em>unknown</em> — including to us.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="v">3/15</div><div class="k">cells with data</div></div>
+    <div class="stat"><div class="v">3</div><div class="k">saturated (≥ 3 points)</div></div>
+    <div class="stat"><div class="v">144</div><div class="k">measurements, baselines included</div></div>
+    <div class="stat"><div class="v">2</div><div class="k">contributors</div></div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:rgba(255,255,255,.04);border:1px dashed #22305a"></i>no data</span>
+    <span><i style="background:rgba(56,189,248,.35)"></i>1–2 points</span>
+    <span><i style="background:rgba(16,185,129,.45)"></i>≥ 3 points (saturated)</span>
+  </div>
+
+  <div class="grid">
+    <div class="grid">
+    <div></div>
+    <div class="colh">batch 1</div>
+    <div class="colh">batch 4</div>
+    <div class="colh">batch 8</div>
+    <div class="colh">batch 16</div>
+    <div class="colh">batch 32</div>
+    <div class="rowh">FP16</div>
+    <a class="cell full" href="/replications/" title="FP16 at batch 1: 72 measurements, most recent 2026-08-23, by @gkgoing, @hongping-zh"><div class="count">72</div><div class="cmeta"><span class="nw">latest 2026-08-23</span><br>@gkgoing, @hongping‑zh</div><div class="action">saturated ✓</div></a>
+    <a class="cell empty" href="/container/" title="FP16 at batch 4: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="FP16 at batch 8: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="FP16 at batch 16: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="FP16 at batch 32: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <div class="rowh">NF4</div>
+    <a class="cell full" href="/replications/" title="NF4 at batch 1: 40 measurements, most recent 2026-08-23, by @gkgoing, @hongping-zh"><div class="count">40</div><div class="cmeta"><span class="nw">latest 2026-08-23</span><br>@gkgoing, @hongping‑zh</div><div class="action">saturated ✓</div></a>
+    <a class="cell empty" href="/container/" title="NF4 at batch 4: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="NF4 at batch 8: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="NF4 at batch 16: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="NF4 at batch 32: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <div class="rowh">INT8</div>
+    <a class="cell full" href="/replications/" title="INT8 at batch 1: 32 measurements, most recent 2026-08-20, by @hongping-zh"><div class="count">32</div><div class="cmeta"><span class="nw">latest 2026-08-20</span><br>@hongping‑zh</div><div class="action">saturated ✓</div></a>
+    <a class="cell empty" href="/container/" title="INT8 at batch 4: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="INT8 at batch 8: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="INT8 at batch 16: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    <a class="cell empty" href="/container/" title="INT8 at batch 32: no measurement exists"><div class="count">0</div><div class="cmeta">never measured</div><div class="action">Measure it ▸</div></a>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:14px">Counts are measurements, not sessions: a cell measured three times on the same
+  card reads 3, and a configuration repeated five times contributes 5. FP16 is dense because every quantized run also
+  measures its own FP16 baseline on the same card, and each baseline counts in its own right: 72 quantized
+  measurements plus 72 baselines. The “42 rows” quoted elsewhere on this site counts distinct
+  <em>configurations</em>, not repeats — same data, different unit. A quantized number with no same-session baseline
+  cannot produce a ΔE% and is not counted at all. Contributors so far: @gkgoing, @hongping-zh.</p>
+
+  <div class="callout">
+    <b>Why ≥ 3 and not 1?</b> One measurement is an anecdote about a card on a particular afternoon. Our own
+    RTX 4090 INT8 cell moved by 12.5 percentage points across three replicates of the <em>same</em> configuration, which
+    is exactly why a single point does not close a cell.
+  </div>
+
+  <h2>The fastest cell to fill</h2>
+  <p>Any of the four batch-4 cells. They need a card you already have and one parameter change, and they are the
+  boundary between "we measured batch 1" and "we know what batch size does" — which is also the gap between this
+  dataset and the large-batch datacentre leaderboards it cannot currently be compared with.</p>
+
+  <div class="cta">
+    <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">No GPU? Run it on a free Colab T4 →</a>
+    <a class="ghost" href="/container/">Run the container →</a>
+  </div>
+
+  <p class="sub">A submission counts once it carries an FP16 baseline from the same session on the same card, and a
+  schema-valid <code>energy.json</code>. Disagreements with the published curve are published on the same page as
+  confirmations.</p>
+
+  <footer>
+    Generated by <code>build/make_variable_matrix.py</code> from the published data — no cell is hand-entered.
+    Methodology: direct NVML GPU-package power sampling, 256 tokens/run, warmup + repeated decode iterations,
+    <b>not wall power</b>. Supplemental energy methodology, not a certified MLPerf result; MLCommons, MLPerf and
+    MLCube are trademarks of MLCommons Association, used nominatively.
+    <br>Other cut of the same data: <a href="/#matrix">quantization method × model size</a> ·
+    contribute → <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a>
+  </footer>
+</div>
+</body>
+</html>
