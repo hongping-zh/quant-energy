@@ -315,7 +315,7 @@
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Nobody measures <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
-    <p class="badge" style="margin-top:12px;line-height:1.65"><b>Seed data.</b> 42 measurements on five GPU architectures — RTX 4090, RTX 4090D, RTX 5090, A800, T4, plus one contributed RTX 3050 Ti — across FP16, bitsandbytes NF4, bitsandbytes INT8 and llama.cpp GGUF <code>Q4_0</code>. bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>: +87% mean on a 7B on RTX 4090 (n&nbsp;=&nbsp;5, range +50…+106%), +131% on A800. NF4 <b>changes sign with model size</b>: +29% at 1.5B on RTX 5090, −34% at 7B on RTX 4090. <b>This is not a conclusion. It is a starting point.</b> <a href="#matrix" style="color:var(--accent);text-decoration:underline">See the whole grid, empty cells included →</a></p>
+    <p class="badge" style="margin-top:12px;line-height:1.65"><b>Seed data.</b> 42 measurements on five GPU architectures — RTX 4090, RTX 4090D, RTX 5090, A800, T4, plus one contributed RTX 3050 Ti — across FP16, bitsandbytes NF4, bitsandbytes INT8 and llama.cpp GGUF <code>Q4_0</code>. bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>: +87% mean on a 7B on RTX 4090 (n&nbsp;=&nbsp;5, range +50…+106%), +131% on A800. NF4 <b>changes sign with model size</b>: +29% at 1.5B on RTX 5090, −34% at 7B on RTX 4090. <b>This is not a conclusion. It is a starting point.</b> <a href="#matrix" style="color:var(--accent);text-decoration:underline">See the whole grid, empty cells included →</a><br><b>New, 2026-09-20:</b> re-measuring the same RTX 5090 on a current stack moved its NF4 crossover from ≈5B to ≈1.8B — 22 runs, n&nbsp;=&nbsp;2 across a restart, archived separately and not pooled into the counts above. <a href="#rtx5090-2026-09" style="color:var(--accent);text-decoration:underline">What changed and what it means →</a></p>
     <div class="cta hero">
       <a id="contributeCta" class="btn" href="#protocol">🧪&nbsp; Contribute a data point · ~30 min</a>
       <a id="crossoverCta" class="btn" href="#matrix">📊&nbsp; See the coverage matrix</a>
@@ -606,6 +606,64 @@
     </div>
   </div>
 
+  <div class="card" id="rtx5090-2026-09">
+    <h2>New · 2026-09-20 · The crossover moved, and the card didn't</h2>
+    <p class="meta" style="margin:0 0 14px;line-height:1.6">
+      The break-even size where NF4 stops costing energy and starts saving it is the single number this site is most
+      often asked for. We re-measured it on the <b>same RTX 5090</b> that produced our Blackwell anchors, months later
+      on a current software stack (<b>bitsandbytes 0.50.2</b>, torch 2.14, CUDA 13.0, driver 580.76.05) — and it moved
+      from <b>≈5B to ≈1.8B</b>.
+      Nothing about the hardware changed. <b>A crossover is a property of the software stack, not of the
+      architecture</b>, and every break-even figure on this site — ours included — carries an implicit "with the
+      libraries we had that month".
+    </p>
+    <a href="assets/rtx5090-crossover-moved.png" target="_blank" rel="noopener" title="Open full size">
+      <img src="assets/rtx5090-crossover-moved.png" loading="lazy"
+           alt="NF4 energy versus FP16 on one RTX 5090 at 0.5B to 7B, measured on two software stacks: the v1.1.0 dataset curve crosses zero near 5B, the 2026-09 bitsandbytes 0.50.2 session crosses near 1.8B."
+           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
+    <p class="chartnote" style="margin-top:14px">
+      Five models, 0.5B–7B, NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations,
+      NVML at 10&nbsp;Hz — run <b>twice with a full instance restart in between</b>, so every cell is n&nbsp;=&nbsp;2
+      across restarts. The two sessions agree to <b>2.1 points on average and 5.2 at worst</b>; that spread is the
+      shaded band, and it is why <b>+0.6% and +1.9% at 1.1–1.5B read as "indistinguishable from FP16"</b> rather than
+      as real numbers. <b>This is not a controlled experiment</b>: driver, CUDA, torch and bitsandbytes all moved between
+      the two curves and only the September session records its library versions, so the claim is that the crossover
+      shifted with the stack — not that one library release caused it.
+      <b>INT8 remains positive at every size</b> on the newest consumer architecture with a current bitsandbytes
+      (+55% at 7B, +256% at 0.5B), for the same reason as everywhere else here: 14–32 tok/s against NF4's 49–79, at
+      <em>lower</em> package power.
+    </p>
+
+    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">FP8 on Blackwell · two code paths, both more expensive</h3>
+    <p class="meta" style="margin:6px 0 0">One RTX 5090 · torchao 0.18.0 · batch 1, 256 tokens · n&nbsp;=&nbsp;3 per cell, one session, no restart repeat · generation-only window (model load and <code>quantize_()</code> excluded).</p>
+    <a href="assets/rtx5090-fp8-two-paths.png" target="_blank" rel="noopener" title="Open full size" style="display:block;margin-top:12px">
+      <img src="assets/rtx5090-fp8-two-paths.png" loading="lazy"
+           alt="torchao FP8 on an RTX 5090: weight-only FP8 rises from +187% to +815% energy versus FP16 with model size while dynamic activation-plus-weight FP8 falls from +323% to +82%; weight-only also draws more package power than FP16 at every size."
+           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
+    <p class="chartnote" style="margin-top:14px">
+      Blackwell has FP8 tensor cores, and neither torchao FP8 path saved energy at any size we measured. They fail in
+      <b>opposite directions</b>: weight-only degrades with scale (+187% → +815%) while dynamic activation+weight
+      improves with it (+323% → +82%), which is what you expect from dequantization overhead that scales with weights
+      versus a fixed per-activation cost. Weight-only also draws <b>more</b> power than FP16 at every size while
+      decoding up to 7× slower. This is a statement about <em>these kernels at batch 1</em> — the regime FP8 is least
+      suited to — and a separate script from the container above, with its own baselines: <b>do not compare these
+      percentages against the NF4/INT8 numbers</b>, whose measurement window is wider.
+      The 1.1B weight-only cell stopped after 177 of 768 tokens and is asterisked for that reason.
+    </p>
+    <p class="chartnote">
+      Per-run CSVs, the A-vs-B agreement table and both build scripts are in
+      <a href="https://github.com/hongping-zh/quant-energy/tree/main/data" target="_blank" rel="noopener">data/</a>
+      (<code>rtx5090_bnb_2026-09-20.csv</code>, <code>rtx5090_fp8_torchao_2026-09-20.csv</code>); raw
+      <code>energy.json</code> reports, the environment snapshot and the FP8 script are archived at
+      <a href="https://doi.org/10.5281/zenodo.22855133" target="_blank" rel="noopener">DOI 10.5281/zenodo.22855133</a>,
+      CC&nbsp;BY&nbsp;4.0. Four reports in that archive named a TinyLlama repo id that does not resolve; the container
+      labelled them <code>basis: interpolated</code> and they are excluded here — published so the failure is
+      auditable, not counted as measurements.
+      <b>These rows are a supplementary session, not folded into the fitted curves below</b>, which still describe the
+      0.4x-era stack; pooling the two would produce a crossover neither session measured. Not an MLPerf result.
+    </p>
+  </div>
+
   <div class="card" id="evidence">
     <h2>Latest run · RTX 4090 (Ada) · measured in our own open container</h2>
     <p class="meta" style="margin:0 0 14px;line-height:1.6">
@@ -651,8 +709,10 @@
       <b>+138%</b> against the July run's +146% — two single trials 8&nbsp;points apart, on different software
       versions. Both are in <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a> as separate n&nbsp;=&nbsp;1 anchors; neither is a replication of the other.
       Also note:
-      INT8 was measured on Ada and Ampere only, H100 borrows the Ampere curve (estimated, not measured), and T4 and
-      RTX&nbsp;5090 have no INT8 curve at all.
+      the fitted INT8 curves cover Ada and Ampere only, H100 borrows the Ampere curve (estimated, not measured), and
+      T4 and RTX&nbsp;5090 have none. RTX&nbsp;5090 INT8 <em>has</em> since been measured — ten runs, all positive,
+      +55% to +259% — in the <a href="#rtx5090-2026-09">2026-09-20 session above</a>, which is a different software
+      stack and is deliberately not folded into these fits.
     </p>
     <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">Honest scope · what this run does and does not support</h3>
     <table class="scope">

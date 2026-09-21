@@ -55,7 +55,7 @@
     </div>
 
     <h1>Which EcoCompute artifact should I cite?</h1>
-    <p class="sub">There are three artifacts and they do three different jobs. This page is the single authoritative list — what each one is, how they relate, and which DOI to use.</p>
+    <p class="sub">There is one paper, one main dataset, and one record per single-platform session. This page is the single authoritative list — what each one is, how they relate, and which DOI to use.</p>
 
     <div class="callout">
       <b>The rule of thumb.</b> Cite the <b>paper</b> for the argument or the method, the <b>main dataset v1.1.0</b> for
@@ -99,6 +99,16 @@
         <td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td>
       </tr>
       <tr>
+        <td><b>RTX 5090 (Blackwell) four-precision session</b></td>
+        <td>Anything from the <b>2026-09-19/20</b> session: NF4/INT8 repeated across a full instance restart
+        (n&nbsp;=&nbsp;2 per cell) and the separate torchao FP8 track (n&nbsp;=&nbsp;3). It is a <b>different software
+        stack</b> from v1.1.0's rows for the same card — bitsandbytes 0.50.2, torch 2.14.0, CUDA 13.0, driver
+        580.76.05 — and the NF4 crossover on this card sits near 1.8B in it against ≈5B in v1.1.0. Cite it for that
+        comparison and never pool the two.</td>
+        <td><a href="https://doi.org/10.5281/zenodo.22855132" target="_blank" rel="noopener">10.5281/zenodo.22855132</a></td>
+        <td><a href="https://doi.org/10.5281/zenodo.22855133" target="_blank" rel="noopener">10.5281/zenodo.22855133</a></td>
+      </tr>
+      <tr>
         <td><b>Dataset v1</b> <span class="pill old">superseded</span></td>
         <td>Nothing — kept only so old references resolve</td>
         <td><a href="https://doi.org/10.5281/zenodo.18900288" target="_blank" rel="noopener">10.5281/zenodo.18900288</a></td>
@@ -124,7 +134,14 @@
                               INT8 penalty 2.0-2.5x the July session's -> do not pool
           session 2026-08-20: the 5 INT8 configurations re-run 3x each, n=3
                               CV of the energy delta 0.6-3.9%, i.e. 30-50x smaller than that gap
-          supersedes  21528102 -> 21528103 (its vs_fp16_pct column contradicted its energy column)</pre>
+          supersedes  21528102 -> 21528103 (its vs_fp16_pct column contradicted its energy column)
+   |
+   +-- RTX 5090 (Blackwell) 4-precision (22855132 -> 22855133)  ..  SUPPLEMENTS v1.1.0, same card, newer stack
+          session 2026-09-19/20, 0.5B-7B, container NF4/INT8 run twice across a full restart (n=2)
+                              |A-B| mean 2.1 pp, max 5.2 pp
+          plus a standalone torchao FP8 track, n=3, generation-only window -- not comparable to the above
+          v1.1.0 already has RTX 5090 NF4 rows; this session's stack moves the crossover ~5B -> ~1.8B
+                              -> a crossover belongs to a software stack, not to a card; do not pool</pre>
     <p>Concretely: <b>supplements</b> means the RTX 4090 run adds coverage v1.1.0 does not have (INT8 on Ada, and 7B
     on Ada) at a lower repeat count, so it is a deep dive rather than a replacement — and if you quote a
     figure from the RTX 4090 column, cite it; otherwise cite v1.1.0. <b>Supersedes</b> means v1 should no longer be
@@ -206,6 +223,31 @@
       always resolves to the latest version of this record.</p>
     </div>
 
+    <div class="card">
+      <h3>5 · RTX 5090 (Blackwell) four-precision session — the same card on a newer stack</h3>
+      <p class="kv"><b>Published</b> 2026-09-20 (measured 2026-09-19/20) · CC BY 4.0</p>
+      <p class="kv"><b>Contents</b> one RTX 5090 (32&nbsp;GB, 575&nbsp;W, driver 580.76.05), five models 0.5B–7B. Container track: NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations, run twice with a full instance restart between sessions (n&nbsp;=&nbsp;2 per cell; |A&nbsp;−&nbsp;B| mean 2.1&nbsp;pp, max 5.2&nbsp;pp). Standalone track: torchao 0.18.0 FP8 weight-only and FP8 dynamic activation+weight, n&nbsp;=&nbsp;3, generation-only window. Raw reports, both scripts and the environment snapshot included; four reports that fell back to interpolation are shipped labelled as such and are not measurements.</p>
+      <p class="kv"><b>Cite it for</b> RTX 5090 INT8, the FP8 rows, and the claim that the NF4 crossover moves with the software stack. Not an MLPerf result, and not pooled with v1.1.0's rows for the same card.</p>
+<pre>@dataset{zhang_ecocompute_rtx5090_2026,
+  title     = {EcoCompute: LLM Inference Energy on NVIDIA RTX 5090 (Blackwell)
+               --- FP16/NF4/INT8/FP8, 0.5B--7B, direct NVML, with
+               cross-restart repeatability},
+  author    = {Zhang, Hongping},
+  year      = {2026},
+  publisher = {Zenodo},
+  note      = {Supplementary single-platform session to dataset v1.1.0
+               (10.5281/zenodo.19647290); bitsandbytes 0.50.2 NF4/INT8 repeated
+               across a full instance restart (n=2, |A-B| max 5.2 pp) plus a
+               separate torchao 0.18.0 FP8 track (n=3, generation-only window)},
+  doi       = {10.5281/zenodo.22855133},
+  url       = {https://doi.org/10.5281/zenodo.22855133}
+}</pre>
+      <p class="meta">The concept DOI <a href="https://doi.org/10.5281/zenodo.22855132" target="_blank" rel="noopener">10.5281/zenodo.22855132</a>
+      always resolves to the latest version of this record. The README inside the archive carries a
+      <code>10.5281/zenodo.XXXXXXX</code> placeholder in its BibTeX block, minted after the file was written — the
+      block above is the correct one.</p>
+    </div>
+
     <h2>Software, not data</h2>
     <ul>
       <li><a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — the measurement container that produced the RTX 4090 run (<a href="/container/">what it does and how to run it</a>)</li>
@@ -237,6 +279,7 @@
       <tr><td>Main dataset (v1.1.0)</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0)</td></tr>
       <tr><td>RTX 4090 (Ada) deep dive</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (CC BY 4.0)</td></tr>
       <tr><td>llama.cpp GGUF F16 vs Q4_0 (45 runs)</td><td><a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a> (CC BY 4.0)</td></tr>
+      <tr><td>RTX 5090 (Blackwell) four-precision session</td><td><a href="https://doi.org/10.5281/zenodo.22855133" target="_blank" rel="noopener">10.5281/zenodo.22855133</a> (CC BY 4.0)</td></tr>
       <tr><td>Preprint</td><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a></td></tr>
       <tr><td>Preview image</td><td><a href="/preview.png">quantenergy.tech/preview.png</a> (1200×630)</td></tr>
       <tr><td>Maintainer / contact</td><td>Hongping Zhang — <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">hongping-zh.github.io</a> · ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">open an issue</a></td></tr>
