@@ -244,6 +244,7 @@ class PowerSampler(threading.Thread):
         self.requested_hz = hz
         self.period = 1.0 / hz
         self.samples = []          # (t_seconds, watts)
+        self.temps = []            # degrees C, empty on cards that do not report it
         self.dropped = 0
         self.error = None
         self._stop_evt = threading.Event()
@@ -256,6 +257,11 @@ class PowerSampler(threading.Thread):
                 mw = self._pynvml.nvmlDeviceGetPowerUsage(self.handle)
                 self.samples.append((time.time() - t0, mw / 1000.0))
                 consecutive = 0
+                try:
+                    self.temps.append(float(self._pynvml.nvmlDeviceGetTemperature(
+                        self.handle, self._pynvml.NVML_TEMPERATURE_GPU)))
+                except Exception:
+                    pass
             except Exception as exc:
                 self.dropped += 1
                 consecutive += 1
@@ -454,11 +460,17 @@ def measure_once(model_name, precision, idle_watts, idle_temp_c, batch_size=1, t
             max_new_tokens=tokens, min_new_tokens=tokens, do_sample=False, pad_token_id=tok.pad_token_id
         )
 
+        # Warmup, and a record of the thermal state it left the card in. This notebook
+        # always cools to idle first (see `cooldown` above), so it measures a cold card
+        # on purpose — `thermal_mode` names that choice instead of leaving the reader to
+        # guess, because the same card measured hot reports more energy per token.
         print(f"  warming up ({warmup} runs)...")
+        _, temp_at_start = read_power_temp(handle)
         with torch.no_grad():
             for _ in range(warmup):
                 model.generate(**enc, **gen_kwargs)
         torch.cuda.synchronize()
+        _, temp_after_warmup = read_power_temp(handle)
 
         print(f"  measuring ({iterations} decode iterations, {hz} Hz requested)...")
         sampler = PowerSampler(handle, hz=hz)
@@ -495,6 +507,20 @@ def measure_once(model_name, precision, idle_watts, idle_temp_c, batch_size=1, t
             "sample_rate_hz_achieved": round(sampler.achieved_hz(), 1),
             "nvml_update_hz_effective": round(sampler.nvml_update_hz(), 1),
             "cooldown_before_run": cool,
+            "thermal": {
+                "basis": "measured" if temp_at_start is not None else "unavailable",
+                "warmup_iterations": warmup,
+                "gpu_temp_at_start_c": temp_at_start,
+                "gpu_temp_steady_c": temp_after_warmup,
+                "gpu_temp_end_c": read_power_temp(handle)[1],
+                "gpu_temp_max_c": max(sampler.temps) if sampler.temps else None,
+                # A fixed warmup makes no steady-state claim; null means unknown, not false.
+                "steady_state_reached": None,
+                "note": (
+                    "thermal_mode=cold: fixed warmup from an idle start, no steady-state "
+                    "wait. Do not difference against a steady-state run."
+                ),
+            },
         }
     finally:
         try:
@@ -642,7 +668,8 @@ if not _q["cooldown_before_run"]["converged"]:
 # ── energy.json, in the container's schema ──
 
 report = {
-    "schema_version": "ecocompute-energy/1.1",
+    "schema_version": "ecocompute-energy/1.2",
+    "protocol_version": "ecocompute-protocol/1.1",
     "benchmark": "ecocompute-energy-methodology",
     "follows_mlcommons_energy_reporting_conventions": True,
     "certified_benchmark_result": False,
@@ -680,10 +707,19 @@ report = {
         "tokens_per_run": 256,
         "iterations": 10,
         "warmup": 2,
+        "thermal_mode": "cold",
+        "thermal_mode_note": (
+            "cold: each arm starts from a cooled-to-idle card and a fixed warmup. The "
+            "container's --thermal_mode steady instead warms until the temperature stops "
+            "rising; the two report different energy per token on the same card and are "
+            "comparable within a mode, not across one."
+        ),
+        "achieved_sample_rate_hz": _q["sample_rate_hz_achieved"],
         "iterations_note": "Decode iterations within one run; this is n=1.",
         "arm_order": list(ARMS),
         "arm_order_note": "Randomized per session; both arms are preceded by a cooldown to idle.",
         "cooldown": {arm: r["cooldown_before_run"] for arm, r in results.items()},
+        "thermal_per_arm": {arm: r["thermal"] for arm, r in results.items()},
         "integration_note": (
             "Energy is the trapezoidal integral of sampled power. On RTX 4090 the GPU hardware "
             "energy counter read on average 14.9% higher (2.5-31.8%) than integrating the same "
@@ -691,6 +727,9 @@ report = {
         ),
     },
     "software": collect_software(),
+    # Top-level `thermal` describes the measured arm, matching where the container puts
+    # it; measurement.thermal_per_arm keeps the baseline's own state alongside it.
+    "thermal": _q["thermal"],
     "measurement_source": "direct-nvml",
     "results": {
         "total_energy_joules": _q["total_energy_joules"],

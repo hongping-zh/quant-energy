@@ -91,10 +91,15 @@
     <h2>Nothing we own behaves like this at 1.1B</h2>
     <p>TinyLlama-1.1B in NF4 is the single configuration we have measured on the most cards. On every
     one of them, quantizing it <em>costs</em> energy:</p>
+    <p class="meta"><strong>Update, 2026-09-20:</strong> no longer on every one of them. Re-measuring the RTX 5090
+    on a current stack (bitsandbytes 0.50.2) puts this cell at <strong>−0.4% / +1.5%</strong> across two
+    sessions — indistinguishable from FP16, not a penalty. Row added below; the rest of the table is unchanged
+    and the argument this post makes about the laptop still stands, since −16.2% is outside that band.</p>
     <table>
       <tr><th>Card</th><th>ΔE vs FP16 at 1.1B, NF4</th><th>NF4 energy</th><th>n</th></tr>
       <tr><td>RTX 4090D (Ada)</td><td class="num pos">+33.4%</td><td class="num">2134 mJ/token</td><td class="num">2</td></tr>
       <tr><td>RTX 5090 (Blackwell)</td><td class="num pos">+26.5%</td><td class="num">2098 mJ/token</td><td class="num">2</td></tr>
+      <tr><td>RTX 5090 (Blackwell, <a href="/#rtx5090-2026-09">20 Sep session</a>, bitsandbytes 0.50.2)</td><td class="num">−0.4% / +1.5%</td><td class="num">1548 / 1595 mJ/token</td><td class="num">2</td></tr>
       <tr><td>RTX 4090 (Ada, July)</td><td class="num pos">+16.3%</td><td class="num">1884 mJ/token</td><td class="num">1</td></tr>
       <tr><td>RTX 4090 (Ada, 19 Aug session)</td><td class="num pos">+5.5%</td><td class="num">1696 mJ/token</td><td class="num">1</td></tr>
       <tr><td>T4 (Turing)</td><td class="num pos">+4.6%</td><td class="num">4445 mJ/token</td><td class="num">2</td></tr>
