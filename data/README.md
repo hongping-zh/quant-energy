@@ -47,12 +47,19 @@ figures with `python3 build/make_rtx5090_figures.py`. Archived at
   Across the ten bitsandbytes cells |A − B| averages 2.1 pp and peaks at 5.2 pp (INT8 3B); every
   NF4 cell agrees within 1.9 pp. That is the uncertainty to attach to any single cell here, and it
   is why **+1.0 % and −0.4 % at 1.1–1.5B mean "indistinguishable from FP16", not "a small saving"**.
+  Split by precision, the same repeats give a per-precision noise floor: **NF4 |A − B| averages
+  1.1 pp; INT8 averages 3.1 pp and peaks at 5.2 pp (3B).** Any future INT8 comparison on this
+  protocol has to clear ~3 points before it means anything.
 - **The NF4 crossover on this card moved, and the card did not.** The 2026-01 rows for the same GPU
   in `build/measured.csv` cross zero near 5B; these cross near 1.8B
   (`assets/rtx5090-crossover-moved.png`). The two sessions differ in driver, CUDA, torch *and*
   bitsandbytes (0.50.2 here) all at once, so the honest claim is that **the crossover is a property
   of the software stack, not of the architecture** — not that a specific bitsandbytes release
-  caused a specific shift. Do not average the two sessions together.
+  caused a specific shift. Do not average the two sessions together. **The shift is ~20× the
+  restart noise**: across the four sizes both sessions measured (1.1–7B), the stack-to-stack gap
+  averages **23.3 pp** (2026-01 vs the A/B mean here), while the within-stack A/B repeat averages
+  **1.1 pp** on the same cells. The crossover moved because the stack changed, not because the
+  measurement wobbled.
 - **INT8 still costs energy at every size measured**, on the newest consumer architecture with a
   current bitsandbytes: +55 % at 7B, +256 % at 0.5B. Throughput, not power, is the reason —
   14–32 tok/s against 49–79 for NF4, at *lower* package power.

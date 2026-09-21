@@ -86,8 +86,11 @@
       <strong>* The 5090 row is stack-dependent, and we have since proved it on that card.</strong> Re-measuring the
       same RTX 5090 in <a href="/#rtx5090-2026-09">September 2026</a> with bitsandbytes 0.50.2 put NF4 at
       +0.6%/+1.9% at 1.1–1.5B and −32% at 7B — a crossover near <strong>1.8B rather than 4.8B</strong>, with no
-      hardware change. Read every crossover in this table as “this card <em>with the libraries of that session</em>”;
-      the numbers above are the stack the fitted curves are built from.
+      hardware change. And the shift is not measurement noise: within the September stack, the A/B restart repeat
+      agrees to <strong>1.1 pp</strong> (NF4 average), while between stacks the same four cells sit
+      <strong>23.3 pp</strong> apart on average — a factor of ~20. The crossover moved because the stack changed,
+      not because the measurement wobbled. Read every crossover in this table as “this card <em>with the libraries
+      of that session</em>”; the numbers above are the stack the fitted curves are built from.
     </div>
 
     <div class="callout">
