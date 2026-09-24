@@ -297,6 +297,14 @@
     the 64-token cell). Same 45 runs, two different denominators; the per-run CSV carries both the
     undifferenced totals and the differenced aggregates so either can be checked.</p>
 
+    <p class="meta"><b>Update · 2026-09-24</b> — the same 45 runs have now been re-integrated over a
+    third window, the <em>generation</em> window (power sampling from the first sustained rise out of
+    the ~70&nbsp;W weight-load plateau; load, quantization and warm-up excluded), which is the window
+    the bitsandbytes container has always used. The three windows differ by ~11–13 points at 64 output
+    tokens and agree within ~2 at 576; the headline −61.9%/−63.2% stands for the window it declares.
+    Everything, including the raw 100&nbsp;Hz traces and threshold sensitivity, is in
+    <a href="/data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv" target="_blank" rel="noopener">rtx4090_llamacpp_window_comparison_2026-09-24</a>.</p>
+
     <footer>
       Data: <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_gguf_v2_2026-09-03.csv" target="_blank" rel="noopener">rtx4090_llamacpp_gguf_v2_2026-09-03.csv</a>
       (+ <code>.summary.csv</code>) · archive:

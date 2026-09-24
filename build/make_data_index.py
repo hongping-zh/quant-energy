@@ -57,16 +57,65 @@ FILES = [
         "gpu": None,
         "gpu_arch": None,
         "session_date": "2026-09-09",
-        "measurement_window": "mixed (see the denominator column)",
+        "measurement_window": "generation-only (all rows)",
         "window_note": (
-            "The denominator column is load-bearing: llama.cpp rows are decode-only "
-            "energy obtained by differencing E(576)-E(64); bitsandbytes rows are the "
-            "container generation window; FP8 rows are generation-only from a "
-            "standalone script. Cells with different denominators are comparable only "
-            "within their own group."
+            "Every cell is on the generation window (the file name keeps its original "
+            "date): the bitsandbytes rows are the container window (sampling starts "
+            "after load, quantization and warm-up), and since 2026-09-24 the llama.cpp "
+            "row is re-cut from its archived 100 Hz power traces (see "
+            "rtx4090_llamacpp_window_comparison_2026-09-24). The llama.cpp row is "
+            "still listed separately because it is a different runtime and workload "
+            "shape (1x576 tokens vs 10x256), not a different denominator."
         ),
         "doi": None,
         "regenerate": "python3 build/make_coverage_matrix.py",
+    },
+    # --- RTX 4090, llama.cpp window comparison --------------------------------
+    {
+        "path": "data/rtx4090_llamacpp_window_comparison_2026-09-24.csv",
+        "title": "RTX 4090 llama.cpp session, re-cut over three windows (per run)",
+        "kind": "session",
+        "description": (
+            "The 45 runs of the 2026-09-03 v2 session re-integrated over three "
+            "measurement windows: whole-process (NVML hardware counter), generation "
+            "window (counter energy allocated by the 100 Hz trace, cut where power "
+            "leaves the ~70 W load plateau at 0.5x run-max, sustained), and the "
+            "published decode-only differenced figure. Thresholds 0.40/0.55/0.60 "
+            "carried per run. Built by build/make_window_comparison.py, which "
+            "asserts the whole-process and decode-only columns reproduce the "
+            "published summary before writing anything."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-24",
+        "measurement_window": "three windows side by side (whole-process / generation / decode-only)",
+        "window_note": (
+            "The window choice is worth ~11-13 points at 64 output tokens "
+            "(whole-process -57.8/-55.2 vs generation -68.6/-67.7) and ~2 points at "
+            "576 (-61.0/-61.4 vs -62.9/-63.1). The excluded load phase is 193-478 J, "
+            "57-78% of a 64-token run but 12-21% of a 576-token run. State the "
+            "window AND the output length with every energy claim."
+        ),
+        "doi": "10.5281/zenodo.22295184",
+        "companion_of": "data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv",
+        "regenerate": "python3 build/make_window_comparison.py",
+    },
+    {
+        "path": "data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv",
+        "title": "RTX 4090 llama.cpp session, window comparison summary",
+        "kind": "summary",
+        "description": (
+            "Per arm and output length: mean energies per window and Q4_0-vs-F16 "
+            "percentages for all of them - whole-process counter, generation window "
+            "at thresholds 0.40/0.50/0.55/0.60, and the decode-only differenced "
+            "figure. The 0.40 column is flagged as not meaningful for the 64-token "
+            "Q4_0 arms (their ~150 W peak puts 0.4x max below the load plateau)."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-24",
+        "measurement_window": "three windows side by side (whole-process / generation / decode-only)",
+        "doi": "10.5281/zenodo.22295184",
     },
     # --- RTX 5090, 2026-09-19/20 ---------------------------------------------
     {
@@ -156,9 +205,10 @@ FILES = [
         "window_note": (
             "The summary figures difference out the weight-load term; the per-run CSV "
             "also carries the undifferenced whole-process columns (process_energy_j), "
-            "so a whole-process window can be recomputed from this file directly. "
-            "The load phase is 62-73% of a 64-token run but only 13-18% of a "
-            "576-token run: window and output length must be stated together."
+            "and the raw traces under data/llamacpp_v2_traces/ allow any window to be "
+            "re-cut (see the window-comparison file). The load phase is 57-78% of a "
+            "64-token run but only 12-21% of a 576-token run: window and output "
+            "length must be stated together."
         ),
         "doi": "10.5281/zenodo.22295184",
         "companion_of": "data/rtx4090_llamacpp_gguf_v2_2026-09-03.summary.csv",
@@ -289,6 +339,33 @@ FILES = [
     },
 ]
 
+# Whole directories of same-shaped raw files, indexed as one entry each.
+# Every file under these directories must match the declared pattern, and the
+# completeness check below accepts exactly the files that exist there.
+DIRS = [
+    {
+        "path": "data/llamacpp_v2_traces",
+        "title": "RTX 4090 llama.cpp v2 session, raw per-run power traces",
+        "kind": "raw-traces",
+        "description": (
+            "The 45 per-run JSONs the rented 4090 wrote on 2026-09-03: full 100 Hz "
+            "power_trace_w / temp_trace_c for every run (F16, Q4_0 ours, Q4_0 the "
+            "MLPerf Client v2.0 file x 64/320/576 tokens x 5 replicates), plus the "
+            "NVML counter aggregate and wall time. The Zenodo record "
+            "10.5281/zenodo.22295184 archived only the aggregate CSVs, so these "
+            "traces are vendored here to make the window re-analysis "
+            "(rtx4090_llamacpp_window_comparison_2026-09-24) reproducible from the "
+            "repo alone."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-03",
+        "measurement_window": "whole-process (full-run trace; re-cuttable to any window)",
+        "doi": "10.5281/zenodo.22295184",
+        "regenerate": None,
+    },
+]
+
 # Site datasets that live outside data/ but belong in an open-data index.
 RELATED = [
     {
@@ -362,8 +439,9 @@ NOTES = [
     (
         "Measurement windows differ across these files and the difference is not "
         "small: re-integrating one llama.cpp session over different windows moved "
-        "the 64-token delta-vs-F16 by ~13 points while the 576-token figure agreed "
-        "within 2. Every energy claim should name its window AND its output length."
+        "the 64-token delta-vs-F16 by ~11-13 points while the 576-token figures "
+        "agreed within ~2. Every energy claim should name its window AND its "
+        "output length."
     ),
     (
         "The bitsandbytes container rows are the container's generation window: "
@@ -432,9 +510,48 @@ def index_entry(meta):
     return entry
 
 
+def dir_stats(path):
+    names = sorted(os.listdir(path))
+    total = 0
+    for name in names:
+        with open(os.path.join(path, name), "rb") as f:
+            total += len(f.read())
+    return {"files": len(names), "bytes": total}
+
+
+def dir_entry(meta):
+    path = meta["path"]
+    full = os.path.join(ROOT, path.replace("/", os.sep))
+    if not os.path.isdir(full):
+        raise SystemExit("indexed directory missing on disk: %s" % path)
+    entry = {
+        "path": path + "/",
+        "url": "%s/%s/" % (SITE, path),
+        "title": meta["title"],
+        "kind": meta["kind"],
+        "description": meta["description"],
+        "gpu": meta.get("gpu"),
+        "gpu_arch": meta.get("gpu_arch"),
+        "session_date": meta.get("session_date"),
+        "measurement_window": meta.get("measurement_window"),
+        "license": LICENSE,
+    }
+    if meta.get("doi"):
+        entry["doi"] = meta["doi"]
+        entry["doi_url"] = "https://doi.org/" + meta["doi"]
+    entry.update(dir_stats(full))
+    return entry
+
+
 def check_complete_coverage():
     """Fail if anything under data/ is not in the index (or allow-listed)."""
     indexed = {m["path"] for m in FILES}
+    dir_covered = set()
+    for dmeta in DIRS:
+        dpath = os.path.join(ROOT, dmeta["path"].replace("/", os.sep))
+        for name in os.listdir(dpath):
+            dir_covered.add(
+                os.path.relpath(os.path.join(dpath, name), ROOT).replace(os.sep, "/"))
     on_disk = set()
     base = os.path.join(ROOT, "data")
     for dirpath, _, names in os.walk(base):
@@ -443,12 +560,12 @@ def check_complete_coverage():
             if os.path.basename(rel) in NON_DATA_FILES:
                 continue
             on_disk.add(rel)
-    missing = sorted(on_disk - indexed)
+    missing = sorted(on_disk - indexed - dir_covered)
     stale = sorted(indexed - on_disk)
     if missing:
         raise SystemExit(
-            "data/ contains files without index metadata (add them to FILES in "
-            "build/make_data_index.py):\n  " + "\n  ".join(missing))
+            "data/ contains files without index metadata (add them to FILES or DIRS "
+            "in build/make_data_index.py):\n  " + "\n  ".join(missing))
     if stale:
         raise SystemExit(
             "index metadata references files that no longer exist:\n  "
@@ -464,7 +581,7 @@ def main():
             .strftime("%Y-%m-%dT%H:%M:%SZ"),
         "site": SITE,
         "license": LICENSE,
-        "files": [index_entry(m) for m in FILES],
+        "files": [index_entry(m) for m in FILES] + [dir_entry(m) for m in DIRS],
         "related": RELATED,
         "archives": ARCHIVES,
         "notes": NOTES,

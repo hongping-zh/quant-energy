@@ -10,11 +10,17 @@ Sources, all already published here:
   data/rtx4090_paired_energy_quality_2026-08-19.csv   10 rows with paired perplexity
   data/rtx4090_int8_repeats_2026-08-20.summary.csv     5 rows, n=3 each
   data/replications/*.energy.json                      external contributions
-  data/rtx4090_llamacpp_gguf_v2_2026-09-03.summary.csv llama.cpp, n=5, decode-only
+  data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv
+                                                       llama.cpp, n=5, generation window
 
-The llama.cpp block is drawn separately because its delta is decode-only energy obtained
-by differencing E(576)-E(64), while the bitsandbytes rows are whole-process energy at a
-fixed output length. Same sign, different denominator; they are not interchangeable.
+Every cell is on the generation window now: the bitsandbytes rows always were
+(the container starts NVML sampling after load, quantization and warm-up - the
+"whole-process" label this grid once carried was wrong), and the llama.cpp row
+is re-cut from its archived 100 Hz power traces by
+build/make_window_comparison.py. The llama.cpp block is still drawn separately
+because it is a different runtime and workload shape (one 576-token generation
+per run vs the container's 10 x 256 tokens with per-iteration prefill) - same
+measurement window, different animal, do not read across the line carelessly.
 
     python3 build/make_coverage_matrix.py
 """
@@ -60,7 +66,7 @@ ROWS = [
     ("bnb NF4", "blackwell"),
     ("llama.cpp Q4_0", "ada"),
 ]
-SPLIT_BEFORE = ("llama.cpp Q4_0", "ada")   # denominator changes here
+SPLIT_BEFORE = ("llama.cpp Q4_0", "ada")   # runtime / workload shape changes here
 
 
 def cells_init():
@@ -114,14 +120,16 @@ def load(cells):
             rep["system_under_test"]["gpu_arch"], float(wl["params_b"]),
             float(res["vs_fp16_energy_pct"]), 1, rep["system_under_test"]["gpu"])
 
-    # ── 5. llama.cpp GGUF, clean rerun, n=5 per arm, decode-only by differencing ──
+    # ── 5. llama.cpp GGUF, generation window re-cut from the raw traces ──
+    #    (build/make_window_comparison.py; supersedes the decode-only figure
+    #     this grid used to show. 576 tokens: one long generation per run,
+    #     the closest shape to the container's 10 x 256-token iterations.)
     for r in csv.DictReader(open(os.path.join(
-            ROOT, "data", "rtx4090_llamacpp_gguf_v2_2026-09-03.summary.csv"))):
-        if r["precision"] != "Q4_0":
+            ROOT, "data", "rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv"))):
+        if r["n_tokens"] != "576" or r["arm"] == "f16":
             continue
-        add(cells, "llama.cpp Q4_0", "ada", float(r["params_b"]),
-            float(r["vs_fp16_energy_pct"]), int(r["n_replicates"]), "RTX 4090",
-            float(r["delta_perplexity_pct"]) if r["delta_perplexity_pct"] else None)
+        add(cells, "llama.cpp Q4_0", "ada", 8.0,
+            float(r["vs_fp16_pct_gen_th50"]), int(r["n_replicates"]), "RTX 4090", None)
 
 
 def write_csv(cells, path):
@@ -131,7 +139,9 @@ def write_csv(cells, path):
                     "vs_fp16_energy_pct_min", "vs_fp16_energy_pct_max",
                     "n_measurements", "gpus", "delta_perplexity_pct_mean", "denominator"])
         for (method, arch) in ROWS:
-            denom = "decode-only (differenced)" if method.startswith("llama.cpp") else "whole-process at fixed output length"
+            denom = ("generation-only (re-cut from the raw trace)"
+                     if method.startswith("llama.cpp")
+                     else "generation-only (container window)")
             for size in SIZES:
                 c = cells[(method, arch)][size]
                 if not c["deltas"]:
@@ -159,7 +169,7 @@ def render(cells, path):
     ax.set_facecolor(BG)
 
     split_index = ROWS.index(SPLIT_BEFORE)
-    gap = 0.55   # visual break where the denominator changes
+    gap = 0.55   # visual break where the runtime / workload shape changes
 
     def row_y(ri):
         return n_rows - 1 - ri - (gap if ri >= split_index else 0.0)
@@ -216,7 +226,7 @@ def render(cells, path):
     split_y = row_y(split_index) + 0.9 + gap / 2
     ax.plot([-3.6, n_cols], [split_y, split_y], color=LINE, lw=1.2)
     ax.text(n_cols - 0.06, split_y - 0.08,
-            "below the line: decode-only energy (differenced) — a different denominator, do not read across it",
+            "below the line: llama.cpp — same generation window, different runtime and workload shape (1\u00d7576 tokens vs 10\u00d7256)",
             ha="right", va="top", color=MUTED, fontsize=8, style="italic")
 
     ax.text(-3.6, -1.17,

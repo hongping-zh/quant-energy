@@ -539,9 +539,13 @@
     <p class="chartnote">
       Read it with the same care as the rest of the site. Cells are the <b>unweighted mean</b> of the runs behind
       them and most are n&nbsp;=&nbsp;1 or 2, so the printed range matters more than the mean where one is shown.
-      The llama.cpp row is drawn below a rule because its delta is <b>decode-only energy</b> obtained by differencing,
-      while every row above it is whole-process energy at a fixed output length — same sign, different denominator,
-      not interchangeable. All of it is GPU-package power, not wall AC, and none of it is a certified benchmark result.
+      Every cell is on the <b>generation window</b> — model load, quantization and warm-up excluded: the
+      bitsandbytes rows always were (the container starts sampling after warm-up; this grid once mislabelled them
+      whole-process), and the llama.cpp row is re-cut from its archived 100&nbsp;Hz power traces
+      (<a href="/data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv" target="_blank" rel="noopener">window comparison</a>).
+      The llama.cpp row stays below a rule because it is a <em>different runtime and workload shape</em> —
+      one 576-token generation per run against the container's 10×256 tokens — same window, still not one benchmark.
+      All of it is GPU-package power, not wall AC, and none of it is a certified benchmark result.
       The grid is generated from the published CSVs by
       <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/make_coverage_matrix.py" target="_blank" rel="noopener"><code>build/make_coverage_matrix.py</code></a>
       — if you think a cell is wrong, the input files are in the repo.

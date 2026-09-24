@@ -1,0 +1,10 @@
+arm,arm_label,n_tokens,n_replicates,whole_counter_j_mean,gen_energy_j_th50_mean,load_energy_j_mean,load_share_pct_mean,vs_fp16_pct_whole_counter,vs_fp16_pct_gen_th50,vs_fp16_pct_gen_th40,vs_fp16_pct_gen_th55,vs_fp16_pct_gen_th60,vs_fp16_pct_decode_only_diff,threshold_note
+f16,F16,64,5,702.38,266.19,436.19,62.0,0.0,0.0,0.0,0.0,0.0,0.0,
+f16,F16,320,5,1959.52,1550.99,408.54,20.8,0.0,0.0,0.0,0.0,0.0,0.0,
+f16,F16,576,5,3251.88,2819.11,432.76,13.3,0.0,0.0,0.0,0.0,0.0,0.0,
+q4ours,Q4_0 (ours),64,5,296.58,83.71,212.87,71.7,-57.78,-68.55,-18.5,-67.4,-68.34,-61.87,0.4 x max falls below the ~70 W load plateau for these runs (peak ~150 W); the th40 column is not a meaningful sensitivity here - use th50/th55
+q4ours,Q4_0 (ours),320,5,769.98,538.49,231.49,30.0,-60.71,-65.28,-64.51,-66.1,-66.97,-61.87,
+q4ours,Q4_0 (ours),576,5,1268.61,1044.53,224.08,17.7,-60.99,-62.95,-62.55,-63.29,-63.83,-61.87,
+q4mlperf,Q4_0 (MLPerf Client v2.0 file),64,5,314.88,86.1,228.78,72.4,-55.17,-67.66,-12.17,-67.22,-66.28,-63.17,0.4 x max falls below the ~70 W load plateau for these runs (peak ~150 W); the th40 column is not a meaningful sensitivity here - use th50/th55
+q4mlperf,Q4_0 (MLPerf Client v2.0 file),320,5,764.71,540.26,224.44,29.3,-60.97,-65.17,-64.21,-65.66,-66.89,-63.17,
+q4mlperf,Q4_0 (MLPerf Client v2.0 file),576,5,1253.81,1040.4,213.41,17.0,-61.44,-63.09,-62.57,-63.44,-63.84,-63.17,

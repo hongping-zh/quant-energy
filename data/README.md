@@ -9,7 +9,8 @@ Regenerate with `python3 build/make_data_index.py` — the build fails if a file
 appears under `data/` without curated metadata, so the index cannot drift.
 The index records the measurement window per file because it is load-bearing:
 re-integrating one llama.cpp session over different windows moved the
-64-token delta by ~13 points while the 576-token figure agreed within 2.
+64-token delta by ~13 points while the 576-token figure agreed within ~4
+(see the window-comparison file below for the reproduced numbers).
 
 ## `coverage_matrix_2026-09-09.csv`
 
@@ -21,10 +22,13 @@ with `python3 build/make_coverage_matrix.py`, which also renders `assets/coverag
 
 Two things to keep in mind when reading it. The mean is **unweighted** across the runs feeding a
 cell — those runs come from different sessions and protocols, so the range column carries more
-information than the mean wherever the two differ. And the `denominator` column is load-bearing:
-the llama.cpp rows are decode-only energy obtained by differencing `E(576) − E(64)`, every other
-row is whole-process energy at a fixed output length. Cells with different denominators are not
-comparable to each other, only within their own group.
+information than the mean wherever the two differ. And every cell is on the **generation window**
+(model load, quantization and warm-up excluded): the bitsandbytes rows always were — the container
+starts NVML sampling after warm-up, and this grid once mislabelled them "whole-process" — and the
+llama.cpp row is now re-cut to the same window from its archived power traces (file below). The
+llama.cpp row is still kept below the rule in the rendered grid because it is a different runtime
+and workload shape (one 576-token generation per run vs the container's 10×256 tokens with
+per-iteration prefill), not because of a denominator change.
 
 ## `rtx5090_bnb_2026-09-20.csv` (+ `.summary.csv`) and `rtx5090_fp8_torchao_2026-09-20.csv`
 
@@ -151,6 +155,35 @@ each preceded by a forced cooldown to idle (all 45 converged, starting at ~25 W 
   `Q4_0` arms within 1.2 % of each other at 320 and 576 tokens — while everything here is decode-only
   after differencing the load out. Same runs, different denominator; both columns are in the per-run
   CSV.
+
+## `rtx4090_llamacpp_window_comparison_2026-09-24.csv` (+ `.summary.csv`) and `llamacpp_v2_traces/`
+
+The same 45 runs as the v2 session above, re-integrated over **three measurement windows** so that
+the llama.cpp side and the bitsandbytes container side of the coverage matrix are finally on one
+definition (the container's generation window). Built by `python3 build/make_window_comparison.py`
+from the per-run 100 Hz power traces, vendored under `data/llamacpp_v2_traces/` because the Zenodo
+record archived only the aggregate CSVs.
+
+- **Method.** The generation window is cut where the power trace first leaves the ~70 W weight-load
+  plateau (first sample above 0.5 × the run maximum, sustained), and the NVML hardware counter's
+  energy is allocated to it in proportion to the trace: `E_gen = counter × (window integral /
+  whole-trace integral)`. All three windows are therefore on one energy basis. Thresholds 0.40 /
+  0.55 / 0.60 are carried alongside; at 320/576 tokens they move the result by at most ~2.5 points,
+  and at 64 tokens the `Q4_0` arms peak near 150 W so sub-0.45 thresholds are meaningless there
+  (the summary's `threshold_note` says so per row).
+- **The table** (`vs_fp16_pct`, ours / MLPerf file). Whole-process: −57.8/−55.2 (64 tok),
+  −60.7/−61.0 (320), −61.0/−61.4 (576). Generation window: −68.6/−67.7, −65.3/−65.2, −62.9/−63.1.
+  Decode-only (differenced, the previously published figure): −61.9/−63.2 on the 512-token basis.
+  The script asserts all of these against the published summary before writing anything.
+- **What it means.** The window choice is worth ~11 points at 64 output tokens and ~2–4 points at
+  576; the excluded load phase is 193–478 J (57–78 % of a 64-token run, 12–21 % of a 576-token
+  run). The grid's llama.cpp cell is now the generation-window figure at 576 tokens (−63.0 %,
+  previously −62.5 % decode-only). Energy claims are only comparable when both the measurement
+  window **and** the output length are stated.
+- **Not a correction of the archive.** Zenodo 10.5281/zenodo.22295184 remains correct for the
+  window it declares (whole-process) and the decode-only figure it publishes; this file is a
+  re-analysis of the same runs on another definition, which is why it exists as a separate file
+  rather than an edit.
 
 ## `rtx4090_llamacpp_gguf_2026-08-31.csv` (+ `.summary.csv`) — superseded
 
