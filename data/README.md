@@ -1,5 +1,16 @@
 # Measured sessions published alongside this site
 
+## Machine-readable index
+
+Every file here is also indexed at [`/data/index.json`](https://quantenergy.tech/data/index.json)
+(schema `quantenergy/data-index/1.0`): per-file title, GPU, session date,
+**measurement window**, archive DOI, and live stats (rows, bytes, sha256).
+Regenerate with `python3 build/make_data_index.py` — the build fails if a file
+appears under `data/` without curated metadata, so the index cannot drift.
+The index records the measurement window per file because it is load-bearing:
+re-integrating one llama.cpp session over different windows moved the
+64-token delta by ~13 points while the 576-token figure agreed within 2.
+
 ## `coverage_matrix_2026-09-09.csv`
 
 Not a session: a derived roll-up of every other file here plus `build/measured.csv` and
