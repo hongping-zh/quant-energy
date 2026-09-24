@@ -40,8 +40,10 @@ Reproduction guards (asserted, so the script fails loudly on wrong input):
   * whole-process deltas vs F16: -57.8/-55.2 (64), -60.7/-61.0 (320),
     -61.0/-61.4 (576) — the published summary;
   * decode-only differenced: -61.87/-63.17 — the published headline;
-  * generation window at 0.5 x max: -68.6/-67.7, -65.3/-65.2, -63.0/-63.1 —
-    the 2026-09-22 window-unification re-analysis.
+  * generation window at 0.5 x max: -68.6/-67.7, -65.3/-65.2, -62.9/-63.1 —
+    the 2026-09-22 window-unification re-analysis (the 576-token "ours"
+    value is -62.95 at two decimals and displays as -62.9 at one decimal,
+    matching the manuscript's Table 9).
 
 Input:  data/llamacpp_v2_traces/res_{arm}_n{tokens}_r{replicate}.json
         (arm in f16 / q4ours / q4mlperf; the JSONs the rented 4090 wrote,
@@ -72,7 +74,7 @@ SUSTAIN = 20          # samples the trace must stay above the threshold
 # Figures this script must reproduce — guards against wrong input.
 EXPECTED_WHOLE_PCT = {64: (-57.8, -55.2), 320: (-60.7, -61.0), 576: (-61.0, -61.4)}
 EXPECTED_DECODE_PCT = (-61.87, -63.17)
-EXPECTED_GEN_PCT = {64: (-68.6, -67.7), 320: (-65.3, -65.2), 576: (-63.0, -63.1)}
+EXPECTED_GEN_PCT = {64: (-68.6, -67.7), 320: (-65.3, -65.2), 576: (-62.9, -63.1)}
 TOL = 0.15
 AXIS_TOL = 0.025      # reconstructed-axis vs archived trapezoid, per run
 
