@@ -9,7 +9,7 @@ Regenerate with `python3 build/make_data_index.py` — the build fails if a file
 appears under `data/` without curated metadata, so the index cannot drift.
 The index records the measurement window per file because it is load-bearing:
 re-integrating one llama.cpp session over different windows moved the
-64-token delta by ~13 points while the 576-token figure agreed within ~4
+64-token delta by ~11–13 points while the 576-token figures agreed within ~2
 (see the window-comparison file below for the reproduced numbers).
 
 ## `coverage_matrix_2026-09-09.csv`
