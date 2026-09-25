@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Schema — the EcoCompute report contract, and the v1.3 environment draft</title>
+<meta name="description" content="The machine-checkable contract behind every EcoCompute energy report: current schema ecocompute-energy/1.3, the draft environment block (power limit, clocks, temperatures, GPU UUID) for the v1.0 bar, required-field checklists, and the version-migration and compliance rules." />
+<link rel="canonical" href="https://quantenergy.tech/schema/" />
+<meta property="og:title" content="Schema — the EcoCompute report contract, and the v1.3 environment draft" />
+<meta property="og:description" content="What a valid energy.json must contain, what makes two reports comparable, and the draft environment block for the v1.0 bar." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/schema/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"TechArticle",
+  "headline":"The EcoCompute report schema and the v1.3 environment draft",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/schema/",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e;--amber:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+  h2{font-size:20px;margin:32px 0 6px}
+  h3{font-size:16px;margin:22px 0 4px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  pre code{background:none;padding:0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.55}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  .lvl{font-weight:700;white-space:nowrap}
+  .lvl.a{color:var(--muted)} .lvl.b{color:var(--accent)} .lvl.c{color:var(--good)}
+  footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+  .draft{border-left:3px solid var(--amber);padding-left:12px}
+  @media (max-width:720px){ h1{font-size:24px} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Schema</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/measured/">Evidence</a><a href="/changelog/">Changelog</a><a href="/blog/">Findings</a><a href="/about/">About</a></nav>
+    </div>
+
+    <h1>The report contract, and the v1.3 environment draft</h1>
+    <p class="sub">This page is part of the <a href="/method/">spec layer</a>: the machine-checkable half of the protocol.
+    The live schema is <code>ecocompute-energy/1.3</code>, maintained in the container repository at
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener"><code>schema/energy.schema.json</code></a> —
+    the container validates every report it writes against it before emitting it. What follows is (a) what a valid
+    report must contain today, (b) the <b>draft</b> environment block proposed for the v1.0 bar, and (c) the
+    version-migration and compliance rules. A separate, much smaller schema describes the
+    <a href="/schema/quantization-energy-report-schema.yaml">estimator's output</a> — it is a tool response, not a measurement.</p>
+
+    <div class="callout">
+      <b>Why a schema at all.</b> An energy number without its context (GPU, driver, stack, window, thermal state,
+      replication) is unfalsifiable — there is nothing to check it against. The schema makes the context a
+      <em>required</em> part of the number, so "a measurement" is a typed object, not a headline.
+    </div>
+
+    <h2>1 · Required today — <code>ecocompute-energy/1.3</code></h2>
+    <p>A report is schema-valid if and only if it passes validation against the live schema. The top-level required
+    keys are:</p>
+    <pre><code>schema_version          "ecocompute-energy/1.3"
+benchmark               "ecocompute-energy-methodology"
+scenario                "SingleStream" | "Offline"   (nominal, from batch size; not LoadGen-enforced —
+                        scenario_note says so)
+system_under_test       gpu, gpu_arch, accelerator_count, host
+workload                model_name, params_b, precision, batch_size, context_length
+measurement             method ("NVML on-device power sampling"), sample_rate_hz,
+                        tokens_per_run, iterations, warmup
+results                 total_energy_joules, tokens_generated, energy_per_token_mj,
+                        avg_power_watts, throughput_tokens_per_s, basis
+                        (+ fp16_energy_per_token_mj, vs_fp16_energy_pct when a
+                        same-session FP16 baseline exists)</code></pre>
+    <p>Conditional requirements the validator enforces: <code>basis</code> must be <code>measured</code> whenever
+    <code>measurement_source</code> is <code>direct-nvml</code>; a report that fell back to dataset-derived values must
+    name the fallback and must <em>not</em> claim <code>measured</code>. The <code>software</code> block records the
+    full version set actually used and diffs it against the published pins — a run on a different stack is real, but
+    is flagged as not directly comparable with pinned-image runs. Since 1.3, a <code>power_trace</code> block may
+    carry whole-run 10&nbsp;Hz sidecar CSVs with phase markers (load → quantization → warm-up → measure → quality),
+    so the measurement window can be re-cut post hoc without re-running.</p>
+
+    <h2>2 · Draft — the <code>environment</code> block for the v1.0 bar</h2>
+    <div class="draft">
+    <p><b>Status: draft, open for comment</b> (<a href="https://github.com/hongping-zh/ecocompute-mlcube/issues" target="_blank" rel="noopener">issue tracker</a>).
+    Not yet emitted by the container. Motivated by three gaps the 2026-09 sessions exposed:</p>
+    <ul>
+      <li><b>Power limit and clocks were never recorded.</b> The 2026-09-25 two-card re-test had to capture
+      <code>nvidia-smi -q -d POWER,CLOCK,PERFORMANCE</code> manually; one session in August missed it entirely
+      (post-hoc re-captured, and labelled as such). A card with a locked power limit is a different operating point.</li>
+      <li><b>Idle/cooldown temperature was not a field.</b> Cold-start claims ("28 °C at start") lived in side logs,
+      not in the report.</li>
+      <li><b>Physical card identity was not a field.</b> The same re-test found the hosting platform had moved the
+      instance to a <em>different physical GPU</em> between sessions (different UUID) — without the UUID we would have
+      mis-filed a card-to-card difference as session-to-session noise.</li>
+    </ul>
+    <pre><code>"environment": {
+  "gpu_uuid":            "GPU-ccb89dd1-33ae-1b76-f767-8fe2bd818af6",
+  "power_limit_w":       450.0,
+  "power_limit_source":  "nvml enforced power limit",
+  "clocks_mhz": {
+    "sm_start": 210,  "mem_start": 210,
+    "sm_end":   2790, "mem_end":   10501
+  },
+  "temperature_c": {
+    "idle_before": 28,        // after cooldown, before load — the cold-start claim
+    "start":       28,
+    "end":         41,
+    "peak":        58
+  },
+  "clock_lock_applied":  false,
+  "power_lock_applied":  false,
+  "capture_method":      "nvidia-smi -q -d POWER,CLOCK,PERFORMANCE,TEMPERATURE"
+}</code></pre>
+    <p>Design rules: fields record the <b>as-found</b> operating point — the protocol says <em>do not</em> lock clocks
+    or power to match historical data; record what the card was actually doing. <code>idle_before</code> is the
+    cooldown gate (protocol: wait until the card returns to idle temperature before each arm).
+    <code>power_limit_source</code> distinguishes the enforced NVML limit from a user override. Unavailable telemetry
+    is <code>null</code> with a reason — never omitted silently, never invented.</p>
+    </div>
+
+    <h2>3 · Compliance levels</h2>
+    <p>"Valid" is not one binary. A report is graded at the highest level it satisfies:</p>
+    <table>
+      <tr><th>Level</th><th>Name</th><th>Criteria</th><th>What it may be used for</th></tr>
+      <tr>
+        <td class="lvl a">A</td>
+        <td>Schema-valid</td>
+        <td>Passes <code>ecocompute-energy/1.3</code> validation; all §1 required keys present and consistent</td>
+        <td>Overlay on the charts; browser-side comparison; archived as-is</td>
+      </tr>
+      <tr>
+        <td class="lvl b">B</td>
+        <td>Submittable</td>
+        <td>Level A <b>plus</b>: same-session FP16 baseline (<code>vs_fp16_energy_pct</code> present), stated
+        <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, thermal state not violated
+        (cooldown respected, or the violation disclosed in a note)</td>
+        <td>Publication in <a href="/replications/">/replications/</a>, credited; enters the next dataset release after review</td>
+      </tr>
+      <tr>
+        <td class="lvl c">C</td>
+        <td>v1.0-grade <span class="meta">(draft)</span></td>
+        <td>Level B <b>plus</b>: the §2 <code>environment</code> block complete (power limit, clocks, idle temperature,
+        GPU UUID), achieved sample rate recorded, and the configuration has n&nbsp;≥&nbsp;3 independent sessions or
+        ≥&nbsp;2 physical cards — cross-session/cross-card spread reported, not implied</td>
+        <td>Counted toward the <a href="/method/">v1.0 micro-standard bar</a> (per-configuration ≥3 sessions, ≥2–3 cards per architecture)</td>
+      </tr>
+    </table>
+
+    <h2>4 · Version migration and invalidation rules</h2>
+    <ul>
+      <li><b>Old reports are never rewritten.</b> A v1.2 report stays v1.2; if its numbers are re-derived (window
+      re-cut, baseline recomputation), the re-derivation is a new artifact with its own provenance entry, and the
+      <a href="/changelog/">changelog</a> records what moved and why. The 2026-09-24 window unification followed this
+      rule: the llama.cpp row was re-cut into a new CSV, the original archive untouched.</li>
+      <li><b>Backward compatibility:</b> v1.3 validators accept v1.2 reports (the added blocks are optional at v1.3);
+      v1.2 validators reject v1.3 reports. Submissions at either version are accepted at compliance level A/B.</li>
+      <li><b>What invalidates a comparison</b> (a pair of reports may both be valid yet not comparable): different
+      <code>software</code> stacks (kernel changes move NF4/INT8 results — the 2026-09-20 5090 re-test is the worked
+      example), different measurement windows, different thermal modes, locked vs unlocked clocks/power, or a
+      workload field mismatch (batch, tokens, context). The site states the stack and window with every displayed
+      number for exactly this reason.</li>
+      <li><b>Deprecation:</b> a schema version is deprecated when a successor has been the container default for two
+      releases; deprecated versions remain validatable forever (the validators are versioned with the schema), but
+      new submissions at deprecated versions are flagged in review.</li>
+      <li><b>Failure tests:</b> the container repository carries schema tests including deliberately malformed
+      reports (missing <code>results</code>, <code>basis: measured</code> with a fallback source, mismatched
+      scenario labels) that must fail validation. A schema change that lets any of them pass is itself a bug.</li>
+      <li><b>Pooling rule (data policy, not schema):</b> supplementary sessions measured on a different stack are
+      archived separately and never silently pooled into seed counts or fitted curves — versioning is by session
+      archive, and the changelog entry says which counts, if any, a session entered.</li>
+    </ul>
+
+    <h2>5 · Machine-readable copies</h2>
+    <ul>
+      <li><b>Measurement report schema (live, 1.3):</b>
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener"><code>ecocompute-mlcube/schema/energy.schema.json</code></a> —
+      JSON Schema draft-07; the container runs builtin validation on every report.</li>
+      <li><b>Environment block (draft, §2):</b> proposed as <code>ecocompute-energy/1.4-draft</code>; tracked in the
+      container issues; will land together with a compliance-level checker script.</li>
+      <li><b>Estimator output schema:</b>
+      <a href="/schema/quantization-energy-report-schema.yaml"><code>quantization-energy-report-schema.yaml</code></a> —
+      describes the /?tab=estimate tool response. It is a <em>model output</em>: its <code>measurement_method</code>
+      field says "interpolated from measured anchors" and it must never be archived as a measurement.</li>
+    </ul>
+
+    <footer>
+      EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
+      <br><a href="/">← Back to the tool</a> · <a href="/method/">Protocol</a> · <a href="/measured/">Evidence</a> · <a href="/changelog/">Changelog</a> · <a href="/about/">About</a>
+    </footer>
+  </div>
+</body>
+</html>
