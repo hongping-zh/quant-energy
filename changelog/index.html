@@ -72,6 +72,23 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-25</span><span class="etag protocol">protocol</span></div>
+      <h2>The spec layer becomes a standalone, DOI-tracked specification document</h2>
+      <p>Protocol v1.1 is extracted from the <a href="/method/">method page</a> into an independent normative
+      document — <a href="/spec/ecocompute-protocol-v1.1.html"><b>EcoCompute Protocol v1.1</b></a> — written in the
+      W3C-Note / IETF-RFC style: explicit <b>MUST / SHOULD / MAY</b> requirements for the power source
+      (NVML GPU-package, ≥&nbsp;10&nbsp;Hz), the same-session FP16 baseline, the workload (batch 1, 256 tokens),
+      the generation window and the report fields; SHOULD-level replication (n&nbsp;≥&nbsp;2, n travels with the
+      data); MAY-level extras (additional modes/batches/formats, the draft environment block), each labelled and
+      never pooled. The document binds the protocol to the machine contract — a conforming submission
+      <b>MUST</b> pass <code>ecocompute-energy/1.2+</code> validation — and carries the protocol ↔ schema ↔
+      dataset version table. A Zenodo DOI is being minted so papers can cite "EcoCompute Protocol v1.1,
+      DOI:&nbsp;…" instead of a moving web page; dataset DOIs and the protocol DOI stay separate. The
+      <a href="/method/">method page</a> remains the human-readable guide and now states that the normative text
+      is the document. Source: <code>spec/</code> in the site repository.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-25</span><span class="etag site">site</span><span class="etag protocol">protocol</span></div>
       <h2>The site is restructured into four layers, and a number bug is fixed</h2>
       <p>The single mixed homepage is split into <a href="/method/">Spec</a> (the protocol, normative),

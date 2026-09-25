@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EcoCompute Protocol v1.1 — A Micro-Benchmark Specification for Quantization Energy in LLM Inference</title>
+<meta name="description" content="The normative text of the EcoCompute Protocol v1.1: workload, baseline, measurement, reporting and validation requirements in RFC 2119/8174 style. A conforming submission MUST pass ecocompute-energy/1.2+ schema validation." />
+<meta name="author" content="Hongping Zhang" />
+<style>
+  :root{--ink:#1a2233;--mut:#5b6779;--line:#d7dce5;--acc:#0b5cad;--must:#b42318;--may:#086b53}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font:16px/1.65 Georgia,"Times New Roman",serif}
+  .page{max-width:780px;margin:0 auto;padding:48px 26px 64px}
+  header.doc{border-bottom:3px double var(--ink);padding-bottom:18px;margin-bottom:26px}
+  h1{font-size:25px;line-height:1.3;margin:0 0 2px}
+  .subtitle{font-size:15.5px;color:var(--mut);font-style:italic;margin:0 0 16px}
+  table.docinfo{width:100%;border-collapse:collapse;font-family:ui-sans-serif,system-ui,Arial,sans-serif;font-size:12.5px}
+  table.docinfo td{border:1px solid var(--line);padding:5px 9px;vertical-align:top}
+  table.docinfo td:first-child{width:110px;font-weight:700;background:#f4f6fa;color:var(--mut)}
+  h2{font-size:19px;margin:34px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:16px;margin:22px 0 4px}
+  p{margin:8px 0}
+  ul,ol{margin:8px 0;padding-left:26px}
+  li{margin:4px 0}
+  a{color:var(--acc)}
+  code{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:13.5px;background:#f2f4f8;border:1px solid #e4e8f0;border-radius:3px;padding:0 4px}
+  .kw{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:13.5px;font-weight:700}
+  .kw.must{color:var(--must)} .kw.should{color:var(--acc)} .kw.may{color:var(--may)}
+  table.grid{width:100%;border-collapse:collapse;font-family:ui-sans-serif,system-ui,Arial,sans-serif;font-size:13px;margin:12px 0}
+  table.grid th,table.grid td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  table.grid th{background:#f4f6fa;color:var(--mut);font-weight:600}
+  .note{border-left:3px solid var(--acc);background:#f4f8fd;padding:12px 16px;margin:14px 0;font-size:14.5px}
+  .abstract{font-size:15.5px}
+  footer.doc{border-top:3px double var(--ink);margin-top:40px;padding-top:14px;font-size:13px;color:var(--mut)}
+  @media print{body{font-size:11.5pt}.page{padding:0}a{color:inherit;text-decoration:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="doc">
+  <h1>EcoCompute Protocol v1.1</h1>
+  <p class="subtitle">A Micro-Benchmark Specification for Quantization Energy in LLM Inference</p>
+  <table class="docinfo">
+    <tr><td>Status</td><td>Normative specification (stable)</td></tr>
+    <tr><td>Version</td><td>1.1 — issued 2026-09-25</td></tr>
+    <tr><td>Author</td><td>Hongping Zhang · ORCID <a href="https://orcid.org/0009-0000-2529-4613">0009-0000-2529-4613</a></td></tr>
+    <tr><td>License</td><td><a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></td></tr>
+    <tr><td>Validation</td><td><code>ecocompute-energy/1.2</code> or later (live: <code>1.3</code>)</td></tr>
+    <tr><td>Canonical</td><td>Zenodo DOI (being minted; this file is the pre-publication text) · rendered at <code>quantenergy.tech/spec/</code></td></tr>
+    <tr><td>Machine contract</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json"><code>ecocompute-mlcube/schema/energy.schema.json</code></a></td></tr>
+  </table>
+</header>
+
+<h2>Abstract</h2>
+<p class="abstract">This document specifies the EcoCompute Protocol: how to measure the effect of weight-only
+quantization (e.g. NF4, INT8) on the energy cost of large-language-model inference on a GPU, so that two
+measurements taken by different people on different cards can be compared. The protocol fixes the workload
+(single-stream decode, batch 1, 256 generated tokens), the baseline (an FP16 run in the same session on the
+same card), the measurement source (NVML GPU-package power sampled at ≥ 10 Hz), the measurement window
+(generation only), and the report contents (validated against a machine-checkable JSON schema). Requirements
+are stated in the RFC 2119/8174 style. This document <b>is</b> the protocol, not a description of one: a
+measurement that satisfies its <span class="kw must">MUST</span> requirements and passes its validation entry
+point is an EcoCompute measurement.</p>
+
+<h2>Status of This Document</h2>
+<p>This is the normative text of EcoCompute Protocol v1.1. The website <code>quantenergy.tech</code> keeps a
+human-readable guide with worked examples at <code>/method/</code>, the measured evidence at
+<code>/measured/</code>, data changes at <code>/changelog/</code>, and exploratory write-ups at
+<code>/blog/</code> — but the normative text is <b>this document</b>; the web pages are reader's guides. Where
+a page and this document disagree, this document governs. A Zenodo DOI is being minted for this document so
+that papers can cite “EcoCompute Protocol v1.1, DOI: 10.5281/zenodo.xxxxxxx” rather than a web page that can
+change; dataset DOIs and this protocol DOI are separate and correspond through the version table (§8).</p>
+
+<h2>1. Introduction</h2>
+<h3>1.1 Scope</h3>
+<p>Every quantization tool documents <i>how</i> to quantize; none measures <i>whether</i> it saves energy on a
+given card. The protocol exists to fill that gap with a measurement that is small enough to run on a rented or
+free-tier GPU (a free Colab T4 suffices) and strict enough that its results can be pooled, compared and
+falsified.</p>
+<p>The measured quantity is the <b>energy cost of generating tokens</b>, as a delta between a quantized
+configuration and an FP16 baseline measured under identical conditions (§3).</p>
+<h3>1.2 What this protocol is not</h3>
+<ul>
+  <li>It is <b>not a certified benchmark</b> and is not affiliated with MLCommons, any energy-consulting body,
+  or any vendor. <code>scenario</code> labels such as <code>SingleStream</code> are nominal descriptions of the
+  workload, not LoadGen-enforced claims.</li>
+  <li>It does <b>not</b> measure whole-system draw: CPU, DRAM, PSU losses, cooling, PUE and CO₂e are out of
+  scope.</li>
+  <li>It does <b>not</b> measure serving throughput: single-stream decode only (batched serving with
+  continuous batching has a different energy profile and is a separate measurement, see §4.8).</li>
+</ul>
+
+<h2>2. Conventions and Terminology</h2>
+<p>The key words <span class="kw must">MUST</span>, <span class="kw must">MUST NOT</span>,
+<span class="kw must">REQUIRED</span>, <span class="kw must">SHALL</span>,
+<span class="kw must">SHALL NOT</span>, <span class="kw should">SHOULD</span>,
+<span class="kw should">SHOULD NOT</span>, <span class="kw should">RECOMMENDED</span>,
+<span class="kw may">MAY</span>, and <span class="kw may">OPTIONAL</span> are to be interpreted as described in
+RFC 2119 and RFC 8174 when, and only when, they appear in all capitals.</p>
+<p>Terms used by this specification:</p>
+<ul>
+  <li><b>Configuration</b> — a (model, precision, GPU) triple, e.g. (Qwen2.5-3B, NF4, RTX 4090).</li>
+  <li><b>Arm</b> — one measured run of one configuration within a session.</li>
+  <li><b>Session</b> — one sitting on one card: arms share the host, driver and library stack.</li>
+  <li><b>Baseline</b> — the FP16 arm of the same model in the same session (§4.2).</li>
+  <li><b>Generation window</b> — the measured interval: from the first generated token after warm-up to the
+  last. Model load, quantization and warm-up are excluded.</li>
+  <li><b>Thermal mode</b> — <code>cold</code> (cool to idle, fixed warm-up, measure) or <code>steady</code>
+  (keep warming until three consecutive readings fall within 2 °C, then measure a hot card). Two different
+  measurements, not two spellings of one.</li>
+  <li><b>Anchor</b> — a distinct (GPU × model × precision) point behind the fitted curves on the site.</li>
+</ul>
+
+<h2>3. The Measured Quantity</h2>
+<p>Energy per configuration is obtained by sampling GPU-package power while the model generates tokens, and
+integrating power over wall-clock time of the generation window. The reported quantities are:</p>
+<ul>
+  <li><code>energy_per_token_mj</code> — millijoules per generated token, per arm;</li>
+  <li><code>avg_power_watts</code> — mean GPU-package power over the window;</li>
+  <li><code>throughput_tokens_per_s</code>;</li>
+  <li><code>vs_fp16_energy_pct</code> — the quantized arm's energy per token relative to the same-session FP16
+  baseline (§4.2), in percent.</li>
+</ul>
+<p>Nothing is derived from thermal design power. Values that are <b>not</b> measured — sizes between or beyond
+the measured anchors, and latency/throughput estimates — are modelled and labelled <code>interpolated</code>,
+<code>extrapolated</code> or <code>estimated</code>; measurements and estimates are never mixed silently, and
+an estimator output <span class="kw must">MUST NOT</span> be archived as a measurement.</p>
+
+<h2>4. Requirements</h2>
+
+<h3>4.1 Power measurement — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>The power source <span class="kw must">MUST</span> be NVML on-device GPU-package power sampling.</li>
+  <li>The sampling rate <span class="kw must">MUST</span> be at least 10 Hz. The report
+  <span class="kw must">MUST</span> record the <b>achieved</b> (not requested) sample rate.</li>
+  <li>Energy <span class="kw must">MUST</span> be the integral of power over wall-clock time of the generation
+  window.</li>
+  <li>Values derived from TDP or vendor typical power <span class="kw must">MUST NOT</span> be reported as
+  measurements (<code>basis: "measured"</code> requires <code>measurement_source: "direct-nvml"</code>).</li>
+</ol>
+
+<h3>4.2 Baseline — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>A <code>vs_fp16_energy_pct</code> value <span class="kw must">MUST</span> be computed against an FP16 run
+  measured <b>in the same session on the same card</b>.</li>
+  <li>A quantized run without a same-session FP16 baseline <span class="kw must">MUST NOT</span> yield a
+  vs-FP16 claim.</li>
+  <li>Absolute J/token <span class="kw should">SHOULD NOT</span> be compared across sessions or days as a proxy
+  for the quantization effect: between two consecutive days on the same host, absolute energy per token can
+  drift double-digit percent while the FP16-normalised delta moves only a few points.</li>
+</ol>
+
+<h3>4.3 Workload — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>Single-stream decode, <b>batch 1</b>.</li>
+  <li><b>256 generated tokens</b> per run; 10 decode iterations after a warm-up; greedy decoding.</li>
+  <li>The context length <span class="kw must">MUST</span> be recorded.</li>
+  <li>Warm-up <span class="kw must">MUST</span> precede measurement (§4.4 excludes it from the window).</li>
+</ol>
+
+<h3>4.4 Measurement window — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>The measurement window <span class="kw must">MUST</span> be the <b>generation window</b>: model load,
+  quantization and warm-up excluded.</li>
+  <li>The window definition and the output length <span class="kw must">MUST</span> be stated with every energy
+  claim — re-integrating one session over different windows moves its 64-token figure by up to 12.5 percentage
+  points.</li>
+  <li>A submission <span class="kw may">MAY</span> attach whole-run power-trace sidecars (schema
+  <code>1.3</code>) with phase markers (load → quantization → warm-up → measure → quality) so the window can be
+  re-cut post hoc without re-running; this is <span class="kw should">RECOMMENDED</span>.</li>
+</ol>
+
+<h3>4.5 Report contents and validation — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>The report <span class="kw must">MUST</span> contain the schema-required fields: GPU and architecture,
+  driver, runtime/engine and version, model and <code>params_b</code>, precision, batch size, context length,
+  J/token, tok/s, mean package watts, and the <code>software</code> block recording the full version set
+  actually used.</li>
+  <li>The report <span class="kw must">MUST</span> pass validation against <code>ecocompute-energy/1.2</code> or
+  any later version (the live schema at time of issue is <code>1.3</code>; <code>1.3</code> validators accept
+  <code>1.2</code> reports). See §5.</li>
+  <li>A run on a different stack from the published pins is real but <span class="kw must">MUST</span> be
+  flagged as not directly comparable (the <code>software</code> block diffs it; §6.2 governs pooling).</li>
+</ol>
+
+<h3>4.6 Thermal state — <span class="kw must">MUST</span></h3>
+<ol>
+  <li>The report <span class="kw must">MUST</span> record a <code>thermal</code> block: the warm-up count and
+  temperature at start, steady state, end and peak.</li>
+  <li>Arms <span class="kw must">MUST</span> be separated by an enforced cooldown; arm order
+  <span class="kw should">SHOULD</span> be randomised.</li>
+  <li>Comparisons <span class="kw must">MUST</span> be within one thermal mode, never across <code>cold</code>
+  and <code>steady</code> (a hot card clocks lower and reports more energy per token).</li>
+  <li>A run that never settles <span class="kw must">MUST</span> report
+  <code>steady_state_reached: false</code> rather than pretending it did; a card without a temperature sensor
+  <span class="kw must">MUST</span> report <code>basis: "unavailable"</code> rather than inventing a value.</li>
+  <li>Sessions recorded before the <code>thermal</code> block existed (the 42 seed measurements, v1.1.0 dataset)
+  have <b>unknown</b> thermal state — not cold. This is why the container default remains
+  <code>--thermal_mode cold</code> and why their provenance says so.</li>
+</ol>
+
+<h3>4.7 Replication — <span class="kw should">SHOULD</span></h3>
+<ol>
+  <li>Each configuration <span class="kw should">SHOULD</span> be measured at least n = 2 in a reporting
+  dataset (the main dataset's repeated trials carry CV &lt; 2%).</li>
+  <li>The replication count <span class="kw must">MUST</span> travel with the data: <code>n_trials</code> in
+  <code>build/measured.csv</code>, <code>n</code> on every anchor in <code>curves.json</code>, and n rendered
+  next to every displayed number. A single trial <span class="kw must">MUST</span> be visually marked so no one
+  mistakes one observation for a distribution.</li>
+  <li>Reports <span class="kw should">SHOULD</span> state <code>n_session</code> and, where more than one
+  physical card is involved, <code>n_card</code> separately (see §6.3).</li>
+</ol>
+
+<h3>4.8 Additional measurements — <span class="kw may">MAY</span></h3>
+<p>A submitter <span class="kw may">MAY</span> measure under additional thermal modes (both <code>cold</code>
+and <code>steady</code>), batch sizes, context lengths, token counts, runtimes (vLLM, TensorRT-LLM, SGLang) and
+quantization formats (GPTQ, AWQ, FP8, <code>Q4_K_M</code>). Such measurements:</p>
+<ol>
+  <li><span class="kw must">MUST</span> be labelled separately (the workload fields say what they are), and</li>
+  <li><span class="kw must">MUST NOT</span> be pooled with the batch-1 single-stream anchors of the main
+  dataset.</li>
+</ol>
+<p>A submitter <span class="kw may">MAY</span> additionally record the draft <code>environment</code> block
+(schema <code>1.4-draft</code>: power limit, clocks, idle temperature, GPU UUID). This is
+<span class="kw may">OPTIONAL</span> at v1.1 and <span class="kw should">RECOMMENDED</span> for v1.0-grade
+submissions (§5, level C): the 2026-09 two-card re-test found that power limit, clock state and physical card
+identity were the three context fields whose absence cost the most when reconstructing a session.</p>
+
+<h2>5. Validation and Compliance</h2>
+<div class="note"><b>A conforming submission <span class="kw must">MUST</span> pass validation against the
+EcoCompute report schema.</b> The machine-readable contract is
+<a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json"><code>ecocompute-mlcube/schema/energy.schema.json</code></a>
+(JSON Schema draft-07) in the container repository; the reference implementation is the
+<a href="https://github.com/hongping-zh/ecocompute-mlcube">EcoCompute energy MLCube</a>, which validates every
+report it writes before emitting it, and whose test suite includes deliberately malformed reports (missing
+<code>results</code>, <code>basis: "measured"</code> with a fallback source, mismatched scenario labels) that
+must fail. A schema change that lets any of them pass is itself a bug.</div>
+<p>“Valid” is not one binary. A report is graded at the highest level it satisfies:</p>
+<table class="grid">
+  <tr><th>Level</th><th>Name</th><th>Criteria</th><th>May be used for</th></tr>
+  <tr><td>A</td><td>Schema-valid</td><td>Passes <code>ecocompute-energy/1.3</code> validation; required keys present and consistent</td><td>Chart overlay; browser-side comparison; archived as-is</td></tr>
+  <tr><td>B</td><td>Submittable</td><td>A <b>plus</b> same-session FP16 baseline, <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, thermal state not violated (or violation disclosed)</td><td>Publication in <code>/replications/</code>, credited; enters the next dataset release after review</td></tr>
+  <tr><td>C</td><td>v1.0-grade <span style="color:var(--mut)">(draft)</span></td><td>B <b>plus</b> complete <code>environment</code> block, achieved sample rate, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported</td><td>Counted toward the v1.0 micro-standard bar</td></tr>
+</table>
+<p>Level-C criteria beyond level B are draft and tracked in the container issue tracker; the
+<code>environment</code> block is not yet emitted by the container at schema <code>1.3</code>.</p>
+
+<h2>6. Versioning, Pooling and Comparability</h2>
+<h3>6.1 Reports are never rewritten</h3>
+<p>A <code>1.2</code> report stays <code>1.2</code>. If its numbers are re-derived (window re-cut, baseline
+recomputed), the re-derivation is a <b>new artifact</b> with its own provenance entry, and the site changelog
+records what moved and why.</p>
+<h3>6.2 What invalidates a comparison</h3>
+<p>Two reports may both be valid yet not comparable. A pair is not comparable if it differs in: software stack
+(quantization kernels move NF4/INT8 results between library versions), measurement window, thermal mode,
+locked vs unlocked clocks/power, or any workload field (batch, tokens, context). Supplementary sessions
+measured on a different stack <span class="kw must">MUST</span> be archived separately and
+<span class="kw must">MUST NOT</span> be silently pooled into seed counts or fitted curves; versioning is by
+session archive and the changelog says which counts, if any, a session entered.</p>
+<h3>6.3 Card vs session identity</h3>
+<p>The physical card (GPU UUID) and the session are different units of replication. A dataset that says n = 3
+for one configuration may contain three sessions on two physical cards — for questions about the card
+population the effective sample is <code>n_card</code> = 2, not 3. Reports <span class="kw should">SHOULD</span>
+state both counts, and <span class="kw should">SHOULD NOT</span> present a card-vs-session variance
+decomposition unless each card has at least two sessions.</p>
+
+<h2>7. Limitations</h2>
+<ol>
+  <li>NVML reports GPU-package power only: CPU, DRAM, PSU losses and cooling are excluded.</li>
+  <li>Single-stream generation only (§1.2).</li>
+  <li>Curves fitted per architecture class pool cards of that class (the Ada class pools RTX 4090 and
+  RTX 4090D, which differ by roughly 20 percentage points at the same size).</li>
+  <li>Results are backend-specific: NF4 and INT8 here mean bitsandbytes NF4 and <code>LLM.int8()</code> at the
+  versions recorded in each report. A statement like “INT8 cost energy at every size we tested” is a claim
+  about that backend on those cards, not about INT8 as a format.</li>
+  <li>This is a research protocol, not a certified benchmark.</li>
+</ol>
+<p>What would falsify the central claims this protocol produces: a measured run, from this container or an
+equivalent NVML-based protocol, showing quantization saving energy below the published crossover for that
+architecture, or costing energy above it. Such runs are published on the replications page whether they agree
+or not.</p>
+
+<h2>8. Version Correspondence</h2>
+<table class="grid">
+  <tr><th>Protocol</th><th>Report schema</th><th>Thermal block</th><th>Environment block</th><th>Companion datasets (concept DOI)</th></tr>
+  <tr><td>v1.0 (implicit, 2026-07 seed sessions)</td><td><code>ecocompute-energy/1.2</code></td><td>absent (thermal state unknown)</td><td>absent</td><td>main dataset <a href="https://doi.org/10.5281/zenodo.19647290">10.5281/zenodo.19647290</a></td></tr>
+  <tr><td><b>v1.1 (this document)</b></td><td><code>1.2</code> accepted, <code>1.3</code> live</td><td><b>required</b> (§4.6)</td><td>draft <code>1.4-draft</code>, optional (§4.8)</td><td>main dataset <a href="https://doi.org/10.5281/zenodo.19647290">19647290</a> · RTX 4090 deep dive <a href="https://doi.org/10.5281/zenodo.22037483">22037483</a> (concept <a href="https://doi.org/10.5281/zenodo.22019741">22019741</a>) · RTX 5090 re-test <a href="https://doi.org/10.5281/zenodo.22855133">22855133</a></td></tr>
+</table>
+<p>Dataset DOIs and the protocol DOI are separate. Each dataset release states, in its metadata, the protocol
+version its sessions were measured under; the table above is the normative correspondence.</p>
+
+<h2>9. References</h2>
+<ul>
+  <li>Bradner, S., “Key words for use in RFCs to Indicate Requirement Levels”, BCP 14, RFC 2119.</li>
+  <li>Leiba, B., “Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words”, BCP 14, RFC 8174.</li>
+  <li>NVIDIA Management Library (NVML), as exposed by <code>nvidia-ml-py</code>.</li>
+  <li>EcoCompute energy MLCube (reference implementation):
+  <code>github.com/hongping-zh/ecocompute-mlcube</code> (Apache-2.0).</li>
+  <li>Report schema: <code>ecocompute-mlcube/schema/energy.schema.json</code> (JSON Schema draft-07).</li>
+  <li>Website and evidence: <code>quantenergy.tech</code>.</li>
+  <li>Preprint: “Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference
+  Across NVIDIA GPU Platforms”, SSRN #6854700
+  (<a href="https://doi.org/10.5281/zenodo.21066652">archived: 10.5281/zenodo.21066652</a>).</li>
+</ul>
+
+<h2>Appendix A. Relationship to the Website</h2>
+<p>The site <code>quantenergy.tech</code> is organised in four layers, of which this document is the normative
+core:</p>
+<table class="grid">
+  <tr><th>Layer</th><th>URL</th><th>Role</th></tr>
+  <tr><td>Spec (this document)</td><td><code>/spec/</code> + DOI</td><td>The protocol itself</td></tr>
+  <tr><td>Spec guide</td><td><code>/method/</code></td><td>Human-readable guide: requirements walkthrough, number glossary, contribution flow</td></tr>
+  <tr><td>Machine contract</td><td><code>/schema/</code></td><td>The JSON schema, compliance levels, migration rules</td></tr>
+  <tr><td>Evidence</td><td><code>/measured/</code></td><td>Every measured number, its n, its stack and its DOI</td></tr>
+  <tr><td>Updates</td><td><code>/changelog/</code></td><td>What changed, in what order, and why</td></tr>
+  <tr><td>Findings</td><td><code>/blog/</code></td><td>Exploratory write-ups; not counted in the coverage matrix</td></tr>
+</table>
+
+<footer class="doc">
+  Issued 2026-09-25 · EcoCompute is an independent research project by Hongping Zhang
+  (<a href="https://orcid.org/0009-0000-2529-4613">ORCID 0009-0000-2529-4613</a>).
+  This document is licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+</footer>
+
+</div>
+</body>
+</html>
