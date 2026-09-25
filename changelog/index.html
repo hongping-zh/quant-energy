@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Changelog — what changed on this site and in its data</title>
+<meta name="description" content="Every change to the EcoCompute protocol, datasets and site: measurement-window unification, the RTX 5090 stack re-test, the RTX 4090 NF4 two-card re-test, and the four-layer site restructure — each with its date, type and deep link." />
+<link rel="canonical" href="https://quantenergy.tech/changelog/" />
+<meta property="og:title" content="Changelog — what changed on this site and in its data" />
+<meta property="og:description" content="Data, protocol, finding and site changes, newest first — each entry links to the evidence it rests on." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/changelog/" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
+<meta name="author" content="Hongping Zhang" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"TechArticle",
+  "headline":"Changelog — what changed on this site and in its data",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/changelog/",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e;--amber:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+  p,li{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+  /* entry list */
+  .entry{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:18px 20px;margin:0 0 14px}
+  .ehead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .edate{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .etag{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+  .etag.data{color:#34d399;border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.08)}
+  .etag.finding{color:#fbbf24;border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.08)}
+  .etag.protocol{color:#38bdf8;border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.08)}
+  .etag.site{color:#a78bfa;border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.08)}
+  .entry h2{font-size:16.5px;margin:2px 0 6px;line-height:1.4}
+  .entry p{margin:6px 0 0;font-size:14px}
+  .rule-note{border-left:3px solid var(--amber);padding:2px 0 2px 12px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .feed{font-size:12px;color:var(--muted);margin:18px 0 0}
+  @media (max-width:720px){ h1{font-size:24px} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Changelog</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/method/">Protocol</a><a href="/measured/">Evidence</a><a href="/blog/">Findings</a><a href="/about/">About</a></nav>
+    </div>
+
+    <h1>What changed, and when</h1>
+    <p class="sub">Every change to the <b>protocol</b>, the <b>data</b>, published <b>findings</b> and the <b>site</b> itself —
+    newest first, each entry linking to the evidence it rests on. Entries older than this page live in the
+    <a href="/blog/">notes</a> and the dataset release notes on Zenodo; nothing before 2026-09-03 was retroactively
+    reconstructed.</p>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-25</span><span class="etag site">site</span><span class="etag protocol">protocol</span></div>
+      <h2>The site is restructured into four layers, and a number bug is fixed</h2>
+      <p>The single mixed homepage is split into <a href="/method/">Spec</a> (the protocol, normative),
+      <a href="/measured/">Evidence</a> (everything measured), <a href="/changelog/">Changelog</a> (this page) and
+      <a href="/blog/">Findings</a> (exploratory results, explicitly not counted in the coverage matrix). No existing
+      URL changed; <code>/changelog/</code> is the only new one. A <a href="/method/#glossary">number glossary</a> now
+      defines every count on the site with its denominator, and the homepage hero shows a single number (26 of 56
+      coverage-matrix cells). Also fixed: the meta description claimed "26 of 56 cells are still empty" — the empty
+      count is <b>30</b>; the measured count is 26. Search snippets had been propagating the wrong number.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-25</span><span class="etag data">data</span></div>
+      <h2>RTX 4090 NF4 re-tested across two physical cards: July's +0.8% anchor holds</h2>
+      <p>Qwen2.5-3B NF4 vs FP16, three independent sessions across <b>two physical RTX 4090s</b> (different UUIDs),
+      current stack (torch 2.14.0, CUDA 13.0, bitsandbytes 0.50.2 — the same stack as the 2026-09-20 RTX 5090
+      re-test): <b>+3.5% / +0.7% / +0.5%</b>, mean <b>+1.6%</b>. Conclusions: the July n&nbsp;=&nbsp;1 <b>+0.8% anchor
+      is confirmed</b> (Ada 3B is break-even to a small penalty); the <b>−15.1%</b> from the 2026-08-19 paired-quality
+      session is <b>closed as an outlier</b> (nothing near it in n&nbsp;=&nbsp;3); and the RTX 5090's stack flip
+      (crossover ≈5B&nbsp;→&nbsp;≈1.8B) <b>did not reproduce on Ada</b> — same stack, opposite behaviour, so the flip is
+      Blackwell-specific or card-specific, not a general stack effect. First quantitative card-vs-session variance
+      split for this project: <b>card-to-card ≈ 2.8 points, same-card session-to-session ≈ 0.2 points</b>.</p>
+      <p class="rule-note">Kept as a separate versioned archive
+      (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_bnb_2026-09-25.csv" target="_blank" rel="noopener"><code>data/rtx4090_bnb_2026-09-25.csv</code></a>,
+      with power-trace sidecars and the generator script) — <b>not pooled</b> into the seed counts or the fitted curves,
+      per the same versioning policy as the RTX 5090 re-test. Stack differs from the published pins (bitsandbytes
+      0.50.2 ≠ 0.43.3), so vs_fp16 is not directly comparable with image runs; the reports say so.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-24</span><span class="etag data">data</span><span class="etag protocol">protocol</span></div>
+      <h2>All energy numbers unified on the generation measurement window</h2>
+      <p>The coverage matrix and every llama.cpp number now state one window: <b>generation only</b> — model load,
+      on-load quantization and warm-up excluded. The bitsandbytes rows always measured this way (the container starts
+      its sampler after warm-up; the grid once mislabelled them whole-process), and the llama.cpp GGUF row was
+      re-cut from its archived 100&nbsp;Hz power traces: at 576 output tokens it reads
+      <b>−62.9%</b> on the counter basis (the previously displayed −63.0 was a rounding artefact of the full-precision
+      −62.9481). Window choice is load-bearing: one session re-integrated over whole-process vs generation vs
+      decode-only windows moves its 64-token figure by up to <b>12.5 percentage points</b> (576-token figure: within 2).
+      Every energy claim now states its window and output length.</p>
+      <p class="rule-note">Evidence: <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_llamacpp_window_comparison_2026-09-24.csv" target="_blank" rel="noopener"><code>data/rtx4090_llamacpp_window_comparison_2026-09-24.csv</code></a>
+      (generated from the 45 archived traces by <code>build/make_window_comparison.py</code>, assertion-guarded).</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-20</span><span class="etag data">data</span><span class="etag finding">finding</span></div>
+      <h2>The RTX 5090 crossover moved from ≈5B to ≈1.8B on a current stack</h2>
+      <p>Re-measuring the same RTX 5090 months later, on bitsandbytes 0.50.2 / torch 2.14 / CUDA 13.0, moved the NF4
+      break-even size from <b>≈5B to ≈1.8B</b> — nothing about the hardware changed. A crossover is a property of the
+      software stack, not only of the architecture. 22 runs, n&nbsp;=&nbsp;2 across a full instance restart; the two
+      sessions agree to 2.1 points on average, 5.2 at worst. INT8 stayed positive at every size (+55% at 7B, +256% at
+      0.5B). A torchao FP8 companion sweep found both FP8 code paths (weight-only, dynamic activation+weight) more
+      expensive than FP16 at every size, failing in opposite directions.</p>
+      <p class="rule-note">Maintained as a separate archive — <b>not pooled into the seed counts or the fitted
+      curves</b>, which still describe the 0.4x-era stack: pooling the two would produce a crossover neither session
+      measured. Data: <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx5090_bnb_2026-09-20.csv" target="_blank" rel="noopener"><code>rtx5090_bnb_2026-09-20.csv</code></a>,
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx5090_fp8_torchao_2026-09-20.csv" target="_blank" rel="noopener"><code>rtx5090_fp8_torchao_2026-09-20.csv</code></a>;
+      raw reports archived at <a href="https://doi.org/10.5281/zenodo.22855133" target="_blank" rel="noopener">10.5281/zenodo.22855133</a>.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-03</span><span class="etag finding">finding</span></div>
+      <h2>The kernel decides the sign, not the bit width</h2>
+      <p>Inside one runtime on one RTX 4090: llama.cpp GGUF <code>Q4_0</code> decoding Llama-3.1-8B-Instruct costs
+      <b>61.9% less</b> energy per token than GGUF <code>F16</code> (for +5.60% perplexity) — the quantized arms draw
+      <em>more</em> power (296–319&nbsp;W vs 273&nbsp;W) and win purely on throughput. On the same card, bitsandbytes
+      <code>LLM.int8()</code> costs <b>106% more</b>. Same idea, opposite sign: format-level claims ("4-bit saves
+      energy") are meaningless without the kernel. Corrected the same day over 45 runs (n&nbsp;=&nbsp;5, randomized
+      order, cooldown before every run, hardware energy counter): the provisional −63.6% was an overestimate.</p>
+      <p class="rule-note">Note: <a href="/blog/it-was-never-the-format.html">the note</a> and raw data
+      (<a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a>)
+      predate the 2026-09-24 window unification; where the two disagree on a number, the window-comparison CSV is
+      authoritative.</p>
+    </div>
+
+    <p class="feed">Older history — the v1.1.0 dataset release, the July RTX 4090 deep dive, the August INT8 repeats —
+    is documented in the <a href="/blog/">notes</a> and in each Zenodo record's release notes, not reconstructed here.</p>
+
+    <footer>
+      EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
+      (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
+      <br><a href="/">← Back to the tool</a> · <a href="/method/">Protocol</a> · <a href="/measured/">Evidence</a> · <a href="/blog/">Findings</a> · <a href="/about/">About</a>
+    </footer>
+  </div>
+</body>
+</html>
