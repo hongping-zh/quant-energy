@@ -300,12 +300,21 @@
   .aboutlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--card);transition:border-color .15s,color .15s}
   .aboutlink:hover{border-color:var(--accent);color:var(--txt)}
   /* First site-wide responsive breakpoint: at phone widths the nav becomes a
-     horizontally scrollable single row instead of wrapping over the h1. */
+     horizontally scrollable single row instead of wrapping over the h1.
+     .more (set by JS only when the row actually overflows) pins a fade at the
+     right edge as the scroll hint; buttons stack full-width; hero text tightens. */
   @media (max-width:720px){
     .topnav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
     .topnav::-webkit-scrollbar{display:none}
     .topnav .aboutlink{flex:none;white-space:nowrap}
+    .topnav.more::after{content:"";position:sticky;right:0;top:0;flex:none;order:9;width:34px;margin-left:-34px;background:linear-gradient(90deg,rgba(11,16,32,0),rgba(11,16,32,.92));pointer-events:none}
     header h1{font-size:26px}
+    .wrap{padding:20px 14px 44px}
+    header>p{font-size:13px}
+    .tagline{font-size:13px !important;letter-spacing:0 !important;margin-top:8px !important}
+    .cta{flex-direction:column;align-items:stretch;gap:10px}
+    .cta a.btn,.cta a.ghost,.cta button.ghost{justify-content:center;text-align:center}
+    .cta a.btn>span{display:block;font-size:11.5px;font-weight:500;opacity:.75}
   }
 </style>
 <script>
@@ -672,7 +681,7 @@
   <div class="card" id="recent">
     <h2>Recent updates · 最近更新</h2>
     <p class="meta" style="line-height:1.9;margin:0">
-      <b>2026-09-25</b> · <span class="tag estimated" style="font-size:10px">data</span> RTX 4090 NF4 re-tested across two physical cards — July's +0.8% anchor holds (mean +1.6%, n=3), the −15.1% session closed as an outlier, the 5090 stack flip did not reproduce on Ada. <a href="/changelog/" style="color:var(--accent)">→</a><br>
+      <b>2026-09-25</b> · <span class="tag estimated" style="font-size:10px">data</span> RTX 4090 NF4 re-tested across two physical cards — July's +0.8% anchor holds (mean +1.6%, n=3); the −15.1% historical reading was not reproduced and stays a divergent observation; no direction flip at the 3B anchor under the current stack. <a href="/changelog/" style="color:var(--accent)">→</a><br>
       <b>2026-09-24</b> · <span class="tag interpolated" style="font-size:10px">data</span> All energy numbers unified on the generation measurement window; the llama.cpp row re-cut from its 100 Hz traces (−62.9% at 576 tokens, counter basis). <a href="/changelog/" style="color:var(--accent)">→</a><br>
       <b>2026-09-25</b> · <span class="tag conf-medium" style="font-size:10px">site</span> The site split into four layers — spec, evidence, changelog, findings; every count now has a defined denominator. <a href="/changelog/" style="color:var(--accent)">→</a><br>
       <span class="badge">Full history, each entry linked to its evidence: <a href="/changelog/" style="color:var(--accent)">the changelog →</a></span>
@@ -1676,6 +1685,12 @@ function loadOverlayFromURL(q){
 })();
 
 track("pageview_demo", {});
+
+/* Mobile nav scroll hint: flag the row as scrollable only when it truly overflows. */
+(function(){
+  var n=document.querySelector('.topnav');
+  if(n&&n.scrollWidth>n.clientWidth+4){n.classList.add('more');}
+})();
 </script>
 </body>
 </html>

@@ -123,15 +123,81 @@
       <div class="stat"><div class="v">+0.5%</div><div class="k">trial C · card 2, second session</div></div>
       <div class="stat"><div class="v">+1.6%</div><div class="k">mean (n = 3)</div></div>
     </div>
+    <!-- Overlay chart: July trajectory from the corrected table in
+         /blog/we-ran-our-own-container-rtx4090.html (Δ recomputed from energies, per the
+         2026-08-11 correction; same values the fitted curves use); re-test cluster from
+         data/rtx4090_bnb_2026-09-25.csv. Trial dots are offset horizontally only for
+         visibility — B and C differ by 0.2 pp and nearly coincide at this scale. -->
+    <svg viewBox="0 0 680 300" role="img" aria-label="RTX 4090 NF4 versus FP16 energy per token by model size. July 2026 session, one card, pinned stack: plus 35.6 percent at 0.5B, plus 16.3 at 1.1B, plus 15.1 at 1.5B, plus 0.8 at 3B, minus 28.5 at 7B. The 2026-09-25 re-test at 3B on the current stack, two physical cards: trials plus 3.5, plus 0.7 and plus 0.5, mean plus 1.6. Only the 3B point was re-measured."
+         style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;margin-top:14px;background:var(--card2)">
+      <!-- gridlines + y labels -->
+      <g stroke="#243352" stroke-width="1">
+        <line x1="52" y1="44" x2="650" y2="44"/><line x1="52" y1="102" x2="650" y2="102"/>
+        <line x1="52" y1="217" x2="650" y2="217"/><line x1="52" y1="260" x2="650" y2="260"/>
+      </g>
+      <line x1="52" y1="159" x2="650" y2="159" stroke="#3b4a6b" stroke-width="1" stroke-dasharray="5 4"/>
+      <g font-family="inherit" font-size="11" fill="#94a3b8" text-anchor="end">
+        <text x="46" y="48">+40%</text><text x="46" y="106">+20%</text><text x="46" y="163">0</text>
+        <text x="46" y="221">−20%</text><text x="46" y="264">−35%</text>
+      </g>
+      <text x="14" y="150" font-size="11" fill="#94a3b8" text-anchor="middle" transform="rotate(-90 14 150)">NF4 vs FP16 · energy per token (%)</text>
+      <!-- x ticks -->
+      <g font-family="inherit" font-size="11" fill="#94a3b8" text-anchor="middle">
+        <text x="52" y="282">0.5B</text><text x="231" y="282">1.1B</text><text x="301" y="282">1.5B</text>
+        <text x="458" y="282">3B</text><text x="650" y="282">7B</text>
+      </g>
+      <text x="351" y="298" font-size="11" fill="#94a3b8" text-anchor="middle">model size (log scale)</text>
+      <!-- 3B guide -->
+      <line x1="458" y1="52" x2="458" y2="260" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 5" opacity=".35"/>
+      <!-- July 2026 trajectory: one card, pinned stack, n=1 per point -->
+      <polyline points="52,57 231,112 301,116 458,157 650,241" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <g fill="#94a3b8">
+        <circle cx="52" cy="57" r="4.5"/><circle cx="231" cy="112" r="4.5"/><circle cx="301" cy="116" r="4.5"/>
+        <circle cx="458" cy="157" r="4.5"/><circle cx="650" cy="241" r="4.5"/>
+      </g>
+      <g font-family="inherit" font-size="11" fill="#94a3b8">
+        <text x="52" y="45">+35.6%</text>
+        <text x="231" y="100" text-anchor="middle">+16.3%</text>
+        <text x="301" y="133" text-anchor="middle">+15.1%</text>
+        <text x="644" y="247" text-anchor="end">−28.5%</text>
+        <text x="446" y="170" text-anchor="end">July +0.8%</text>
+      </g>
+      <!-- 2026-09-25 re-test cluster at 3B: trials + mean -->
+      <g fill="#38bdf8" opacity=".85">
+        <circle cx="448" cy="149" r="3.5"/><circle cx="458" cy="157" r="3.5"/><circle cx="468" cy="158" r="3.5"/>
+      </g>
+      <polygon points="458,148 465,155 458,162 451,155" fill="#38bdf8" stroke="#e8edf7" stroke-width="1"/>
+      <text x="474" y="150" font-family="inherit" font-size="11" font-weight="700" fill="#38bdf8">re-test mean +1.6%</text>
+      <text x="474" y="164" font-family="inherit" font-size="10" fill="#94a3b8">A +3.5 · B +0.7 · C +0.5</text>
+      <!-- legend -->
+      <g font-family="inherit" font-size="11.5" fill="#94a3b8">
+        <line x1="380" y1="20" x2="404" y2="20" stroke="#94a3b8" stroke-width="2"/><circle cx="392" cy="20" r="4" fill="#94a3b8"/>
+        <text x="412" y="24">July 2026 · pinned stack (bnb 0.43.3) · n = 1</text>
+        <polygon points="392,38 397,43 392,48 387,43" fill="#38bdf8" stroke="#e8edf7" stroke-width="1"/>
+        <text x="412" y="47">2026-09-25 · current stack (bnb 0.50.2) · 2 cards, n = 3</text>
+      </g>
+    </svg>
+    <p class="chartnote" style="margin-top:10px">
+      <b>Same cell, two stacks.</b> The gray trajectory is the July session on one card (one session per point); the
+      blue cluster is the 3B cell only, re-measured on the current stack. <b>Only 3B was re-measured</b> — the rest of
+      the July line is not re-tested, and the pooled fitted Ada curve (crossover ≈3.7B, which also carries 4090D
+      anchors) is a different object from either. Trial dots are offset horizontally for visibility; B and C differ by
+      0.2&nbsp;pp and nearly coincide at this scale.
+    </p>
     <p class="chartnote" style="margin-top:14px">
       <b>1 · July's +0.8% anchor is confirmed</b> — across two cards, three sessions and a whole stack generation, Ada
       at 3B is break-even to a small NF4 penalty.
-      <b>2 · The −15.1% is closed as an outlier</b> — nothing within 15 points of it in n&nbsp;=&nbsp;3.
-      <b>3 · The RTX 5090's stack flip did not reproduce on Ada</b> — the same stack that moved the 5090 crossover by
-      3B left this card at break-even, so that flip is Blackwell-specific or card-specific, not a general stack effect.
-      <b>4 · First card-vs-session variance split for this project:</b> card-to-card ≈ <b>2.8 points</b> while
-      same-card session-to-session is ≈ <b>0.2 points</b> — an order of magnitude apart, and the reason the v1.0
-      bar asks for multiple physical cards per architecture. The two cards' FP16 baselines agree to &lt;0.1%
+      <b>2 · The −15.1% historical reading was not reproduced</b> — none of the three current-stack sessions lands
+      within 15 points of it. Its software stack and conditions differ from the present run and no specific error was
+      identified, so it is retained as a divergent historical observation and excluded from current-stack conclusions.
+      <b>3 · No direction flip at the 3B anchor</b> — the same stack that moved the 5090 crossover by 3B left this
+      card at break-even. Only the 3B anchor was re-measured; whether the full Ada crossover curve moves under this
+      stack awaits the 1.5B and 7B points.
+      <b>4 · Card and session gaps, described — not decomposed:</b> the two cards' observations differ by
+      ≈ <b>2.8 points</b>; the two sessions on card 2 differ by ≈ <b>0.2 points</b>. Card 1 was measured only once,
+      so this is not a formal variance decomposition — and for card-population questions the physical sample is
+      n<sub>card</sub>&nbsp;=&nbsp;2. It still motivates the v1.0 bar's multiple-cards-per-architecture requirement.
+      The two cards' FP16 baselines agree to &lt;0.1%
       (3426 vs 3423 mJ/tok), and the perplexity probe reproduces to <b>three decimals</b> across all three sessions
       (5.8004 vs 4.5473) — same code path, so the residual differences are energy, not software.
     </p>

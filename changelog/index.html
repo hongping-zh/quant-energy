@@ -90,10 +90,14 @@
       current stack (torch 2.14.0, CUDA 13.0, bitsandbytes 0.50.2 — the same stack as the 2026-09-20 RTX 5090
       re-test): <b>+3.5% / +0.7% / +0.5%</b>, mean <b>+1.6%</b>. Conclusions: the July n&nbsp;=&nbsp;1 <b>+0.8% anchor
       is confirmed</b> (Ada 3B is break-even to a small penalty); the <b>−15.1%</b> from the 2026-08-19 paired-quality
-      session is <b>closed as an outlier</b> (nothing near it in n&nbsp;=&nbsp;3); and the RTX 5090's stack flip
-      (crossover ≈5B&nbsp;→&nbsp;≈1.8B) <b>did not reproduce on Ada</b> — same stack, opposite behaviour, so the flip is
-      Blackwell-specific or card-specific, not a general stack effect. First quantitative card-vs-session variance
-      split for this project: <b>card-to-card ≈ 2.8 points, same-card session-to-session ≈ 0.2 points</b>.</p>
+      session <b>was not reproduced</b> in three current-stack sessions — its stack and conditions differ from the
+      present run and no specific error was identified, so it is retained as a divergent historical observation and
+      excluded from current-stack conclusions; and at the <b>3B anchor</b> the RTX 5090's stack flip
+      (crossover ≈5B&nbsp;→&nbsp;≈1.8B) <b>did not appear on the RTX 4090</b> — only that one anchor was re-measured,
+      and whether the full Ada crossover curve moves under the current stack awaits the 1.5B and 7B points.
+      Observed gaps: the two cards differ by ≈ <b>2.8 points</b>, the two sessions on card 2 by ≈ <b>0.2 points</b>
+      (card 1 was measured once, so this is a description, not a variance decomposition; for card-population questions
+      n<sub>card</sub>&nbsp;=&nbsp;2).</p>
       <p class="rule-note">Kept as a separate versioned archive
       (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_bnb_2026-09-25.csv" target="_blank" rel="noopener"><code>data/rtx4090_bnb_2026-09-25.csv</code></a>,
       with power-trace sidecars and the generator script) — <b>not pooled</b> into the seed counts or the fitted curves,

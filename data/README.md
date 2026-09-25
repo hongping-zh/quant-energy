@@ -51,17 +51,22 @@ re-derives every delta and refuses to write if the reports disagree with the quo
 ### Read this before using the numbers
 
 - **The July anchor stands.** Mean +1.6%, range +0.5 to +3.5, against the July single-session
-  +0.8% — across a card change *and* a stack change. 3B on Ada is break-even for NF4; the
-  4090D +25.2% reading stays a card/session offset and the −15.1% paired-session reading is
-  now an outlier (n = 3 here, none within 3 points of it).
-- **The 5090 stack flip did not reproduce on Ada.** Same stack as the 5090 session, where this
-  cell reads −8.0/−7.4%: on 4090 it reads +0.5 to +3.5%. The crossover shift is a property of
-  that Blackwell card + stack combination, not a general law of the new bitsandbytes.
-- **Card-to-card gap ≫ same-card session noise — the first quantitative split on this site.**
-  B vs C (same card, new sessions) differ by 0.2 pp; A vs B (different cards, same protocol)
-  differ by 2.8 pp — an order of magnitude apart, while the two cards' FP16 baselines agree
-  within 1%. This is the evidence behind the "2–3 physical cards per architecture" requirement
-  in the v1.0 checklist: extra sessions on one card do not buy the confidence a second card does.
+  +0.8% — across a card change *and* a stack change. 3B on Ada is break-even for NF4.
+- **The −15.1% historical reading was not reproduced — not "closed".** None of the three
+  current-stack sessions lands within 15 points of it. Its software stack and experimental
+  conditions differ from the present run and no specific error was identified, so it is
+  retained as a divergent historical observation, excluded from current-stack conclusions.
+- **No direction flip at the 3B anchor under the current stack.** Same stack as the 5090
+  session, where this cell reads −8.0/−7.4%: on 4090 it reads +0.5 to +3.5%. Only the 3B
+  anchor was re-measured; whether the full Ada crossover curve moves under this stack awaits
+  the 1.5B and 7B points.
+- **Card and session gaps, described — not decomposed.** B vs C (same card, new sessions)
+  differ by 0.2 pp; A vs B (different cards, same protocol) differ by 2.8 pp, while the two
+  cards' FP16 baselines agree within 1%. Card 1 was measured only once, so this is a
+  description, not a formal variance decomposition — and for card-population questions the
+  physical sample is n_card = 2. It still motivates the "2–3 physical cards per architecture"
+  requirement in the v1.0 checklist: extra sessions on one card do not buy the confidence a
+  second card does.
 - **The quality probe is a software checksum.** Perplexity 5.8004 vs FP16 4.5473 (+27.557%,
   14123 tokens) reproduced bit-for-bit across all three trials *and* against the 5090 session's
   +27.594% on the same model — same corpus, greedy decode, same stack. Where the numbers
