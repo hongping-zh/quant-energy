@@ -9,7 +9,7 @@
 | **Author** | Hongping Zhang · ORCID [0009-0000-2529-4613](https://orcid.org/0009-0000-2529-4613) |
 | **License** | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | **Validation** | `ecocompute-energy/1.2` or later (live: `1.3`) |
-| **Canonical** | Zenodo DOI (being minted; this file is the pre-publication text) · rendered at `quantenergy.tech/spec/` |
+| **Canonical** | [DOI 10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) (concept: [10.5281/zenodo.22958674](https://doi.org/10.5281/zenodo.22958674)) · rendered at `quantenergy.tech/spec/` |
 | **Machine contract** | [`ecocompute-mlcube/schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json) |
 
 ---
@@ -32,8 +32,9 @@ This is the normative text of EcoCompute Protocol v1.1. The website `quantenergy
 human-readable guide with worked examples at `/method/`, the measured evidence at `/measured/`,
 data changes at `/changelog/`, and exploratory write-ups at `/blog/` — but the normative text is
 **this document**; the web pages are reader's guides. Where a page and this document
-disagree, this document governs. A Zenodo DOI is being minted for this document so that papers can
-cite "EcoCompute Protocol v1.1, DOI: 10.5281/zenodo.xxxxxxx" rather than a web page that can
+disagree, this document governs. The document is archived at
+[DOI 10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) so that papers can
+cite "EcoCompute Protocol v1.1, DOI: 10.5281/zenodo.22958675" rather than a web page that can
 change; dataset DOIs and this protocol DOI are separate and correspond through the version table
 (§8).
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Artifacts &amp; citation — every citable EcoCompute output and how they relate</title>
-<meta name="description" content="One page listing every citable EcoCompute artifact — the preprint, the main dataset v1.1.0, the RTX 4090 (Ada) deep dive — with concept vs version DOIs, how they relate, and ready-to-paste BibTeX." />
+<meta name="description" content="One page listing every citable EcoCompute artifact — the preprint, the protocol specification v1.1, the main dataset v1.1.0, the RTX 4090 (Ada) deep dive — with concept vs version DOIs, how they relate, and ready-to-paste BibTeX." />
 <link rel="canonical" href="https://quantenergy.tech/cite/" />
 <meta property="og:title" content="Artifacts &amp; citation — EcoCompute" />
 <meta property="og:description" content="Which DOI should you cite? All EcoCompute artifacts, their concept and version DOIs, their relationships, and BibTeX." />
@@ -55,10 +55,11 @@
     </div>
 
     <h1>Which EcoCompute artifact should I cite?</h1>
-    <p class="sub">There is one paper, one main dataset, and one record per single-platform session. This page is the single authoritative list — what each one is, how they relate, and which DOI to use.</p>
+    <p class="sub">There is one paper, one protocol specification, one main dataset, and one record per single-platform session. This page is the single authoritative list — what each one is, how they relate, and which DOI to use.</p>
 
     <div class="callout">
-      <b>The rule of thumb.</b> Cite the <b>paper</b> for the argument or the method, the <b>main dataset v1.1.0</b> for
+      <b>The rule of thumb.</b> Cite the <b>paper</b> for the argument, the <b>protocol specification</b> for the
+      measurement method, the <b>main dataset v1.1.0</b> for
       any number on this site, and the <b>RTX 4090 (Ada) deep dive</b> only for the RTX 4090 column. Use a
       <b>version DOI</b> in a reference list (it pins exactly what you read); use a <b>concept DOI</b> when you link
       to “the dataset” in prose and want the newest version.
@@ -72,6 +73,12 @@
         <td>The argument and the measurement methodology</td>
         <td><a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a></td>
         <td><a href="https://doi.org/10.5281/zenodo.21066654" target="_blank" rel="noopener">10.5281/zenodo.21066654</a></td>
+      </tr>
+      <tr>
+        <td><b>Protocol v1.1</b> <span class="pill cite">normative</span></td>
+        <td>The measurement specification itself — MUST/SHOULD/MAY requirements, workload, baseline, report fields</td>
+        <td><a href="https://doi.org/10.5281/zenodo.22958674" target="_blank" rel="noopener">10.5281/zenodo.22958674</a></td>
+        <td><a href="https://doi.org/10.5281/zenodo.22958675" target="_blank" rel="noopener">10.5281/zenodo.22958675</a></td>
       </tr>
       <tr>
         <td><b>Main dataset v1.1.0</b> <span class="pill cite">source of truth</span></td>
@@ -123,6 +130,10 @@
 <pre>preprint (SSRN #6854700, Zenodo 21066652)
    |  states the claim and the NVML measurement protocol
    |
+   +-- protocol v1.1 (22958674 -> 22958675)  ............  THE NORMATIVE SPECIFICATION
+   |      RFC-2119 style MUST/SHOULD/MAY; bound to ecocompute-energy/1.2+ schema validation
+   |      the web /method/ page is its reader's guide
+   |
    +-- main dataset v1.1.0 (19647289 -> 19647290)  ......  SOURCE OF TRUTH for this site
    |      360+ configurations, 0.5B-14B, 4 architectures, FP16/NF4/INT8/FP8, n=2, CV &lt; 2%
    |      supersedes  dataset v1 (18900288 -> 18900289, 113 configurations)
@@ -166,7 +177,29 @@
     </div>
 
     <div class="card">
-      <h3>2 · Main dataset v1.1.0 — the numbers on this site</h3>
+      <h3>2 · Protocol v1.1 — the normative specification</h3>
+      <p class="kv"><b>Published</b> 2026-09-25 · CC BY 4.0</p>
+      <p class="kv"><b>Contents</b> the measurement specification itself, extracted from the site's method layer into a standalone W3C-Note/IETF-RFC-style document: workload (single-stream decode, batch 1, 256 generated tokens), baseline (same-session same-card FP16), measurement source (NVML GPU-package power at ≥10&nbsp;Hz), measurement window, report fields, compliance levels A/B/C, and the protocol ↔ schema ↔ dataset version table. A conforming submission MUST pass <code>ecocompute-energy/1.2+</code> validation.</p>
+      <p class="kv"><b>Cite it for</b> the measurement method in any paper that follows it — cite this instead of the website's <a href="/method/">/method/</a> page, which is the reader's guide</p>
+<pre>@techreport{zhang_ecocompute_protocol_v1_1,
+  title       = {{EcoCompute Protocol v1.1: A Micro-Benchmark
+                  Specification for Quantization Energy in LLM Inference}},
+  author      = {Zhang, Hongping},
+  year        = {2026},
+  month       = {9},
+  publisher   = {Zenodo},
+  version     = {1.1},
+  doi         = {10.5281/zenodo.22958675},
+  url         = {https://doi.org/10.5281/zenodo.22958675}
+}</pre>
+      <p class="meta">Also rendered at <a href="/spec/ecocompute-protocol-v1.1.html">quantenergy.tech/spec/</a>; the
+      concept DOI <a href="https://doi.org/10.5281/zenodo.22958674" target="_blank" rel="noopener">10.5281/zenodo.22958674</a>
+      always resolves to the latest version. Dataset DOIs and this protocol DOI are separate and correspond through
+      the version table inside the document.</p>
+    </div>
+
+    <div class="card">
+      <h3>3 · Main dataset v1.1.0 — the numbers on this site</h3>
       <p class="kv"><b>Published</b> 2026-04-19 · CC BY 4.0</p>
       <p class="kv"><b>Contents</b> 360+ configurations, 0.5B–14B, RTX 4090D (Ada), RTX 5090 (Blackwell), A800 (Ampere), Tesla T4 (Turing); FP16/NF4/INT8/FP8; n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%</p>
       <p class="kv"><b>Cite it for</b> anything on this site except the RTX 4090 column</p>
@@ -183,7 +216,7 @@
     </div>
 
     <div class="card">
-      <h3>3 · RTX 4090 (Ada) deep dive — the newest column</h3>
+      <h3>4 · RTX 4090 (Ada) deep dive — the newest column</h3>
       <p class="kv"><b>Published</b> 2026-08-21 (measured 2026-07-24, 2026-08-19 and 2026-08-20) · CC BY 4.0</p>
       <p class="kv"><b>Contents</b> one RTX 4090, five models 0.5B–7B × FP16/NF4/INT8, 15/15 real measurements from the open container; a second session of 10 measurements pairing energy with same-run perplexity (n&nbsp;=&nbsp;1 each); and a third session repeating the five INT8 configurations three times each (n&nbsp;=&nbsp;3, CV of the energy delta 0.6–3.9%)</p>
       <p class="kv"><b>Cite it for</b> the RTX 4090 column, INT8-on-Ada and 7B-on-Ada claims</p>
@@ -203,7 +236,7 @@
     </div>
 
     <div class="card">
-      <h3>4 · llama.cpp GGUF F16 vs Q4_0 on RTX 4090 — the MLPerf Client comparison</h3>
+      <h3>5 · llama.cpp GGUF F16 vs Q4_0 on RTX 4090 — the MLPerf Client comparison</h3>
       <p class="kv"><b>Published</b> 2026-09-04 (measured 2026-09-03) · CC BY 4.0</p>
       <p class="kv"><b>Contents</b> 45 runs on one RTX 4090: three llama.cpp GGUF arms (F16, our Q4_0, and the <code>Llama-3.1-8B-Instruct-Q4_0.gguf</code> that MLPerf Client v2.0 ships) × three output lengths (64/320/576) × n&nbsp;=&nbsp;5, randomized order, forced cooldown before every run, NVML hardware energy counter at 100&nbsp;Hz, with the measurement scripts, environment snapshot and model SHA-256 hashes</p>
       <p class="kv"><b>Cite it for</b> the llama.cpp F16-vs-Q4_0 energy rows and anything on the <a href="/mlperf-client/">MLPerf Client page</a>. Not an MLPerf result.</p>
@@ -224,7 +257,7 @@
     </div>
 
     <div class="card">
-      <h3>5 · RTX 5090 (Blackwell) four-precision session — the same card on a newer stack</h3>
+      <h3>6 · RTX 5090 (Blackwell) four-precision session — the same card on a newer stack</h3>
       <p class="kv"><b>Published</b> 2026-09-20 (measured 2026-09-19/20) · CC BY 4.0</p>
       <p class="kv"><b>Contents</b> one RTX 5090 (32&nbsp;GB, 575&nbsp;W, driver 580.76.05), five models 0.5B–7B. Container track: NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations, run twice with a full instance restart between sessions (n&nbsp;=&nbsp;2 per cell; |A&nbsp;−&nbsp;B| mean 2.1&nbsp;pp, max 5.2&nbsp;pp). Standalone track: torchao 0.18.0 FP8 weight-only and FP8 dynamic activation+weight, n&nbsp;=&nbsp;3, generation-only window. Raw reports, both scripts and the environment snapshot included; four reports that fell back to interpolation are shipped labelled as such and are not measurements.</p>
       <p class="kv"><b>Cite it for</b> RTX 5090 INT8, the FP8 rows, and the claim that the NF4 crossover moves with the software stack. Not an MLPerf result, and not pooled with v1.1.0's rows for the same card.</p>
