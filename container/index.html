@@ -89,6 +89,16 @@
       <span class="pill">Not a certified benchmark</span>
     </div>
 
+    <div class="callout" style="border-color:rgba(56,189,248,.4)">
+      <b>How long it actually takes · 实际时长.</b>
+      <b>Pure measurement: minutes.</b>
+      First run end-to-end (image pull / dependency install + ~2&nbsp;GB model download):
+      <b>57 minutes measured once</b> on a China-hosted rented RTX&nbsp;4090, mostly wheel downloads — details and
+      caveats in §1. Warm start from cache: <b>no timed measurement yet</b> (needs a GPU; will be added when run).
+      The homepage CTA says "start reproducing in 60 seconds" — that is the time to <em>begin</em> the run, not to
+      finish it.
+    </div>
+
     <div class="callout">
       <b>The point of shipping it.</b> Published energy numbers are usually impossible to check: they come from TDP
       arithmetic, from a wall meter with no workload isolation, or from a benchmark you cannot rerun. This container
