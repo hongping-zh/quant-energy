@@ -128,7 +128,7 @@
       <tr><td>Workload</td><td>Single-stream decode, batch size 1, <b>256 generated tokens</b> per run, 10 iterations after 2 warmups, greedy</td></tr>
       <tr><td>Baseline</td><td>Each model's own FP16 run in the same session; every ΔE% is relative to that</td></tr>
       <tr><td>Hardware</td><td>NVIDIA RTX 4090 and RTX 4090D (Ada), RTX 5090 (Blackwell), A800-SXM4 (Ampere), Tesla T4 (Turing)</td></tr>
-      <tr><td>Software</td><td>Pinned per session and published: see the <a href="/#repro">environment card</a> on the home page</td></tr>
+      <tr><td>Software</td><td>Pinned per session and published: see the <a href="/measured/#environment">environment card</a> in the evidence layer</td></tr>
     </table>
     <p>Where a value is modelled rather than measured it is labelled in the UI and in the API response —
     <code>measured</code>, <code>interpolated</code>, <code>extrapolated</code>, <code>estimated</code>. Estimates are never
@@ -141,6 +141,41 @@
       <li>Not a statement about quantization in general: they are statements about <code>bitsandbytes</code> NF4 / <code>LLM.int8()</code> on the cards listed. A different kernel or serving stack can reverse the sign.</li>
       <li>Not all replicated: the main dataset is n&nbsp;=&nbsp;2 (CV&nbsp;&lt;&nbsp;2%); the RTX 4090 deep dive is n&nbsp;=&nbsp;1 per configuration, except five INT8 configurations repeated three times (CV of ΔE% 0.6–3.9%). The site draws single-trial points hollow.</li>
     </ul>
+
+    <h2>Related work · and what makes this different</h2>
+    <p>EcoCompute is not a competitor to the established energy benchmarks — it answers a narrower question they do not:
+    <b>for one model on one GPU, does switching FP16 → NF4/INT8 raise or lower energy per token?</b>
+    That needs a controlled A/B of precisions on identical hardware, which is why we sample GPU-package power directly
+    instead of ranking systems or estimating carbon.</p>
+    <table>
+      <tr><th>Project</th><th>What it measures</th><th>How EcoCompute differs</th></tr>
+      <tr>
+        <td><a href="https://mlcommons.org/benchmarks/inference-datacenter/" target="_blank" rel="noopener">MLPerf Power</a></td>
+        <td>Audited <b>whole-system wall power</b> of submitted MLPerf Inference/Training runs, under LoadGen timing rules, with certified results</td>
+        <td>We report <b>GPU-package power only</b> and run our own warmup/iteration loop, so our numbers are a supplementary energy methodology — explicitly <code>certified_benchmark_result: false</code>, never an MLPerf result</td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/mlcommons/mlperf_client" target="_blank" rel="noopener">MLPerf Client v2.0</a></td>
+        <td>Client-machine <b>performance</b> (geomean TTFT and 2nd+ token rate) of the models vendors ship — all of them already quantized (Q4_0, int4, MLX q4, NVFP4/FP8). Its <b>tokens/Joule</b> path is wall power via a Yokogawa analyzer, SPEC PTDaemon and a second host</td>
+        <td>We measure the <b>FP16 baseline alongside the quantized model in the same session</b>, in software, on one machine — so the difference quantization made is a number rather than an inference. Different boundary (GPU package, not wall) and not a certified result: <a href="/mlperf-client/">how the two map onto each other →</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://top500.org/lists/green500/" target="_blank" rel="noopener">Green500</a></td>
+        <td>Ranks whole supercomputers by <b>GFLOPS/watt</b> on HPL-class numerical workloads</td>
+        <td>Different unit and scope: one accelerator, LLM <b>decode</b> phase, joules per generated token — and a comparison between precisions rather than a league table</td>
+      </tr>
+      <tr>
+        <td><a href="https://codecarbon.io/" target="_blank" rel="noopener">CodeCarbon</a> / <a href="https://github.com/lfwa/carbontracker" target="_blank" rel="noopener">CarbonTracker</a></td>
+        <td>Workload-agnostic <b>trackers</b>: sample RAPL/NVML while <em>your</em> job runs and convert to CO₂e with grid-intensity factors</td>
+        <td>Complementary, not overlapping: they instrument whatever you run, we fix the workload (256 tokens, batch 1, single stream) so two precisions are comparable — and we publish no CO₂e, because that needs a PUE and a grid model we do not have</td>
+      </tr>
+      <tr>
+        <td><a href="https://mlco2.github.io/impact/" target="_blank" rel="noopener">ML CO₂ Impact</a> and TDP calculators</td>
+        <td><b>Estimate</b> energy from hardware TDP × runtime</td>
+        <td>No TDP anywhere in our pipeline: every published point is an integrated NVML power trace, and anything modelled is labelled <code>interpolated</code>/<code>extrapolated</code></td>
+      </tr>
+    </table>
+    <p class="meta">Trademark note: MLCommons, MLPerf and MLCube are trademarks of MLCommons Association, referenced here nominatively. The maintainer is an individual observer member of MLCommons; EcoCompute is independently developed and is neither an official MLCommons benchmark nor endorsed by MLCommons.</p>
 
     <h2>Data and code availability</h2>
     <p>Everything behind the figures is public and archived under CC BY 4.0 (data) or Apache-2.0 (code):</p>

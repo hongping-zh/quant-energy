@@ -308,32 +308,50 @@
     header h1{font-size:26px}
   }
 </style>
+<script>
+/* Old homepage anchors now live in the four layers — silently forward deep links. */
+(function(){
+  var MAP={'#protocol':'/method/','#matrix':'/measured/#matrix','#evidence':'/measured/#evidence',
+           '#repro':'/measured/#environment','#rtx5090-2026-09':'/measured/#rtx5090-2026-09',
+           '#replteaser':'/measured/#replteaser','#stack':'/container/','#related':'/about/'};
+  var h=location.hash;
+  if(MAP[h]){ location.replace(MAP[h]); }
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
   <header>
     <nav class="topnav" aria-label="Site">
+      <a class="aboutlink" href="/measured/">Evidence</a>
+      <a class="aboutlink" href="/method/">Protocol</a>
+      <a class="aboutlink" href="/changelog/">Changelog</a>
+      <a class="aboutlink" href="/blog/">Findings</a>
       <a class="aboutlink" href="/container/">Container</a>
-      <a class="aboutlink" href="/replications/">Replications</a>
-      <a class="aboutlink" href="/variables/">Variable matrix</a>
-      <a class="aboutlink" href="/method/">Methodology</a>
-      <a class="aboutlink" href="/cite/">Cite</a>
       <a class="aboutlink" href="/about/">About</a>
     </nav>
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
     <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Nobody measures <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
-    <p class="badge" style="margin-top:12px;line-height:1.65"><b>Seed data.</b> 42 measurements on five GPU architectures — RTX 4090, RTX 4090D, RTX 5090, A800, T4, plus one contributed RTX 3050 Ti — across FP16, bitsandbytes NF4, bitsandbytes INT8 and llama.cpp GGUF <code>Q4_0</code>. bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>: +87% mean on a 7B on RTX 4090 (n&nbsp;=&nbsp;5, range +50…+106%), +131% on A800. NF4 <b>changes sign with model size</b>: +29% at 1.5B on RTX 5090, −34% at 7B on RTX 4090. <b>This is not a conclusion. It is a starting point.</b> <a href="#matrix" style="color:var(--accent);text-decoration:underline">See the whole grid, empty cells included →</a><br><b>New, 2026-09-20:</b> re-measuring the same RTX 5090 on a current stack moved its NF4 crossover from ≈5B to ≈1.8B — 22 runs, n&nbsp;=&nbsp;2 across a restart, archived separately and not pooled into the counts above. <a href="#rtx5090-2026-09" style="color:var(--accent);text-decoration:underline">What changed and what it means →</a></p>
+
+    <div class="card" style="border-left:3px solid var(--accent);margin-top:16px;padding:18px 20px 16px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <span style="font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1">26<span style="color:var(--muted);font-size:24px"> / 56</span></span>
+        <span style="font-size:14px;color:var(--txt);line-height:1.55">cells of the <a href="/measured/#matrix" style="color:var(--accent)">coverage matrix</a> have a measurement. The other <b>30</b> are not an oversight — they are the reason this site exists. <a href="/method/#glossary" style="color:var(--accent)">What these counts mean →</a></span>
+      </div>
+      <p class="badge" style="margin:12px 0 0;line-height:1.65"><b>Scope of every number on this site:</b> GPU-package power (NVML), not whole-system draw — no PSU losses, CPU, DRAM, cooling, PUE or CO₂e · single-stream decode, <b>batch 1, 256 tokens</b> · <b>generation window</b> (model load, quantization and warm-up excluded) · replication stated per point: main dataset n&nbsp;=&nbsp;2 (CV&nbsp;&lt;&nbsp;2%), deep dives n&nbsp;=&nbsp;1, re-tests and their stacks versioned separately. In one line: bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>, and NF4 <b>changes sign with model size and GPU</b> — the <a href="/measured/" style="color:var(--accent)">evidence layer</a> holds every number, its n and its DOI. <a href="/method/#limits" style="color:var(--accent);text-decoration:underline">Limits and how to disprove us →</a></p>
+    </div>
+
     <div class="cta hero">
-      <a id="contributeCta" class="btn" href="#protocol">🧪&nbsp; Contribute a data point · ~30 min</a>
-      <a id="crossoverCta" class="btn" href="#matrix">📊&nbsp; See the coverage matrix</a>
-      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Reproduce in 60s</a>
+      <a id="contributeCta" class="btn" href="/method/#contribute">🧪&nbsp; Contribute a data point · from ~30 min <span style="font-weight:600;opacity:.8">(first run incl. downloads: up to 1 h)</span></a>
+      <a id="crossoverCta" class="btn" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
+      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Start reproducing in 60 s <span style="font-weight:600;opacity:.8">(pure measurement: minutes · one timed end-to-end run: 57 min)</span></a>
       <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
-      <a href="#evidence">29 measured anchors · RTX 4090 11 · A800 6 · RTX 4090D 4 · RTX 5090 4 · T4 4</a>
-      <a href="#matrix">Coverage matrix · 26 of 56 cells measured</a>
-      <a href="/variables/">Batch size · 3 of 15 cells measured</a>
+      <a href="/method/">Protocol v1.1 · normative</a>
+      <a href="/measured/" title="Crossover anchors: distinct GPU × model × precision points behind the fitted curves. Definition at /method/#glossary.">29 measured anchors · 5 architectures</a>
+      <a href="/method/#glossary" title="Every count on this site, with its denominator.">All counts defined · glossary</a>
       <a href="/method/">NVML @ 10&nbsp;Hz · GPU package</a>
       <a href="/container/">MLCube-compatible</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener">Schema-validated</a>
@@ -341,135 +359,40 @@
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
     </div>
     <p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
-    <p class="badge" style="margin-top:8px">Scope of every number here: <b>GPU-package power</b> (NVML), not whole-system draw — no PSU losses, CPU, DRAM, cooling, PUE or CO₂e. <b>Single-stream decode</b>, batch 1, 256 tokens. Replication is stated per point: the main dataset is n&nbsp;=&nbsp;2 (CV&nbsp;&lt;&nbsp;2%), the RTX 4090 deep dive is <b>n&nbsp;=&nbsp;1 per configuration</b>. <a href="/method/#limits" style="color:var(--accent);text-decoration:underline">Limits and how to disprove us →</a></p>
-    <p class="badge" style="margin-top:10px">Open measurement stack: an <b>MLCube-compatible container</b> doing direct NVML power sampling, the <b>datasets it produced</b> (Zenodo, CC&nbsp;BY&nbsp;4.0), and the <b>preprint</b> that interprets them.</p>
     <div class="cta" style="margin-top:6px">
       <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
       <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
       <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
     </div>
 
-    <div class="card" id="protocol" style="border-left:3px solid var(--accent);margin-top:20px">
-      <h2 style="margin:0 0 2px">Contribute a measurement · 贡献一个数据点</h2>
-      <p class="meta" style="margin:0 0 12px">One GPU, one model, about half an hour. You do not need a GPU of your own: a free Colab T4 is enough.</p>
+        <div class="card" id="layers" style="border-left:3px solid var(--accent)">
+      <h2 style="margin:0 0 4px">Four layers · 这个网站怎么读</h2>
+      <p class="meta" style="margin:0 0 14px;line-height:1.6">The site is deliberately split so that <b>what we require</b>,
+      <b>what we measured</b>, <b>what changed</b> and <b>what we are still exploring</b> never blur into one page.</p>
       <div class="stackgrid">
         <div>
-          <h3>Three steps · 三步</h3>
-          <p><b>1 ·</b> Pick a configuration nobody has measured — the
-          <a href="#matrix">coverage matrix</a> shows which ones (<b>26 of 56 cells</b> have data today).<br>
-          <b>2 ·</b> Run it. Either the
-          <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
-          (no card needed) or the <a href="/container/">container</a> — both write the same
-          <code>energy.json</code>.<br>
-          <b>3 ·</b> Drop that file on <a href="/replications/#submit">/replications/</a>. It is parsed
-          <b>in your browser</b>, drawn against the published curve, and one button copies the submission and opens a
-          GitHub issue for you to send. There is no upload endpoint; nothing is submitted behind your back.</p>
+          <h3>1 · Spec — 规范</h3>
+          <p>What makes two submissions comparable. The normative protocol, the container and schema that enforce it.</p>
+          <p><a href="/method/">Protocol v1.1</a> · <a href="/method/#glossary">Number glossary</a> · <a href="/container/">Container guide</a> · <a href="/run/">Run it yourself</a> · <a href="/schema/">Schema</a></p>
         </div>
         <div>
-          <h3>Why we need you · 现在缺什么</h3>
-          <p>These are the gaps that could <b>change what this site says</b>, not just add rows:</p>
-          <p><b>Runtimes.</b> Almost everything here is bitsandbytes. llama.cpp has exactly <b>one</b> cell (8B
-          <code>Q4_0</code>, −63%) — the largest effect on the whole grid, resting on a single point. vLLM,
-          TensorRT-LLM, SGLang: <b>zero</b> measurements.<br>
-          <b>Quant formats.</b> <code>Q4_K_M</code>, GPTQ, AWQ, FP8 on Ada: none measured under this protocol.<br>
-          <b>Batch size.</b> Every point here is batch 1. Leaderboards that disagree with us run large batches.<br>
-          <b>Cards.</b> No 3090, A100, H100, L4, and no AMD at all.<br>
-          <b>Quality.</b> Only 13 of 42 rows carry a paired perplexity, and "energy ranking ≠ quality ranking" is the
-          most load-bearing claim on this site.</p>
+          <h3>2 · Evidence — 证据</h3>
+          <p>Everything measured, at its replication level — and every count with its denominator.</p>
+          <p><a href="/measured/">Evidence hub</a> · <a href="/measured/#matrix">Coverage matrix</a> · <a href="/measured/#nf4-retest-2026-09">Latest: two-card NF4 re-test</a> · <a href="/replications/">Public replications</a> · <a href="/cite/">Cite</a></p>
         </div>
         <div>
-          <h3>Protocol v1.1 · 协议</h3>
-          <p>What makes two submissions comparable:</p>
-          <p>Single-stream decode, <b>batch 1</b>, <b>256 generated tokens</b>, 10 decode iterations after a warmup,
-          greedy.<br>
-          An <b>FP16 baseline measured in the same session on the same card</b> — a quantized run on its own cannot
-          produce a ΔE%.<br>
-          <b>NVML</b> GPU-package power at ≥&nbsp;10&nbsp;Hz, integrated over the decode loop. Not wall power.<br>
-          Required in the report: GPU and architecture, driver, runtime/engine and version, model and
-          <code>params_b</code>, precision, batch size, context length, J/token, tok/s, mean package watts —
-          schema <code>ecocompute-energy/1.2</code>.<br>
-          <b>New in v1.1:</b> the report now records the <b>thermal state</b> it was taken in — a <code>thermal</code>
-          block with the warmup count and the temperature at the start, at steady state, at the end and at peak —
-          plus the <em>achieved</em> (not requested) sample rate, an enforced cooldown between arms and randomised arm
-          order. These are the corrections we had to make to our own numbers,
-          <a href="/blog/rerunning-a-number-you-do-not-trust.html">written up here</a>.<br>
-          <b>Cold and steady are two different measurements.</b> The container defaults to
-          <code>--thermal_mode cold</code>: cool to idle, fixed warmup, measure. <code>--thermal_mode steady</code>
-          instead keeps warming, one pass per second, until three consecutive readings fall within 2&nbsp;°C, then
-          measures a hot card — which clocks lower and reports <em>more</em> energy per token. Compare within a mode,
-          not across one. A run that never settles says <code>steady_state_reached: false</code> rather than
-          pretending it did, and a card with no temperature sensor says <code>basis: "unavailable"</code> rather than
-          inventing a number.<br>
-          <b>The 42 seed measurements have no <code>thermal</code> block at all</b>, because it did not exist when they
-          were taken. That means their thermal state is <em>unknown</em>, not cold — which is the honest reason the
-          default stayed <code>cold</code> instead of switching under them.</p>
+          <h3>3 · Changelog — 版本更新</h3>
+          <p>What changed in the data, protocol and site — dated, typed, linked to its evidence.</p>
+          <p><a href="/changelog/">All entries</a> · <a href="/changelog/">Window unification (09-24)</a> · <a href="/changelog/">NF4 two-card re-test (09-25)</a></p>
         </div>
         <div>
-          <h3>What you get · 署名</h3>
-          <p>Stated as what actually happens today, not as a promise we cannot keep:</p>
-          <p>Every accepted submission is published in <a href="/replications/">/replications/</a> <b>credited by your
-          handle</b>, and your point is drawn on every chart it belongs on — including when it contradicts us. A run
-          that breaks the curve is published as prominently as one that confirms it.<br>
-          The first measurement on a GPU architecture not yet in the set is labelled as such.<br>
-          Accepted points go into the <b>next Zenodo release</b> of the dataset, which carries its own DOI and names
-          its contributors (current release: <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>).<br>
-          Submissions are reviewed by a human for schema and plausibility — <b>never for result</b> — so publication is
-          not instant and is not automatic.</p>
+          <h3>4 · Findings — 探索性结果</h3>
+          <p>Deeper write-ups and tools whose output is a model, not a measurement — never counted in the matrix.</p>
+          <p><a href="/blog/">Notes &amp; findings</a> · <a href="/variables/">Variable matrix</a> · <a href="/?tab=estimate">Estimator</a> · <a href="/?tab=optimize">Optimizer</a></p>
         </div>
       </div>
     </div>
 
-    <div class="card" id="repro" style="border-left:3px solid var(--accent);margin-top:20px">
-      <h2 style="margin:0 0 2px">Replicate this number · 复现环境</h2>
-      <p class="meta" style="margin:0 0 12px">Hardware, software versions, DOIs and the command — as plain text, so Ctrl+F finds them.</p>
-      <p class="badge" style="margin:0 0 14px">The stacks below are <b>not identical to each other</b>, and saying so is the point. The published
-      Ada curves were measured in the <b>2026-07-24</b> session; the container image you would pull today pins a
-      <b>different torch</b>; and a native (non-Docker) install pins a third one, on which the same INT8 configurations
-      measured <b>about twice</b> the energy penalty. Which of these you run changes the INT8 number you get.
-      <a href="/blog/how-repeatable-is-a-quantization-energy-number.html" style="color:var(--accent);text-decoration:underline">Run-to-run vs cross-session, with the CVs →</a></p>
-      <div class="stackgrid">
-        <div>
-          <h3>Hardware · 硬件</h3>
-          <p><b>NVIDIA GeForce RTX 4090</b> · Ada Lovelace · 24 GB · compute capability 8.9 · CUDA build
-          <code>12.1</code> · NVIDIA driver <code>535.146.02</code> in the August sessions (the July driver is in
-          <code>run_metadata/gpu_summary.csv</code> of that session's raw archive). Rented AutoDL instances.<br>
-          Other anchors in the fit: RTX 4090D (Ada), RTX 5090 (Blackwell), A800 (Ampere), T4 (Turing).<br>
-          Power: <b>NVML</b> <code>nvmlDeviceGetPowerUsage</code> at <b>10 Hz</b>, integrated over the decode loop —
-          GPU-package power only, not wall power.</p>
-        </div>
-        <div>
-          <h3>Software · 软件</h3>
-          <p><b>Container image (what you get today):</b> Python 3.10 · <code>torch 2.13.0</code> ·
-          <code>transformers 4.57.6</code> · <code>bitsandbytes 0.43.3</code> · <code>accelerate 1.14.0</code> ·
-          <code>nvidia-ml-py 13.610.43</code>, base <code>nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04</code>
-          (<a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/requirements.lock.txt" target="_blank" rel="noopener">requirements.lock.txt</a>).<br>
-          <b>2026-07-24 session — the anchors the Ada curves are fitted on:</b> Python 3.8 ·
-          <code>torch 2.4.1+cu121</code> · <code>transformers 4.46.3</code> · <code>bitsandbytes 0.45.5</code> ·
-          <code>accelerate 1.0.1</code>. Older than the current pins.<br>
-          <b>2026-08-19 / 08-20 native sessions:</b> Python 3.10.20 · <code>torch 2.5.1+cu121</code>, the other four
-          matching the pins above.</p>
-        </div>
-        <div>
-          <h3>Data · 数据</h3>
-          <p><b>Main dataset v1.1.0</b> — DOI <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a>, n = 2 per configuration, CV &lt; 2%.<br>
-          <b>RTX 4090 deep dive</b> — DOI <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a>
-          (concept 10.5281/zenodo.22019741): 2026-07-24 energy, n = 1; 2026-08-19 energy + same-run perplexity, n = 1;
-          2026-08-20 INT8 <b>n = 3</b> per size, CV of ΔE% <b>0.6–3.9%</b>.<br>
-          <b>Protocol:</b> batch size 1 · context 2048 · 256 generated tokens per run · 10 decode iterations after 2
-          warmups · greedy · each model's own FP16 baseline in the same session.<br>
-          Quality probe corpus SHA-256 <code>22ac091a6383740d30f8e41ae144032c873c772db5e1c901112c1c330fdc5504</code>.</p>
-        </div>
-        <div>
-          <h3>Container · 容器</h3>
-          <p>Image <code>ghcr.io/hongping-zh/ecocompute-mlcube:latest</code>, rebuilt by CI on every merge to
-          <code>main</code>. One INT8 run of TinyLlama-1.1B:</p>
-          <p style="margin-top:8px"><code>docker run --rm --gpus all -v "$PWD/out:/workspace/outputs" ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 --precision INT8 --gpu_arch auto --output_dir /workspace/outputs</code></p>
-          <p style="margin-top:8px">Writes <code>out/energy.json</code>, schema <code>ecocompute-energy/1.2</code>, carrying
-          <code>results.vs_fp16_energy_pct</code>, <code>results.basis</code> and the <code>software</code> block that
-          recorded the versions above. Drop it into <a href="/replications/">/replications/</a> to overlay it on the curve.</p>
-        </div>
-      </div>
-    </div>
   </header>
 
   <div class="modetabs" role="tablist">
@@ -518,303 +441,6 @@
     <div id="cross"></div>
     <p class="meta" id="crossAnchors" style="margin:6px 0 10px"></p>
     <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). <b>Marker fill encodes replication, not accuracy:</b> filled dots are points repeated at least twice in the main dataset (<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a>, n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); hollow dots on a faded line were measured <b>once</b> (n&nbsp;=&nbsp;1) — the July&nbsp;2026 <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep dive</a> and one early RTX 4090D point — so they carry no measured spread and should be read as a single observation, not as a distribution. INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
-  </div>
-
-  <div class="card" id="matrix">
-    <h2>Coverage matrix · what has been measured, and what nobody has measured yet</h2>
-    <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      Every energy measurement published here, on one grid: quantization method × GPU architecture down the side,
-      model size across the top, and in each cell the change in energy per token against an FP16 baseline
-      <b>on the same card</b>. <b>26 of 56 cells have a measurement.</b> The empty ones are not an oversight —
-      they are the reason this page exists.
-    </p>
-    <a href="assets/coverage-matrix.png" target="_blank" rel="noopener" title="Open full size">
-      <img src="assets/coverage-matrix.png" loading="lazy"
-           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point moves with GPU architecture; llama.cpp Q4_0 has one cell at -63%. 26 of 56 cells are measured."
-           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
-    <p class="chartnote" style="margin-top:14px">
-      Three things the grid says that no single number does.
-      <b>1 · bitsandbytes <code>LLM.int8()</code> never saved energy</b> — eight measured cells, 0.5B to 14B,
-      Ada and Ampere, every one a penalty (+87% … +473%). It lowers instantaneous power and loses more than that
-      to collapsed decode throughput.
-      <b>2 · NF4 changes sign with model size, and the size at which it flips moves with the architecture</b> —
-      fitted crossings sit near <b>2.1B on Turing</b>, <b>3.7B on Ada</b> and <b>4.8B on Blackwell</b>.
-      "Does NF4 save energy?" has no answer that is not conditional on the card.
-      <b>3 · The largest effect in the whole grid sits in the emptiest row</b> — llama.cpp GGUF <code>Q4_0</code>
-      is −63% at 8B, and it is the <em>only</em> cell in that row. One point is not a trend; that row is a claim
-      waiting to be checked, including by anyone who wants to contradict it.
-    </p>
-    <p class="chartnote">
-      Read it with the same care as the rest of the site. Cells are the <b>unweighted mean</b> of the runs behind
-      them and most are n&nbsp;=&nbsp;1 or 2, so the printed range matters more than the mean where one is shown.
-      Every cell is on the <b>generation window</b> — model load, quantization and warm-up excluded: the
-      bitsandbytes rows always were (the container starts sampling after warm-up; this grid once mislabelled them
-      whole-process), and the llama.cpp row is re-cut from its archived 100&nbsp;Hz power traces
-      (<a href="/data/rtx4090_llamacpp_window_comparison_2026-09-24.summary.csv" target="_blank" rel="noopener">window comparison</a>).
-      The llama.cpp row stays below a rule because it is a <em>different runtime and workload shape</em> —
-      one 576-token generation per run against the container's 10×256 tokens — same window, still not one benchmark.
-      All of it is GPU-package power, not wall AC, and none of it is a certified benchmark result.
-      The grid is generated from the published CSVs by
-      <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/make_coverage_matrix.py" target="_blank" rel="noopener"><code>build/make_coverage_matrix.py</code></a>
-      — if you think a cell is wrong, the input files are in the repo.
-    </p>
-    <div class="cta" style="margin-top:14px">
-      <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Fill an empty cell on a free Colab T4 →</a>
-      <a class="ghost" href="https://github.com/hongping-zh/quant-energy/blob/main/data/coverage_matrix_2026-09-09.csv" target="_blank" rel="noopener">Download the matrix as CSV</a>
-      <span class="badge">A ? costs about half an hour of a free GPU. Contradictions are published as prominently as confirmations.</span>
-    </div>
-  </div>
-
-  <div class="card" id="stack">
-    <h2>Where these numbers come from · the open measurement container</h2>
-    <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      EcoCompute is not a table of numbers you have to trust — it is a <b>measurement container you can run</b>.
-      The <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>
-      samples GPU power directly through <b>NVML</b> during real decoding and writes an <code>energy.json</code> whose fields are
-      exactly the ones plotted here, so an independent run either lands on our curve or visibly does not.
-    </p>
-    <div class="stackgrid">
-      <div>
-        <h3>Direct measurement, never TDP</h3>
-        <p>NVML on-device power sampling at 10&nbsp;Hz over the decode phase, 256 tokens per run with warmup, repeated for the configured iterations. Energy, average power and throughput come out of that trace — no datasheet wattage, no wall-meter guesswork.</p>
-      </div>
-      <div>
-        <h3>It refuses to fake a measurement</h3>
-        <p>No GPU, or NVML power telemetry unavailable? The run still completes, but the report is derived from the published dataset and labelled <code>basis</code> ≠ <code>measured</code> with the fallback named in <code>measurement_source</code>. A fallback is never dressed up as a measurement.</p>
-      </div>
-      <div>
-        <h3>Portable and contract-checked</h3>
-        <p>An <a href="https://mlcommons.github.io/mlcube/" target="_blank" rel="noopener">MLCube</a>-compatible descriptor with one task, <code>energy_estimate</code>, exercised with the official <code>mlcube</code> CLI on the Docker platform; a CPU descriptor verifies the build/mount/report contract without a GPU. Dependencies are pinned with a full transitive lock, because bitsandbytes and torch change NF4/INT8 kernels between releases.</p>
-      </div>
-      <div>
-        <h3>Machine-checkable output</h3>
-        <p>Every report validates against <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener"><code>schema/energy.schema.json</code></a> and carries its own scope: <code>certified_benchmark_result: false</code>, plus a <code>scenario_note</code> saying the SingleStream/Offline label is nominal and not enforced by LoadGen.</p>
-      </div>
-    </div>
-    <div class="cta" style="margin-top:16px">
-      <a class="btn" href="/container/">How to run it (60 seconds) →</a>
-      <a class="ghost" href="/?tab=run">Overlay your energy.json on the curve →</a>
-      <span class="badge">Apache-2.0 · reproductions and disagreements both welcome</span>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>New · 2026-09-03 · The kernel decides the sign, not the bit width</h2>
-    <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      <a href="https://mlcommons.org/2026/08/mlperf-client-v2-0/" target="_blank" rel="noopener">MLPerf Client v2.0</a>
-      ships an already-quantized suite, so it cannot tell you what quantizing cost. We measured the missing baseline
-      inside <b>one</b> runtime: on an RTX 4090, llama.cpp GGUF <code>Q4_0</code> decoding Llama-3.1-8B-Instruct costs
-      <b>61.9% less energy per token</b> than GGUF <code>F16</code>, for <b>+5.60% perplexity</b>. The quantized arms
-      draw <em>more</em> power while decoding — 296–319 W against F16's 273 W — and win purely on throughput (2.8–3.2×).
-      On the same card, bitsandbytes <code>LLM.int8()</code> costs <b>106% more</b>. Same idea, opposite sign.
-      <br><b>Corrected 2026-09-03</b>: re-run over 45 runs, n&nbsp;=&nbsp;5, randomized order, cooldown before every run,
-      hardware energy counter; the provisional −63.6% was indeed an overestimate. One card, decode-only by differencing,
-      GPU-package power. Not an MLPerf result. Raw data:
-      <a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">10.5281/zenodo.22295184</a>.
-    </p>
-    <div class="cta">
-      <a class="btn" href="/blog/it-was-never-the-format.html">Read the note →</a>
-      <a class="ghost" href="/mlperf-client/">MLPerf Client v2.0 ↔ EcoCompute, mapped →</a>
-    </div>
-  </div>
-
-  <div class="card" id="rtx5090-2026-09">
-    <h2>New · 2026-09-20 · The crossover moved, and the card didn't</h2>
-    <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      The break-even size where NF4 stops costing energy and starts saving it is the single number this site is most
-      often asked for. We re-measured it on the <b>same RTX 5090</b> that produced our Blackwell anchors, months later
-      on a current software stack (<b>bitsandbytes 0.50.2</b>, torch 2.14, CUDA 13.0, driver 580.76.05) — and it moved
-      from <b>≈5B to ≈1.8B</b>.
-      Nothing about the hardware changed. <b>A crossover is a property of the software stack, not of the
-      architecture</b>, and every break-even figure on this site — ours included — carries an implicit "with the
-      libraries we had that month".
-    </p>
-    <a href="assets/rtx5090-crossover-moved.png" target="_blank" rel="noopener" title="Open full size">
-      <img src="assets/rtx5090-crossover-moved.png" loading="lazy"
-           alt="NF4 energy versus FP16 on one RTX 5090 at 0.5B to 7B, measured on two software stacks: the v1.1.0 dataset curve crosses zero near 5B, the 2026-09 bitsandbytes 0.50.2 session crosses near 1.8B."
-           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
-    <p class="chartnote" style="margin-top:14px">
-      Five models, 0.5B–7B, NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations,
-      NVML at 10&nbsp;Hz — run <b>twice with a full instance restart in between</b>, so every cell is n&nbsp;=&nbsp;2
-      across restarts. The two sessions agree to <b>2.1 points on average and 5.2 at worst</b>; that spread is the
-      shaded band, and it is why <b>+0.6% and +1.9% at 1.1–1.5B read as "indistinguishable from FP16"</b> rather than
-      as real numbers. <b>This is not a controlled experiment</b>: driver, CUDA, torch and bitsandbytes all moved between
-      the two curves and only the September session records its library versions, so the claim is that the crossover
-      shifted with the stack — not that one library release caused it.
-      <b>INT8 remains positive at every size</b> on the newest consumer architecture with a current bitsandbytes
-      (+55% at 7B, +256% at 0.5B), for the same reason as everywhere else here: 14–32 tok/s against NF4's 49–79, at
-      <em>lower</em> package power.
-    </p>
-
-    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">FP8 on Blackwell · two code paths, both more expensive</h3>
-    <p class="meta" style="margin:6px 0 0">One RTX 5090 · torchao 0.18.0 · batch 1, 256 tokens · n&nbsp;=&nbsp;3 per cell, one session, no restart repeat · generation-only window (model load and <code>quantize_()</code> excluded).</p>
-    <a href="assets/rtx5090-fp8-two-paths.png" target="_blank" rel="noopener" title="Open full size" style="display:block;margin-top:12px">
-      <img src="assets/rtx5090-fp8-two-paths.png" loading="lazy"
-           alt="torchao FP8 on an RTX 5090: weight-only FP8 rises from +187% to +815% energy versus FP16 with model size while dynamic activation-plus-weight FP8 falls from +323% to +82%; weight-only also draws more package power than FP16 at every size."
-           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
-    <p class="chartnote" style="margin-top:14px">
-      Blackwell has FP8 tensor cores, and neither torchao FP8 path saved energy at any size we measured. They fail in
-      <b>opposite directions</b>: weight-only degrades with scale (+187% → +815%) while dynamic activation+weight
-      improves with it (+323% → +82%), which is what you expect from dequantization overhead that scales with weights
-      versus a fixed per-activation cost. Weight-only also draws <b>more</b> power than FP16 at every size while
-      decoding up to 7× slower. This is a statement about <em>these kernels at batch 1</em> — the regime FP8 is least
-      suited to — and a separate script from the container above, with its own baselines: <b>do not compare these
-      percentages against the NF4/INT8 numbers</b>, whose measurement window is wider.
-      The 1.1B weight-only cell stopped after 177 of 768 tokens and is asterisked for that reason.
-    </p>
-    <p class="chartnote">
-      Per-run CSVs, the A-vs-B agreement table and both build scripts are in
-      <a href="https://github.com/hongping-zh/quant-energy/tree/main/data" target="_blank" rel="noopener">data/</a>
-      (<code>rtx5090_bnb_2026-09-20.csv</code>, <code>rtx5090_fp8_torchao_2026-09-20.csv</code>); raw
-      <code>energy.json</code> reports, the environment snapshot and the FP8 script are archived at
-      <a href="https://doi.org/10.5281/zenodo.22855133" target="_blank" rel="noopener">DOI 10.5281/zenodo.22855133</a>,
-      CC&nbsp;BY&nbsp;4.0. Four reports in that archive named a TinyLlama repo id that does not resolve; the container
-      labelled them <code>basis: interpolated</code> and they are excluded here — published so the failure is
-      auditable, not counted as measurements.
-      <b>These rows are a supplementary session, not folded into the fitted curves below</b>, which still describe the
-      0.4x-era stack; pooling the two would produce a crossover neither session measured. Not an MLPerf result.
-    </p>
-  </div>
-
-  <div class="card" id="evidence">
-    <h2>Latest run · RTX 4090 (Ada) · measured in our own open container</h2>
-    <p class="meta" style="margin:0 0 14px;line-height:1.6">
-      <b>15 of the 15 configurations in this one session are real hardware measurements</b> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>)
-      — five models (0.5B–7B) × FP16 / NF4 / INT8 on this single card, not a site-wide total; the site as a whole rests on
-      29 measured anchors across five cards. Produced by the
-      <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>
-      container on a rented NVIDIA GeForce RTX 4090, July 2026. It extends the Ada data in two ways the earlier
-      RTX 4090D anchor could not: <b>INT8 on Ada</b> and <b>7B models</b>.
-    </p>
-    <a href="assets/rtx4090-int8-throughput.png" target="_blank" rel="noopener" title="Open full size">
-      <img src="assets/rtx4090-int8-throughput.png" loading="lazy"
-           alt="RTX 4090: absolute decode energy and throughput for FP16, NF4 and INT8 across 0.5B-7B models. INT8 has the highest energy per token and the lowest throughput."
-           style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
-    <p class="chartnote" style="margin-top:14px">
-      <b>NF4 reaches break-even just above 3B on this card</b>: +36% energy penalty at 0.5B → <b>+0.8% at 3B</b> → <b>−28% saving at 7B</b>.
-      These points are now folded into the fitted Ada curve, which puts the crossover at <b>≈3.7B</b> — later than this card alone,
-      because the fit also carries the more heavily penalised RTX&nbsp;4090D anchors.
-      <b>INT8 (bitsandbytes LLM.int8()) did not save energy at any size we tested</b> (+50% … +242%, five sizes, one card,
-      n&nbsp;=&nbsp;1 each): it does lower instantaneous power, but decode throughput collapses to 9–19 tok/s
-      (FP16: 39–62 tok/s), so a token ends up costing more. That is a statement about this backend on this card,
-      not about INT8 in general — a different kernel, card or serving stack could well reverse it.
-    </p>
-
-    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">INT8 energy penalty by model size · vs FP16 on the same card</h3>
-    <p class="meta" style="margin:6px 0 0">One RTX 4090 · bitsandbytes <code>LLM.int8()</code> · batch 1, 256 tokens · <b>n&nbsp;=&nbsp;1 per bar</b> (no error bar exists to draw) · GPU-package power.</p>
-    <!-- Values are ΔE% = energy_quant/energy_fp16 - 1 from build/measured.csv (RTX 4090, INT8 rows).
-         Bar heights are proportional to the largest penalty (+242%). -->
-    <div class="sizebars" role="img"
-         aria-label="INT8 energy penalty versus FP16 on one RTX 4090: plus 242 percent at 0.5B, plus 146 percent at 1.1B, plus 181 percent at 1.5B, plus 135 percent at 3B, plus 50 percent at 7B.">
-      <div class="col"><span class="v">+242%</span><div class="b" style="height:100%"></div><span class="k">0.5B</span></div>
-      <div class="col"><span class="v">+146%</span><div class="b" style="height:60%"></div><span class="k">1.1B</span></div>
-      <div class="col"><span class="v">+181%</span><div class="b" style="height:75%"></div><span class="k">1.5B</span></div>
-      <div class="col"><span class="v">+135%</span><div class="b" style="height:56%"></div><span class="k">3B</span></div>
-      <div class="col"><span class="v">&nbsp;+50%</span><div class="b" style="height:21%"></div><span class="k">7B</span></div>
-    </div>
-    <p class="chartnote" style="margin-top:12px">
-      Every bar here points the wrong way: <b>no model size we tested saved energy in INT8 on this card</b>, and the penalty does not
-      fall monotonically with size (1.5B is worse than 1.1B). The penalty does shrink towards 7B, but we have no
-      measurement above it, so <b>we do not claim INT8 breaks even at some larger size</b> — on this card INT8 bought
-      memory, not energy. Bars are hatched because these are single trials (n&nbsp;=&nbsp;1) on <b>one</b> RTX 4090.
-      The 1.1B bar has since been re-measured on a second RTX 4090 instance (August 2026, same container):
-      <b>+138%</b> against the July run's +146% — two single trials 8&nbsp;points apart, on different software
-      versions. Both are in <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/measured.csv" target="_blank" rel="noopener">measured.csv</a> as separate n&nbsp;=&nbsp;1 anchors; neither is a replication of the other.
-      Also note:
-      the fitted INT8 curves cover Ada and Ampere only, H100 borrows the Ampere curve (estimated, not measured), and
-      T4 and RTX&nbsp;5090 have none. RTX&nbsp;5090 INT8 <em>has</em> since been measured — ten runs, all positive,
-      +55% to +259% — in the <a href="#rtx5090-2026-09">2026-09-20 session above</a>, which is a different software
-      stack and is deliberately not folded into these fits.
-    </p>
-    <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 0">Honest scope · what this run does and does not support</h3>
-    <table class="scope">
-      <tr><th class="do">✅ Do</th><th class="dont">⚠️ Don't</th></tr>
-      <tr>
-        <td>Treat each value as a real measurement of <b>this</b> RTX 4090 under <b>this</b> workload (256 tokens, batch 1, single stream)</td>
-        <td>Read n&nbsp;=&nbsp;1 as a tight distribution: every configuration was run <b>once</b> (ten decode iterations integrated into one energy total), so there is <b>no std and no CV</b> — unlike the main dataset's n&nbsp;=&nbsp;2 / CV&nbsp;&lt;&nbsp;2%</td>
-      </tr>
-      <tr>
-        <td>Compare precisions <b>on the same card</b> — that is what ΔE% is</td>
-        <td>Compare cards across these two layers without noting that one is replicated and one is not (hollow markers and hatched bars mark n&nbsp;=&nbsp;1 site-wide)</td>
-      </tr>
-      <tr>
-        <td>Use the numbers as <b>GPU-package energy</b> from direct NVML sampling</td>
-        <td>Present them as whole-system, datacenter or carbon numbers — there is no PUE, no CPU/DRAM and no grid model here</td>
-      </tr>
-      <tr>
-        <td>Cite it as a supplementary single-platform case study (<a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">DOI</a>) alongside v1.1.0</td>
-        <td>Cite it as a certified MLPerf/MLCommons result, or as a replacement for the main dataset</td>
-      </tr>
-      <tr>
-        <td>Reproduce or contradict it — one card, one hour: <a href="/container/">run the container</a> and <a href="/replications/">publish your point</a></td>
-        <td>Assume our card generalises to yours: cooling, driver, power limit and BIOS all move absolute energy</td>
-      </tr>
-    </table>
-    <p class="chartnote">
-      All raw <code>energy.json</code> reports, the aggregated CSV, environment metadata and both figures are archived
-      under <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">DOI 10.5281/zenodo.22037483</a>,
-      CC&nbsp;BY&nbsp;4.0 — a single-platform deep dive that sits <em>alongside</em> the main
-      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0 dataset</a>, which remains
-      the reference for every other GPU here. Honest scope: <b>n&nbsp;=&nbsp;1 per configuration</b>
-      (no std/CV yet, unlike v1.1.0's n&nbsp;=&nbsp;2 / CV&nbsp;&lt;&nbsp;2%) and NVML measures <b>GPU-package power</b>,
-      not whole-system wall power — a supplementary case study, not a certified benchmark. Reproduce it on your own card
-      from the <b>Run it yourself</b> tab.
-    </p>
-  </div>
-
-  <div class="card" id="replteaser">
-    <h2>Public replications · don't take our word for it</h2>
-    <p class="meta" style="margin:0 0 12px;line-height:1.6">
-      A single-maintainer dataset is only as strong as its first independent confirmation — or contradiction.
-      Run the container on your card, then publish your point in the open gallery: your <code>energy.json</code> is
-      parsed <b>in your browser</b>, and submitting copies the write-up to your clipboard and opens a GitHub issue you
-      paste into and read before you send it.
-      Disagreements are published exactly as prominently as confirmations.
-    </p>
-    <div class="cta" style="margin-top:0">
-      <a class="btn" href="/replications/">See public replications →</a>
-      <a class="ghost" href="/replications/#submit">Submit yours →</a>
-      <span class="badge">Moderated for schema and format only — never for results.</span>
-    </div>
-  </div>
-
-  <div class="card" id="related">
-    <h2>Related work · and what makes this different</h2>
-    <p class="meta" style="margin:0 0 6px;line-height:1.6">
-      EcoCompute is not a competitor to the established energy benchmarks — it answers a narrower question they do not:
-      <b>for one model on one GPU, does switching FP16 → NF4/INT8 raise or lower energy per token?</b>
-      That needs a controlled A/B of precisions on identical hardware, which is why we sample GPU-package power directly
-      instead of ranking systems or estimating carbon.
-    </p>
-    <table class="related">
-      <tr><th>Project</th><th>What it measures</th><th>How EcoCompute differs</th></tr>
-      <tr>
-        <td><a href="https://mlcommons.org/benchmarks/inference-datacenter/" target="_blank" rel="noopener">MLPerf Power</a></td>
-        <td>Audited <b>whole-system wall power</b> of submitted MLPerf Inference/Training runs, under LoadGen timing rules, with certified results</td>
-        <td>We report <b>GPU-package power only</b> and run our own warmup/iteration loop, so our numbers are a supplementary energy methodology — explicitly <code>certified_benchmark_result: false</code>, never an MLPerf result</td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/mlcommons/mlperf_client" target="_blank" rel="noopener">MLPerf Client v2.0</a></td>
-        <td>Client-machine <b>performance</b> (geomean TTFT and 2nd+ token rate) of the models vendors ship — all of them already quantized (Q4_0, int4, MLX q4, NVFP4/FP8). Its <b>tokens/Joule</b> path is wall power via a Yokogawa analyzer, SPEC PTDaemon and a second host</td>
-        <td>We measure the <b>FP16 baseline alongside the quantized model in the same session</b>, in software, on one machine — so the difference quantization made is a number rather than an inference. Different boundary (GPU package, not wall) and not a certified result: <a href="/mlperf-client/">how the two map onto each other →</a></td>
-      </tr>
-      <tr>
-        <td><a href="https://top500.org/lists/green500/" target="_blank" rel="noopener">Green500</a></td>
-        <td>Ranks whole supercomputers by <b>GFLOPS/watt</b> on HPL-class numerical workloads</td>
-        <td>Different unit and scope: one accelerator, LLM <b>decode</b> phase, joules per generated token — and a comparison between precisions rather than a league table</td>
-      </tr>
-      <tr>
-        <td><a href="https://codecarbon.io/" target="_blank" rel="noopener">CodeCarbon</a> / <a href="https://github.com/lfwa/carbontracker" target="_blank" rel="noopener">CarbonTracker</a></td>
-        <td>Workload-agnostic <b>trackers</b>: sample RAPL/NVML while <em>your</em> job runs and convert to CO₂e with grid-intensity factors</td>
-        <td>Complementary, not overlapping: they instrument whatever you run, we fix the workload (256 tokens, batch 1, single stream) so two precisions are comparable — and we publish no CO₂e, because that needs a PUE and a grid model we do not have</td>
-      </tr>
-      <tr>
-        <td><a href="https://mlco2.github.io/impact/" target="_blank" rel="noopener">ML CO₂ Impact</a> and TDP calculators</td>
-        <td><b>Estimate</b> energy from hardware TDP × runtime</td>
-        <td>No TDP anywhere in our pipeline: every published point is an integrated NVML power trace, and anything modelled is labelled <code>interpolated</code>/<code>extrapolated</code></td>
-      </tr>
-    </table>
-    <p class="chartnote">Trademark note: MLCommons, MLPerf and MLCube are trademarks of MLCommons Association, referenced here nominatively. The maintainer is an individual observer member of MLCommons; EcoCompute is independently developed and is neither an official MLCommons benchmark nor endorsed by MLCommons.</p>
   </div>
 
   <div class="hint" id="hint"></div>
@@ -1043,6 +669,16 @@
     </div>
   </div><!-- /runView -->
 
+  <div class="card" id="recent">
+    <h2>Recent updates · 最近更新</h2>
+    <p class="meta" style="line-height:1.9;margin:0">
+      <b>2026-09-25</b> · <span class="tag estimated" style="font-size:10px">data</span> RTX 4090 NF4 re-tested across two physical cards — July's +0.8% anchor holds (mean +1.6%, n=3), the −15.1% session closed as an outlier, the 5090 stack flip did not reproduce on Ada. <a href="/changelog/" style="color:var(--accent)">→</a><br>
+      <b>2026-09-24</b> · <span class="tag interpolated" style="font-size:10px">data</span> All energy numbers unified on the generation measurement window; the llama.cpp row re-cut from its 100 Hz traces (−62.9% at 576 tokens, counter basis). <a href="/changelog/" style="color:var(--accent)">→</a><br>
+      <b>2026-09-25</b> · <span class="tag conf-medium" style="font-size:10px">site</span> The site split into four layers — spec, evidence, changelog, findings; every count now has a defined denominator. <a href="/changelog/" style="color:var(--accent)">→</a><br>
+      <span class="badge">Full history, each entry linked to its evidence: <a href="/changelog/" style="color:var(--accent)">the changelog →</a></span>
+    </p>
+  </div>
+
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">"Weight-Only Quantization Does Not Always Save Energy"</a>
     · real GPU measurements (NVML 10Hz, 256 tokens/run, 10 iterations) · dataset: <a href="https://github.com/hongping-zh/ecocompute-ai" target="_blank" rel="noopener">ecocompute-ai</a>.
@@ -1054,10 +690,12 @@
     <div class="footlinks">
       <a href="/container/">Measurement container</a>
       <a href="/replications/">Public replications</a>
-      <a href="/method/">Methodology</a>
+      <a href="/method/">Protocol</a>
+      <a href="/measured/">Evidence</a>
+      <a href="/changelog/">Changelog</a>
       <a href="/cite/">Artifacts &amp; citation</a>
       <a href="/mlperf-client/">MLPerf Client v2.0</a>
-      <a href="/blog/">Blog / notes</a>
+      <a href="/blog/">Findings / notes</a>
       <a href="/blog/zh-guide.html" hreflang="zh-Hans" lang="zh-Hans">中文说明</a>
       <a href="/blog/zh-container-guide.html" hreflang="zh-Hans" lang="zh-Hans">容器中文手册</a>
       <a href="/blog/rss.xml">RSS</a>

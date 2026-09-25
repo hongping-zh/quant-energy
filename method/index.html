@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Methodology — how EcoCompute measures LLM inference energy</title>
-<meta name="description" content="EcoCompute's measurement protocol: direct NVML GPU power sampling at 10 Hz, 256 tokens per run, repeated iterations across four NVIDIA architectures — plus how estimates, interpolation and extrapolation are labelled." />
+<title>Protocol v1.1 — the EcoCompute measurement specification</title>
+<meta name="description" content="The normative EcoCompute Protocol v1.1: what makes two energy measurements comparable — single-stream decode, same-session FP16 baseline, NVML at 10 Hz, thermal modes, required report fields — plus the number glossary and the contribution flow." />
 <link rel="canonical" href="https://quantenergy.tech/method/" />
 <meta property="og:title" content="Methodology — how EcoCompute measures LLM inference energy" />
 <meta property="og:description" content="Direct NVML power sampling rather than TDP estimates: the full measurement protocol, the model behind estimated values, and the known limitations." />
@@ -55,12 +55,17 @@
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="brand">Eco<span>Compute</span> · Methodology</div>
-      <nav class="nav"><a href="/">Tool</a><a href="/container/">Container</a><a href="/replications/">Replications</a><a href="/cite/">Cite</a><a href="/blog/">Notes</a><a href="/about/">About</a></nav>
+      <div class="brand">Eco<span>Compute</span> · Protocol</div>
+      <nav class="nav"><a href="/">Tool</a><a href="/measured/">Evidence</a><a href="/changelog/">Changelog</a><a href="/blog/">Findings</a><a href="/about/">About</a></nav>
     </div>
 
-    <h1>How EcoCompute measures LLM inference energy</h1>
-    <p class="sub">Direct on-device power sampling, not TDP arithmetic. This page is the citable description of the protocol behind every number on <a href="/">quantenergy.tech</a>.</p>
+    <h1>Protocol v1.1 — the measurement specification</h1>
+    <p class="sub">This is the <b>normative</b> layer of the site: what makes two submissions comparable, so that anyone
+    following this page on any card produces numbers that can be checked against
+    <a href="/measured/">what we have measured</a>. It states no measured results of its own — every number lives in the
+    <a href="/measured/">evidence layer</a>; every count on the site is defined in the
+    <a href="#glossary">number glossary</a>. Execution guides: <a href="/container/">the container</a>,
+    <a href="/run/">run it yourself</a>; the machine-checkable contract: <a href="/schema/">the schema</a>.</p>
 
     <div class="callout">
       <b>In one paragraph.</b> Energy per configuration (model × precision × GPU) is obtained by sampling GPU
@@ -71,19 +76,60 @@
       API response. Measurements and estimates are never mixed silently.
     </div>
 
-    <h2>1 · Measurement protocol</h2>
-    <table>
-      <tr><th>Quantity</th><th>How it is obtained</th></tr>
-      <tr><td>GPU power</td><td>NVML (<code>nvmlDeviceGetPowerUsage</code>) polled at 10&nbsp;Hz for the duration of generation; GPU-package power, board-level</td></tr>
-      <tr><td>Workload</td><td>Single-stream text generation, 256 output tokens per run, fixed prompt and sampling settings</td></tr>
-      <tr><td>Repeats</td><td>Main dataset (v1.1.0): n&nbsp;=&nbsp;2 with CV&nbsp;&lt;&nbsp;2%. RTX 4090 deep dive (July 2026): n&nbsp;=&nbsp;1 per configuration — one trial whose 10 decode iterations are integrated into a single energy total, so it has no CV. The two layers are <b>drawn differently</b> (see below), never merged into one visual tier</td></tr>
-      <tr><td>Energy</td><td>Time-integral of sampled power over the generation window, normalised to <b>joules per 1M output tokens</b></td></tr>
-      <tr><td>Baseline</td><td>Each model's own FP16 run on the same GPU; ΔE% is relative to that baseline</td></tr>
-      <tr><td>Precisions</td><td>FP16, NF4, INT8 (FP8 where the hardware supports it) — weight-only quantization</td></tr>
-      <tr><td>Architectures</td><td>Turing (T4), Ampere (A800), Ada (RTX 4090 / 4090D), Blackwell (RTX 5090)</td></tr>
-    </table>
+    <h2>1 · What the protocol requires · v1.1 normative</h2>
+    <ul>
+      <li><b>Workload:</b> single-stream decode, <b>batch 1</b>, <b>256 generated tokens</b>, 10 decode iterations
+      after a warmup, greedy.</li>
+      <li><b>Baseline:</b> an <b>FP16 run measured in the same session on the same card</b> — a quantized run on its
+      own cannot produce a ΔE%.</li>
+      <li><b>Measurement:</b> <b>NVML</b> GPU-package power at ≥&nbsp;10&nbsp;Hz, integrated over the decode loop
+      (the <b>generation window</b>: model load, quantization and warm-up excluded). Not wall power. State the window
+      and the output length with every energy claim — re-integrating one session over different windows moves its
+      64-token figure by up to 12.5 percentage points.</li>
+      <li><b>Required in the report:</b> GPU and architecture, driver, runtime/engine and version, model and
+      <code>params_b</code>, precision, batch size, context length, J/token, tok/s, mean package watts — schema
+      <code>ecocompute-energy/1.2</code> (1.3 adds whole-run power-trace sidecars so the window can be re-cut post
+      hoc).</li>
+      <li><b>Thermal state (new in v1.1):</b> the report records a <code>thermal</code> block — the warmup count and
+      temperature at start, steady state, end and peak — plus the <em>achieved</em> (not requested) sample rate, an
+      enforced cooldown between arms and randomised arm order. These are corrections we had to make to our own
+      numbers, <a href="/blog/rerunning-a-number-you-do-not-trust.html">written up here</a>. The 42 seed
+      measurements have no <code>thermal</code> block at all, because it did not exist when they were taken — their
+      thermal state is <em>unknown</em>, not cold, which is the honest reason the default stayed <code>cold</code>.</li>
+      <li><b>Cold and steady are two different measurements.</b> The container defaults to
+      <code>--thermal_mode cold</code>: cool to idle, fixed warmup, measure. <code>--thermal_mode steady</code>
+      instead keeps warming, one pass per second, until three consecutive readings fall within 2&nbsp;°C, then
+      measures a hot card — which clocks lower and reports <em>more</em> energy per token. Compare within a mode,
+      not across one. A run that never settles says <code>steady_state_reached: false</code> rather than pretending
+      it did, and a card with no temperature sensor says <code>basis: "unavailable"</code> rather than inventing a
+      number.</li>
+    </ul>
 
-    <h2>2 · What is measured vs modelled</h2>
+    <h2 id="contribute">2 · Contributing a measurement · the flow</h2>
+    <p>One GPU, one model, about half an hour (first run including downloads: up to an hour — see the
+    <a href="/container/">time budget</a>). You do not need a GPU of your own: a free Colab T4 is enough.</p>
+    <ul>
+      <li><b>1 ·</b> Pick a configuration nobody has measured — the
+      <a href="/measured/#matrix">coverage matrix</a> shows which ones (<b>26 of 56 cells</b> have data today).</li>
+      <li><b>2 ·</b> Run it. Either the
+      <a href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+      (no card needed) or the <a href="/container/">container</a> — both write the same <code>energy.json</code>.</li>
+      <li><b>3 ·</b> Drop that file on <a href="/replications/#submit">/replications/</a>. It is parsed
+      <b>in your browser</b>, drawn against the published curve, and one button copies the submission and opens a
+      GitHub issue for you to send. There is no upload endpoint; nothing is submitted behind your back.</li>
+    </ul>
+    <p><b>The gaps that could change what this site says</b> (not just add rows): runtimes — almost everything here is
+    bitsandbytes, llama.cpp has exactly one cell, vLLM/TensorRT-LLM/SGLang have zero; quant formats —
+    <code>Q4_K_M</code>, GPTQ, AWQ, FP8 on Ada: none measured under this protocol; batch size — every point here is
+    batch 1; cards — no 3090, A100, H100, L4, no AMD; quality — only 13 of 42 seed rows carry a paired perplexity.</p>
+    <p><b>What you get:</b> every accepted submission is published in <a href="/replications/">/replications/</a>
+    <b>credited by your handle</b>, and drawn on every chart it belongs on — including when it contradicts us; a run
+    that breaks the curve is published as prominently as one that confirms it. Accepted points go into the next
+    Zenodo release of the dataset, which carries its own DOI and names its contributors. Submissions are reviewed by
+    a human for schema and plausibility — <b>never for result</b> — so publication is not instant and is not
+    automatic.</p>
+
+    <h2>3 · What is measured vs modelled</h2>
     <p>Every result carries a <code>basis</code> field, and the site renders it as a tag next to the number:</p>
     <ul>
       <li><b><code>measured</code></b> — a real NVML run exists for exactly this configuration.</li>
@@ -170,7 +216,27 @@
 
     <p class="meta">The fitted curves and the estimator are open: see <a href="/estimate.js">estimate.js</a>, <a href="/optimize.js">optimize.js</a> and the <code>build/</code> scripts in <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">the site repository</a>.</p>
 
-    <h2 id="glossary">Number glossary · every count on this site, with its denominator</h2>
+    <h2>4 · The finding this protocol produced</h2>
+    <p>Weight-only quantization (NF4/INT8) reliably reduces memory footprint, but it does <b>not</b> always reduce
+    energy. On small models the dequantization overhead outweighs the memory-bandwidth savings, so quantization
+    <em>increases</em> energy per token; above a <b>crossover point</b> that depends on both model size and GPU
+    architecture, it starts to save. Explore your own case on the
+    <a href="/estimate/">Your model</a> tab.</p>
+
+    <h2>5 · Reproduce it on your GPU</h2>
+    <p>The measurement code is a container, not a description. The <b>EcoCompute energy MLCube</b> runs the same NVML
+    sampling on your hardware and writes an <code>energy.json</code> with the exact fields these charts read:</p>
+<pre>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
+cd ecocompute-mlcube
+
+pip install mlcube mlcube-docker
+mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
+    <p>Then drop the resulting <code>energy.json</code> on the <a href="/run/">Run it yourself</a> tab to overlay your
+    point on the crossover curve — the overlay is encoded in the URL, nothing is uploaded. The container’s output
+    schema, honesty guarantees, scope and how to contribute a run are documented on
+    <a href="/container/">the container page</a>.</p>
+
+    <h2 id="glossary">6 · Number glossary · every count on this site, with its denominator</h2>
     <p>The site quotes several counts — 42, 29, 144, 26/56, 360+ — that answer <em>different</em> questions
     and must never be read interchangeably. This table is the single normative definition of each; every
     page that quotes one links here. Denominators verified against the build scripts, not prose.</p>
@@ -206,27 +272,7 @@
     <b>29</b> answers "what the curves stand on", <b>42</b> and <b>360+</b> answer "what is archived in the seed
     dataset", and <b>144</b> counts a separate sweep including its baselines.</p>
 
-    <h2>3 · The finding this protocol produced</h2>
-    <p>Weight-only quantization (NF4/INT8) reliably reduces memory footprint, but it does <b>not</b> always reduce
-    energy. On small models the dequantization overhead outweighs the memory-bandwidth savings, so quantization
-    <em>increases</em> energy per token; above a <b>crossover point</b> that depends on both model size and GPU
-    architecture, it starts to save. Explore your own case on the
-    <a href="/estimate/">Your model</a> tab.</p>
-
-    <h2>4 · Reproduce it on your GPU</h2>
-    <p>The measurement code is a container, not a description. The <b>EcoCompute energy MLCube</b> runs the same NVML
-    sampling on your hardware and writes an <code>energy.json</code> with the exact fields these charts read:</p>
-<pre>git clone https://github.com/hongping-zh/ecocompute-mlcube.git
-cd ecocompute-mlcube
-
-pip install mlcube mlcube-docker
-mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
-    <p>Then drop the resulting <code>energy.json</code> on the <a href="/run/">Run it yourself</a> tab to overlay your
-    point on the crossover curve — the overlay is encoded in the URL, nothing is uploaded. The container’s output
-    schema, honesty guarantees, scope and how to contribute a run are documented on
-    <a href="/container/">the container page</a>.</p>
-
-    <h2 id="limits">5 · Limitations</h2>
+    <h2 id="limits">7 · Limitations</h2>
     <ul>
       <li>NVML reports <b>GPU-package power</b>, not whole-system draw: CPU, DRAM, PSU losses and cooling are excluded.</li>
       <li>Single-stream generation only; batched serving with continuous batching has a different energy profile.</li>
@@ -237,7 +283,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
       <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
     </ul>
 
-    <h2>6 · How to cite</h2>
+    <h2>8 · How to cite</h2>
     <p>Full artifact map, concept vs version DOIs and BibTeX: <a href="/cite/">Artifacts &amp; citation</a>. In short:</p>
     <ul>
       <li><b>The methodology and argument</b> — preprint “Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms”, <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN&nbsp;#6854700</a> (archived: <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a>).</li>
@@ -248,7 +294,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
     <footer>
       EcoCompute is an independent research project by <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">Hongping Zhang</a>
       (ORCID <a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">0009-0000-2529-4613</a>).
-      <br><a href="/">← Back to the tool</a> · <a href="/container/">Measurement container</a> · <a href="/cite/">Artifacts &amp; citation</a> · <a href="/about/">About</a> · <a href="/blog/">Notes</a>
+      <br><a href="/">← Back to the tool</a> · <a href="/measured/">Evidence</a> · <a href="/changelog/">Changelog</a> · <a href="/blog/">Findings</a> · <a href="/container/">Container</a> · <a href="/cite/">Artifacts &amp; citation</a> · <a href="/about/">About</a>
     </footer>
   </div>
 </body>
