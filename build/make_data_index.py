@@ -117,6 +117,56 @@ FILES = [
         "measurement_window": "three windows side by side (whole-process / generation / decode-only)",
         "doi": "10.5281/zenodo.22295184",
     },
+    # --- RTX 4090, bitsandbytes NF4 3B re-test, 2026-09-24/25 ------------------
+    {
+        "path": "data/rtx4090_bnb_2026-09-25.csv",
+        "title": "RTX 4090 bitsandbytes NF4 re-test of the 3B crossover anchor, per-trial",
+        "kind": "session",
+        "description": (
+            "Qwen2.5-3B NF4 vs FP16, three independent trials on two physical RTX "
+            "4090 cards (trial A on GPU-7c81f257; B and C on GPU-ccb89dd1, after the "
+            "rental instance migrated hosts across the trial-A restart): +3.5 / "
+            "+0.7 / +0.5%, mean +1.6%. Confirms the July +0.8% break-even anchor at "
+            "3B on Ada, closes the -15.1% paired-session reading as an outlier, and "
+            "shows the RTX 5090 stack flip did not reproduce on Ada. Current stack "
+            "(torch 2.14.0 / CUDA 13.0 / bitsandbytes 0.50.2 - the same versions as "
+            "the RTX 5090 2026-09-20 session, deliberately), schema 1.3 reports with "
+            "power-trace sidecars, 28 C cold starts, no locked clocks or power caps. "
+            "Kept out of build/measured.csv on purpose: single-version, no pooling."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-25",
+        "measurement_window": "generation-only (container)",
+        "window_note": (
+            "NVML sampling starts after load, quantization and warm-up; idle not "
+            "subtracted. Whole-run power-trace sidecars exist for all six arms "
+            "(3 trials x NF4+FP16), so any window can be re-cut post hoc. Trial B's "
+            "nvidia-smi power-state log was captured post hoc on the same card "
+            "(the pre-run capture was skipped by mistake); clocks and power caps "
+            "are card-level defaults either way, not session-tuned."
+        ),
+        "doi": None,
+        "companion_of": "data/rtx4090_bnb_2026-09-25.summary.csv",
+        "regenerate": "python3 build/make_rtx4090_bnb_csv.py <unpacked_bundle_dir> data",
+    },
+    {
+        "path": "data/rtx4090_bnb_2026-09-25.summary.csv",
+        "title": "RTX 4090 bitsandbytes NF4 3B re-test, per-card summary",
+        "kind": "summary",
+        "description": (
+            "Per card and overall: mean/min/max vs-FP16, absolute energies, power "
+            "and throughput. Same-card session spread (B vs C on card-2) is 0.2 pp "
+            "while the card-to-card gap (A vs B) is 2.8 pp - an order of magnitude "
+            "apart, and the first quantitative evidence on this site for the "
+            "'multiple physical cards per architecture' v1.0 requirement."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-25",
+        "measurement_window": "generation-only (container)",
+        "doi": None,
+    },
     # --- RTX 5090, 2026-09-19/20 ---------------------------------------------
     {
         "path": "data/rtx5090_bnb_2026-09-20.csv",

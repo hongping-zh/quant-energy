@@ -30,7 +30,47 @@ llama.cpp row is still kept below the rule in the rendered grid because it is a 
 and workload shape (one 576-token generation per run vs the container's 10×256 tokens with
 per-iteration prefill), not because of a denominator change.
 
-## `rtx5090_bnb_2026-09-20.csv` (+ `.summary.csv`) and `rtx5090_fp8_torchao_2026-09-20.csv`
+## `rtx4090_bnb_2026-09-25.csv` (+ `.summary.csv`)
+
+The RTX 4090 re-test of the 3B crossover anchor, 2026-09-24/25: Qwen2.5-3B, NF4 vs FP16,
+three independent trials on **two physical cards** — the rental instance migrated hosts across
+the trial-A restart, so trial A ran on `GPU-7c81f257` and trials B/C on `GPU-ccb89dd1`, which
+turns the session into a simultaneous answer to two questions. Same stack as the RTX 5090
+2026-09-20 session (torch 2.14.0 / CUDA 13.0 / bitsandbytes 0.50.2, deliberately), schema 1.3
+reports with whole-run power-trace sidecars, 28 °C cold starts, no locked clocks or power caps.
+
+| Trial | Card | vs FP16 |
+|---|---|---:|
+| A | card-1 | +3.5 % |
+| B | card-2 | +0.7 % |
+| C | card-2 (second session) | +0.5 % |
+
+Regenerate with `python3 build/make_rtx4090_bnb_csv.py <unpacked_bundle_dir> data` (the script
+re-derives every delta and refuses to write if the reports disagree with the quoted values).
+
+### Read this before using the numbers
+
+- **The July anchor stands.** Mean +1.6%, range +0.5 to +3.5, against the July single-session
+  +0.8% — across a card change *and* a stack change. 3B on Ada is break-even for NF4; the
+  4090D +25.2% reading stays a card/session offset and the −15.1% paired-session reading is
+  now an outlier (n = 3 here, none within 3 points of it).
+- **The 5090 stack flip did not reproduce on Ada.** Same stack as the 5090 session, where this
+  cell reads −8.0/−7.4%: on 4090 it reads +0.5 to +3.5%. The crossover shift is a property of
+  that Blackwell card + stack combination, not a general law of the new bitsandbytes.
+- **Card-to-card gap ≫ same-card session noise — the first quantitative split on this site.**
+  B vs C (same card, new sessions) differ by 0.2 pp; A vs B (different cards, same protocol)
+  differ by 2.8 pp — an order of magnitude apart, while the two cards' FP16 baselines agree
+  within 1%. This is the evidence behind the "2–3 physical cards per architecture" requirement
+  in the v1.0 checklist: extra sessions on one card do not buy the confidence a second card does.
+- **The quality probe is a software checksum.** Perplexity 5.8004 vs FP16 4.5473 (+27.557%,
+  14123 tokens) reproduced bit-for-bit across all three trials *and* against the 5090 session's
+  +27.594% on the same model — same corpus, greedy decode, same stack. Where the numbers
+  disagree, only the energy is moving.
+- **Not pooled into the July curves.** `build/measured.csv` and the fitted crossover curves are
+  unchanged; this file stands alone as the current-stack reading of one cell. Folding it into
+  any aggregate is a separate, visible decision.
+
+
 
 One RTX 5090 (Blackwell, 32 GB, 575 W limit, driver 580.76.05), five models from 0.5B to 7B, on
 2026-09-19/20. Two tracks that share the card and nothing else:

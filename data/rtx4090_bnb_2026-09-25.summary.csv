@@ -1,0 +1,4 @@
+group,n_trials,trials,mean_vs_fp16_pct,min_vs_fp16_pct,max_vs_fp16_pct,range_pp,mean_energy_j_per_1k_tok,mean_fp16_energy_j_per_1k_tok,mean_avg_power_w,mean_throughput_tok_s
+card-1,1,A,3.5,3.5,3.5,0.0,3545.644,3426.387,96.3,27.1
+card-2,2,B+C,0.6,0.5,0.7,0.2,3460.122,3439.18,93.4,27.0
+all,3,A+B+C,1.57,0.5,3.5,3.0,3488.629,3434.916,94.4,27.0
