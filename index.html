@@ -191,6 +191,7 @@
   .cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:16px 0 4px}
   .cta a.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#06223a;font-weight:700;font-size:14px;text-decoration:none;padding:11px 18px;border-radius:10px;transition:transform .15s,box-shadow .15s}
   .cta a.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(56,189,248,.35)}
+  .cta a.btn>span,.cta a.ghost>span{display:block;font-size:11.5px;font-weight:500;opacity:.75;margin-top:2px}
   .cta a.ghost{color:var(--accent);text-decoration:none;font-size:13px;border:1px solid var(--line);padding:10px 14px;border-radius:10px}
   .cta a.ghost:hover{border-color:var(--accent)}
   .cta button.ghost{background:transparent;font-family:inherit;color:var(--accent);font-size:13px;font-weight:600;border:1px solid var(--line);padding:10px 14px;border-radius:10px;cursor:pointer;transition:border-color .15s,color .15s}
@@ -301,24 +302,27 @@
   /* nav */
   header{position:relative}
   .topnav{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px;margin-bottom:14px}
+  .navtoggle{display:none}
   .aboutlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--card);transition:border-color .15s,color .15s}
   .aboutlink:hover{border-color:var(--accent);color:var(--txt)}
-  /* First site-wide responsive breakpoint: at phone widths the nav becomes a
-     horizontally scrollable single row instead of wrapping over the h1.
-     .more (set by JS only when the row actually overflows) pins a fade at the
-     right edge as the scroll hint; buttons stack full-width; hero text tightens. */
+  /* First site-wide responsive breakpoint: at phone widths the nav collapses
+     behind a menu button (no truncation, no horizontal scroll); buttons stack
+     full-width; hero text tightens. Button time-notes sit under the title at
+     all widths (base rule above), so no side-by-side split can occur. */
   @media (max-width:720px){
-    .topnav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
-    .topnav::-webkit-scrollbar{display:none}
-    .topnav .aboutlink{flex:none;white-space:nowrap}
-    .topnav.more::after{content:"";position:sticky;right:0;top:0;flex:none;order:9;width:34px;margin-left:-34px;background:linear-gradient(90deg,rgba(11,16,32,0),rgba(11,16,32,.92));pointer-events:none}
+    .navtoggle{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--accent);
+      font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);padding:8px 12px;
+      border-radius:8px;cursor:pointer;margin-bottom:10px}
+    .navtoggle:hover{border-color:var(--accent)}
+    .topnav{display:none}
+    .topnav.open{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+    .topnav.open .aboutlink{padding:4px 0;white-space:nowrap}
     header h1{font-size:26px}
     .wrap{padding:20px 14px 44px}
     header>p{font-size:13px}
     .tagline{font-size:13px !important;letter-spacing:0 !important;margin-top:8px !important}
     .cta{flex-direction:column;align-items:stretch;gap:10px}
     .cta a.btn,.cta a.ghost,.cta button.ghost{justify-content:center;text-align:center}
-    .cta a.btn>span{display:block;font-size:11.5px;font-weight:500;opacity:.75}
   }
 </style>
 <script>
@@ -335,7 +339,8 @@
 <body>
 <div class="wrap">
   <header>
-    <nav class="topnav" aria-label="Site">
+    <button class="navtoggle" aria-expanded="false" aria-controls="topnav">☰ Menu</button>
+    <nav class="topnav" id="topnav" aria-label="Site">
       <a class="aboutlink" href="/measured/">Evidence</a>
       <a class="aboutlink" href="/method/">Protocol</a>
       <a class="aboutlink" href="/changelog/">Changelog</a>
@@ -345,7 +350,7 @@
     </nav>
     <h1>EcoCompute<span class="dot">.</span></h1>
     <p>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
-    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Nobody measures <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
+    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Few open tools measure <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
 
     <div class="card" style="border-left:3px solid var(--accent);margin-top:16px;padding:18px 20px 16px">
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
@@ -356,9 +361,9 @@
     </div>
 
     <div class="cta hero">
-      <a id="contributeCta" class="btn" href="/method/#contribute">🧪&nbsp; Contribute a data point · from ~30 min <span style="font-weight:600;opacity:.8">(first run incl. downloads: up to 1 h)</span></a>
+      <a id="contributeCta" class="btn" href="/method/#contribute">🧪&nbsp; Contribute a data point <span>from ~30 min · first run incl. downloads: up to 1 h</span></a>
       <a id="crossoverCta" class="btn" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
-      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Start reproducing in 60 s <span style="font-weight:600;opacity:.8">(pure measurement: minutes · one timed end-to-end run: 57 min)</span></a>
+      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Start reproducing in 60 s <span>pure measurement: minutes · one timed end-to-end run: 57 min</span></a>
       <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
@@ -615,7 +620,7 @@
 
   <div id="runView" style="display:none">
     <p class="meta" style="margin:2px 0 14px">
-      Every number on this site is reproducible. The <b>EcoCompute energy MLCube</b> container runs the same
+      Every published measurement on this site is accompanied by its reproducibility artifacts. The <b>EcoCompute energy MLCube</b> container runs the same
       measurement on <b>your</b> GPU — direct NVML power sampling, no TDP guesses — and writes an
       <code>energy.json</code> with the <b>exact same fields</b> the charts here use. Run it, then drop the result
       below to overlay your measurement on the crossover curve. No GPU of your own? The
@@ -1693,10 +1698,19 @@ function loadOverlayFromURL(q){
 
 track("pageview_demo", {});
 
-/* Mobile nav scroll hint: flag the row as scrollable only when it truly overflows. */
+/* Mobile nav: a menu button instead of a truncated or scrollable row. */
 (function(){
-  var n=document.querySelector('.topnav');
-  if(n&&n.scrollWidth>n.clientWidth+4){n.classList.add('more');}
+  var b=document.querySelector('.navtoggle'), n=document.getElementById('topnav');
+  if(!b||!n) return;
+  b.addEventListener('click',function(){
+    var open=n.classList.toggle('open');
+    b.setAttribute('aria-expanded',open?'true':'false');
+    b.textContent=open?'✕ Close':'☰ Menu';
+  });
+  n.addEventListener('click',function(e){
+    if(e.target.closest('a')){ n.classList.remove('open');
+      b.setAttribute('aria-expanded','false'); b.textContent='☰ Menu'; }
+  });
 })();
 </script>
 </body>

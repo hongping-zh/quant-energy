@@ -157,6 +157,16 @@
     <p>It measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated
     <code>energy.json</code> into <code>./ecocompute-out/</code>, and prints the overlay link. The script prints every
     command it runs.</p>
+    <p><b>Pinned variant (for reproducibility):</b> the one-liner above executes whatever <code>main</code> currently
+    holds. To run an exact, checksummed release instead:</p>
+<pre>curl -fsSL -o quickstart.sh \
+  https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r1/quickstart.sh
+sha256sum quickstart.sh   # expect 5664b5a1…ac1a7 (full value on the release page)
+ECOCOMPUTE_REF=schema-1.3-r1 bash quickstart.sh</pre>
+    <p>and pin the docker image by digest instead of the mutable <code>:latest</code>:
+    <code>ECOCOMPUTE_IMAGE=ghcr.io/hongping-zh/ecocompute-mlcube@sha256:595e6ddf…4768</code>.
+    The <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1" target="_blank" rel="noopener">release
+    page</a> lists the full SHA-256 values of the schema, the validator and the quickstart, plus the release commit.</p>
     <p><b>Time:</b> the measurement is a few minutes; the first run is dominated by downloads and everything is cached
     afterwards. The one end-to-end run we have timed took <b>57 minutes</b> on a China-hosted rented RTX&nbsp;4090 in
     native mode — 5.5 of those were the ~2&nbsp;GB model, nearly all the rest was ~3&nbsp;GB of torch/CUDA wheels from

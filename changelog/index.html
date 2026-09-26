@@ -73,6 +73,32 @@
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-09-26</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
+      <h2>Protocol errata: measurement algorithm pinned, arm order a MUST, references pinned by checksum</h2>
+      <p>Four clarifications to the <a href="/spec/ecocompute-protocol-v1.1.html">specification</a>, folded into the
+      site edition (the Zenodo snapshot predates them; they merge into v1.2):</p>
+      <ul style="margin:8px 0">
+        <li><b>§4.1 measurement algorithm is now fully specified</b> — trapezoidal integration over the sampler
+        thread's clock, energy spanning first-to-last sample with no edge extrapolation, dropped reads counted and
+        reported (fewer than two usable samples ⇒ discard), and the pooled-ratio iteration aggregation
+        E/token&nbsp;=&nbsp;ΣE/Σtokens. All five items describe exactly what the reference container does.</li>
+        <li><b>§4.6.2 arm order: SHOULD → MUST.</b> Order and thermal state demonstrably move results, so
+        randomised or counterbalanced order is now mandatory; a fixed order is a disclosed deviation.</li>
+        <li><b>Level C renamed "Standard-candidate"</b> (was "v1.0-grade" — confusing next to protocol v1.1), and
+        the document status is now "stable core / candidate specification" rather than plain "stable".</li>
+        <li><b>§5.1 pinned artifacts</b> — release tag <code>schema-1.3-r1</code>, commit, SHA-256 checksums of the
+        schema and validator, and the image digest, so a conformance claim is a claim against immutable pins, not a
+        moving <code>main</code>. The container quickstart gains <code>ECOCOMPUTE_REF</code> and a
+        <a href="/container/">checksummed release variant</a> replaces <code>curl&nbsp;|&nbsp;bash</code> on main
+        for reproducible runs.</li>
+      </ul>
+      <p>Site polish in the same pass: the homepage mobile nav is now a proper menu button (nothing truncated),
+      button time-notes sit below their titles instead of side-by-side, and two absolute phrasings are softened
+      ("Nobody measures…" → "Few open tools measure…"; "Every number is reproducible" → "every published
+      measurement is accompanied by its reproducibility artifacts").</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-26</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
       <h2>The spec–schema loop is closed: schema-valid is no longer mistaken for protocol-conformant</h2>
       <p>The public <code>energy.schema.json</code> checked structure only — a report could pass it while
       violating Protocol v1.1 (no thermal block, no same-session FP16 baseline, arbitrary version strings,

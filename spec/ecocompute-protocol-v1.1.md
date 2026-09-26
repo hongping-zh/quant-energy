@@ -4,13 +4,13 @@
 
 | | |
 |---|---|
-| **Status** | Normative specification (stable) |
+| **Status** | Normative specification — **stable core / candidate specification**: the §4 core and §5 levels are stable; the `environment` block (§2 of the schema page), the container's thermal-block emission and the level-C criteria are still draft |
 | **Version** | 1.1 — issued 2026-09-25 |
 | **Author** | Hongping Zhang · ORCID [0009-0000-2529-4613](https://orcid.org/0009-0000-2529-4613) |
 | **License** | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | **Validation** | `ecocompute-energy/1.2` or later (live: `1.3`) |
 | **Canonical** | [DOI 10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) (concept: [10.5281/zenodo.22958674](https://doi.org/10.5281/zenodo.22958674)) · rendered at `quantenergy.tech/spec/` |
-| **Machine contract** | [`ecocompute-mlcube/schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json) |
+| **Machine contract** | [`ecocompute-mlcube/schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json) — pinned: release `schema-1.3-r1`, commit `05a3ffd`, SHA-256 `501dc1f3…b6efb04` (full pins in §5) |
 
 ---
 
@@ -106,6 +106,22 @@ silently, and an estimator output MUST NOT be archived as a measurement.
 3. Energy MUST be the integral of power over wall-clock time of the generation window.
 4. Values derived from TDP or vendor typical power MUST NOT be reported as measurements
    (`basis: "measured"` requires `measurement_source: "direct-nvml"`).
+5. **Integration method.** The integral MUST be the trapezoidal rule over consecutive power
+   samples: E = Σ (P_i + P_{i+1})/2 · (t_{i+1} − t_i). Sample times MUST come from the
+   sampling thread's clock (wall-clock, per-sampler origin at construction), not from the
+   inference loop.
+6. **Window boundaries.** The reported energy spans the interval from the first to the last
+   sample inside the measurement window; it MUST NOT be extrapolated to the window edges
+   (the uncovered lead-in is at most one sampling period). A run whose reported energy would
+   depend on edge extrapolation MUST disclose it.
+7. **Dropped samples.** Failed NVML reads MUST be counted and reported (`dropped_samples`),
+   never silently skipped. A run with fewer than two usable samples, or with telemetry that
+   fails outright, MUST be discarded — not reported as a measurement.
+8. **Iteration aggregation.** The decode iterations are executed back-to-back in one
+   measurement window; energy per token is the **pooled** ratio
+   E/token = (Σ_j E_j) / (Σ_j tokens_j) over iterations j — not the mean of per-iteration
+   ratios. The reported `throughput_tokens_per_s` uses the wall time of the synchronized
+   iteration loop.
 
 ### 4.2 Baseline — MUST
 
@@ -149,7 +165,10 @@ silently, and an estimator output MUST NOT be archived as a measurement.
 
 1. The report MUST record a `thermal` block: the warm-up count and temperature at start, steady
    state, end and peak.
-2. Arms MUST be separated by an enforced cooldown; arm order SHOULD be randomised.
+2. Arms MUST be separated by an enforced cooldown; the arm order MUST be randomised or
+   counterbalanced (this project's own data shows order and thermal state move results).
+   A fixed order is a **deviation** that MUST be disclosed in the report's notes — it is
+   real data, but reviewers will weight it accordingly.
 3. Comparisons MUST be within one thermal mode, never across `cold` and `steady` (a hot card
    clocks lower and reports more energy per token).
 4. A run that never settles MUST report `steady_state_reached: false` rather than pretending it
@@ -180,7 +199,7 @@ context lengths, token counts, runtimes (vLLM, TensorRT-LLM, SGLang) and quantiz
 
 A submitter MAY additionally record the draft `environment` block (schema `1.4-draft`: power
 limit, clocks, idle temperature, GPU UUID). This is OPTIONAL at v1.1 and RECOMMENDED for
-v1.0-grade submissions (§5, level C): the 2026-09 two-card re-test found that power limit,
+Standard-candidate submissions (§5, level C): the 2026-09 two-card re-test found that power limit,
 clock state and physical card identity were the three context fields whose absence cost the most
 when reconstructing a session.
 
@@ -206,13 +225,28 @@ is checked by a different mechanism:
 |---|---|---|---|---|
 | A | Schema-valid | Passes `ecocompute-energy/1.3` validation; required keys present and consistent (version-conditional: at 1.3, `tokens_per_run`/`iterations`/`warmup`/`context_length`/`software` required; `sample_rate_hz` ≥ 10) | the JSON schema | Chart overlay; browser-side comparison; archived as-is |
 | B | Protocol-conformant (submittable) | A **plus** every §4 MUST: same-session FP16 baseline, `basis: measured`, `measurement_source: direct-nvml`, batch 1 / 256 tokens / warm-up recorded, full `software` version set, thermal state not violated (or violation disclosed) | the semantic validator (`--profile v1.1-core`) | Publication in `/replications/`, credited; enters the next dataset release after review |
-| C | Dataset-eligible (v1.0-grade, draft) | B **plus** power-trace sidecar, achieved sample rate, complete `environment` block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported | validator (`--profile dataset-eligible`) **plus dataset-level review**; replication counts live in the build CSV, not in one report | Counted toward the v1.0 micro-standard bar |
+| C | Dataset-eligible (Standard-candidate, draft) | B **plus** power-trace sidecar, achieved sample rate, complete `environment` block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported | validator (`--profile dataset-eligible`) **plus dataset-level review**; replication counts live in the build CSV, not in one report | Counted toward the v1.0 micro-standard bar |
 
 Level-C criteria beyond level B are draft and tracked in the container issue tracker; the
 `environment` block and the `thermal` block are not yet emitted by the container at schema
 `1.3` — until the container emits them, even the maintainer's own 2026-09-25 re-test reports
 grade as schema-valid but not protocol-conformant, which the validator states rather than
 hides.
+
+### 5.1 Pinned artifacts
+
+GitHub links in this document resolve to `main` for readability; `main` moves. The
+immutable references for this version of the protocol are:
+
+| Artifact | Pin (2026-09-26) |
+|---|---|
+| Report schema | release [`schema-1.3-r1`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1) · commit `05a3ffd` · SHA-256 `501dc1f328270f0bd3221e1ec5c81d740308bdd87090b93f54758ea79b6efb04` |
+| Semantic validator | `tools/validate.py` at the same release · SHA-256 `c5ca27907ffc68c91b6f28702515788210cc670e6d0330e9328788f5dd815205` |
+| Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube@sha256:595e6ddf9658237fdfe222a9929cada024ea2d4dd1c5ae41195d024082247568` (e52f878 build; container content identical to the release commit) |
+| Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `5664b5a131de9458f8dadda6389de44cfc24e9cc51dbac5128d02023482ac1a7` · run with `ECOCOMPUTE_REF=schema-1.3-r1` |
+
+A claim of "protocol-conformant" against this document is a claim against these pins (or a
+later release that supersedes them, with its own pins).
 
 ## 6. Versioning, Pooling and Comparability
 

@@ -42,13 +42,13 @@
   <h1>EcoCompute Protocol v1.1</h1>
   <p class="subtitle">A Micro-Benchmark Specification for Quantization Energy in LLM Inference</p>
   <table class="docinfo">
-    <tr><td>Status</td><td>Normative specification (stable)</td></tr>
+    <tr><td>Status</td><td>Normative specification — <b>stable core / candidate specification</b>: the §4 core and §5 levels are stable; the <code>environment</code> block, the container's thermal-block emission and the level-C criteria are still draft</td></tr>
     <tr><td>Version</td><td>1.1 — issued 2026-09-25</td></tr>
     <tr><td>Author</td><td>Hongping Zhang · ORCID <a href="https://orcid.org/0009-0000-2529-4613">0009-0000-2529-4613</a></td></tr>
     <tr><td>License</td><td><a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></td></tr>
     <tr><td>Validation</td><td><code>ecocompute-energy/1.2</code> or later (live: <code>1.3</code>)</td></tr>
     <tr><td>Canonical</td><td><a href="https://doi.org/10.5281/zenodo.22958675">DOI 10.5281/zenodo.22958675</a> (concept: <a href="https://doi.org/10.5281/zenodo.22958674">10.5281/zenodo.22958674</a>) · rendered at <code>quantenergy.tech/spec/</code></td></tr>
-    <tr><td>Machine contract</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json"><code>ecocompute-mlcube/schema/energy.schema.json</code></a></td></tr>
+    <tr><td>Machine contract</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json"><code>ecocompute-mlcube/schema/energy.schema.json</code></a> — pinned: release <code>schema-1.3-r1</code>, commit <code>05a3ffd</code>, SHA-256 <code>501dc1f3…b6efb04</code> (full pins in §5.1)</td></tr>
   </table>
 </header>
 
@@ -139,6 +139,22 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   window.</li>
   <li>Values derived from TDP or vendor typical power <span class="kw must">MUST NOT</span> be reported as
   measurements (<code>basis: "measured"</code> requires <code>measurement_source: "direct-nvml"</code>).</li>
+  <li><b>Integration method.</b> The integral <span class="kw must">MUST</span> be the trapezoidal rule over
+  consecutive power samples: E&nbsp;=&nbsp;Σ&nbsp;(P<sub>i</sub>&nbsp;+&nbsp;P<sub>i+1</sub>)/2&nbsp;·&nbsp;(t<sub>i+1</sub>&nbsp;−&nbsp;t<sub>i</sub>).
+  Sample times <span class="kw must">MUST</span> come from the sampling thread's clock (wall-clock, per-sampler
+  origin at construction), not from the inference loop.</li>
+  <li><b>Window boundaries.</b> The reported energy spans the interval from the first to the last sample inside
+  the measurement window; it <span class="kw must">MUST NOT</span> be extrapolated to the window edges (the
+  uncovered lead-in is at most one sampling period). A run whose reported energy would depend on edge
+  extrapolation <span class="kw must">MUST</span> disclose it.</li>
+  <li><b>Dropped samples.</b> Failed NVML reads <span class="kw must">MUST</span> be counted and reported
+  (<code>dropped_samples</code>), never silently skipped. A run with fewer than two usable samples, or with
+  telemetry that fails outright, <span class="kw must">MUST</span> be discarded — not reported as a
+  measurement.</li>
+  <li><b>Iteration aggregation.</b> The decode iterations are executed back-to-back in one measurement window;
+  energy per token is the <b>pooled</b> ratio E/token&nbsp;=&nbsp;(Σ<sub>j</sub>&nbsp;E<sub>j</sub>)&nbsp;/&nbsp;(Σ<sub>j</sub>&nbsp;tokens<sub>j</sub>)
+  over iterations j — not the mean of per-iteration ratios. The reported
+  <code>throughput_tokens_per_s</code> uses the wall time of the synchronized iteration loop.</li>
 </ol>
 
 <h3>4.2 Baseline — <span class="kw must">MUST</span></h3>
@@ -189,8 +205,10 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
 <ol>
   <li>The report <span class="kw must">MUST</span> record a <code>thermal</code> block: the warm-up count and
   temperature at start, steady state, end and peak.</li>
-  <li>Arms <span class="kw must">MUST</span> be separated by an enforced cooldown; arm order
-  <span class="kw should">SHOULD</span> be randomised.</li>
+  <li>Arms <span class="kw must">MUST</span> be separated by an enforced cooldown; the arm order
+  <span class="kw must">MUST</span> be randomised or counterbalanced (this project's own data shows order and
+  thermal state move results). A fixed order is a <b>deviation</b> that <span class="kw must">MUST</span> be
+  disclosed in the report's notes — it is real data, but reviewers will weight it accordingly.</li>
   <li>Comparisons <span class="kw must">MUST</span> be within one thermal mode, never across <code>cold</code>
   and <code>steady</code> (a hot card clocks lower and reports more energy per token).</li>
   <li>A run that never settles <span class="kw must">MUST</span> report
@@ -224,7 +242,7 @@ quantization formats (GPTQ, AWQ, FP8, <code>Q4_K_M</code>). Such measurements:</
 </ol>
 <p>A submitter <span class="kw may">MAY</span> additionally record the draft <code>environment</code> block
 (schema <code>1.4-draft</code>: power limit, clocks, idle temperature, GPU UUID). This is
-<span class="kw may">OPTIONAL</span> at v1.1 and <span class="kw should">RECOMMENDED</span> for v1.0-grade
+<span class="kw may">OPTIONAL</span> at v1.1 and <span class="kw should">RECOMMENDED</span> for Standard-candidate
 submissions (§5, level C): the 2026-09 two-card re-test found that power limit, clock state and physical card
 identity were the three context fields whose absence cost the most when reconstructing a session.</p>
 
@@ -249,13 +267,26 @@ checked by a different mechanism:</p>
   <tr><th>Level</th><th>Name</th><th>Criteria</th><th>Checked by</th><th>May be used for</th></tr>
   <tr><td>A</td><td>Schema-valid</td><td>Passes <code>ecocompute-energy/1.3</code> validation; required keys present and consistent (version-conditional: at 1.3, <code>tokens_per_run</code>/<code>iterations</code>/<code>warmup</code>/<code>context_length</code>/<code>software</code> required; <code>sample_rate_hz</code> ≥ 10)</td><td>the JSON schema</td><td>Chart overlay; browser-side comparison; archived as-is</td></tr>
   <tr><td>B</td><td>Protocol-conformant <span style="color:var(--mut)">(submittable)</span></td><td>A <b>plus</b> every §4 <span class="kw must">MUST</span>: same-session FP16 baseline, <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, batch 1 / 256 tokens / warm-up recorded, full <code>software</code> version set, thermal state not violated (or violation disclosed)</td><td>the semantic validator (<code>--profile v1.1-core</code>)</td><td>Publication in <code>/replications/</code>, credited; enters the next dataset release after review</td></tr>
-  <tr><td>C</td><td>Dataset-eligible <span style="color:var(--mut)">(v1.0-grade, draft)</span></td><td>B <b>plus</b> power-trace sidecar, achieved sample rate, complete <code>environment</code> block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported</td><td>validator (<code>--profile dataset-eligible</code>) <b>plus dataset-level review</b>; replication counts live in the build CSV, not in one report</td><td>Counted toward the v1.0 micro-standard bar</td></tr>
+  <tr><td>C</td><td>Dataset-eligible <span style="color:var(--mut)">(Standard-candidate, draft)</span></td><td>B <b>plus</b> power-trace sidecar, achieved sample rate, complete <code>environment</code> block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported</td><td>validator (<code>--profile dataset-eligible</code>) <b>plus dataset-level review</b>; replication counts live in the build CSV, not in one report</td><td>Counted toward the v1.0 micro-standard bar</td></tr>
 </table>
 <p>Level-C criteria beyond level B are draft and tracked in the container issue tracker; the
 <code>environment</code> block and the <code>thermal</code> block are not yet emitted by the container
 at schema <code>1.3</code> — until the container emits them, even the maintainer's own 2026-09-25
 re-test reports grade as schema-valid but not protocol-conformant, which the validator states
 rather than hides.</p>
+
+<h3>5.1 Pinned artifacts</h3>
+<p>GitHub links in this document resolve to <code>main</code> for readability; <code>main</code> moves.
+The immutable references for this version of the protocol are:</p>
+<table class="grid">
+  <tr><th>Artifact</th><th>Pin (2026-09-26)</th></tr>
+  <tr><td>Report schema</td><td>release <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1"><code>schema-1.3-r1</code></a> · commit <code>05a3ffd</code> · SHA-256 <code>501dc1f328270f0bd3221e1ec5c81d740308bdd87090b93f54758ea79b6efb04</code></td></tr>
+  <tr><td>Semantic validator</td><td><code>tools/validate.py</code> at the same release · SHA-256 <code>c5ca27907ffc68c91b6f28702515788210cc670e6d0330e9328788f5dd815205</code></td></tr>
+  <tr><td>Reference container image</td><td><code>ghcr.io/hongping-zh/ecocompute-mlcube@sha256:595e6ddf9658237fdfe222a9929cada024ea2d4dd1c5ae41195d024082247568</code> (e52f878 build; container content identical to the release commit)</td></tr>
+  <tr><td>Quickstart (pinned run)</td><td>release asset <code>quickstart.sh</code> · SHA-256 <code>5664b5a131de9458f8dadda6389de44cfc24e9cc51dbac5128d02023482ac1a7</code> · run with <code>ECOCOMPUTE_REF=schema-1.3-r1</code></td></tr>
+</table>
+<p>A claim of "protocol-conformant" against this document is a claim against these pins (or a later
+release that supersedes them, with its own pins).</p>
 
 <h2>6. Versioning, Pooling and Comparability</h2>
 <h3>6.1 Reports are never rewritten</h3>
