@@ -69,11 +69,20 @@ ROWS = [
 SPLIT_BEFORE = ("llama.cpp Q4_0", "ada")   # runtime / workload shape changes here
 
 
+# Thermal mode tags, spec §4.6: c = cold, s = steady, u = unknown.
+# §4.6.5: sessions recorded before the thermal block existed (the v1.1.0 seed
+# dataset, the July/August supplementary sessions, the llama.cpp traces and
+# external replications) have UNKNOWN thermal state - not cold. Comparisons
+# MUST stay within one mode (§4.6.3), so every cell carries its mode tag.
+THERMAL_TAG = {"cold": "c", "steady": "s", "unknown": "u"}
+
+
 def cells_init():
-    return {row: {s: {"deltas": [], "n": 0, "gpus": set(), "dppl": []} for s in SIZES} for row in ROWS}
+    return {row: {s: {"deltas": [], "n": 0, "gpus": set(), "dppl": [], "thermal": set()}
+                  for s in SIZES} for row in ROWS}
 
 
-def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None):
+def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None, thermal="unknown"):
     key = (method, arch)
     if key not in cells or params_b not in cells[key]:
         raise KeyError(f"no cell for {key} @ {params_b}B")
@@ -81,8 +90,18 @@ def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None):
     c["deltas"].append(delta_pct)
     c["n"] += n
     c["gpus"].add(gpu)
+    c["thermal"].add(thermal)
     if dppl is not None:
         c["dppl"].append(dppl)
+
+
+def thermal_label(modes):
+    """One cell can mix provenance; the label is honest about the mix."""
+    if not modes:
+        return "unknown"
+    if len(modes) == 1:
+        return next(iter(modes))
+    return "+".join(sorted(modes))
 
 
 def load(cells):
@@ -137,7 +156,7 @@ def write_csv(cells, path):
         w = csv.writer(fh)
         w.writerow(["method", "gpu_arch", "params_b", "vs_fp16_energy_pct_mean",
                     "vs_fp16_energy_pct_min", "vs_fp16_energy_pct_max",
-                    "n_measurements", "gpus", "delta_perplexity_pct_mean", "denominator"])
+                    "n_measurements", "gpus", "delta_perplexity_pct_mean", "thermal_mode", "denominator"])
         for (method, arch) in ROWS:
             denom = ("generation-only (re-cut from the raw trace)"
                      if method.startswith("llama.cpp")
@@ -151,6 +170,7 @@ def write_csv(cells, path):
                             round(min(d), 1), round(max(d), 1), c["n"],
                             "; ".join(sorted(c["gpus"])),
                             round(sum(c["dppl"]) / len(c["dppl"]), 2) if c["dppl"] else "",
+                            thermal_label(c["thermal"]),
                             denom])
 
 
@@ -191,7 +211,9 @@ def render(cells, path):
                 ax.text(ci + 0.47, y + (0.62 if spread else 0.56), label,
                         ha="center", va="center", color=TXT,
                         fontsize=11.5 if len(label) <= 4 else 10.2, fontweight="bold")
-                ax.text(ci + 0.47, y + (0.38 if spread else 0.26), f"n={c['n']}",
+                ttag = "".join(sorted(THERMAL_TAG[m] for m in c["thermal"]))
+                ax.text(ci + 0.47, y + (0.38 if spread else 0.26),
+                        f"n={c['n']} \u00b7 t={ttag}",
                         ha="center", va="center", color=MUTED, fontsize=7.5)
                 if spread:
                     ax.text(ci + 0.47, y + 0.17, f"{lo:+.0f}\u2026{hi:+.0f}", ha="center",
@@ -238,11 +260,17 @@ def render(cells, path):
             f"{filled} of {n_rows * n_cols} cells measured.  "
             "Every ? is a run nobody has done — a free Colab T4 fills one in about half an hour.",
             ha="left", va="center", color=TXT, fontsize=9.5, fontweight="bold")
+    ax.text(-3.6, -1.94,
+            "t = thermal mode (spec \u00a74.6): c = cold \u00b7 s = steady \u00b7 u = unknown.  "
+            "Every session behind this grid was recorded before the thermal block existed, so every measured cell is t=u \u2014 "
+            "unknown is not cold (\u00a74.6.5). Compare within a mode, never across cold and steady (\u00a74.6.3): "
+            "do not read these cells against future c/s runs, and the thermal-block re-tests are deliberately not pooled here.",
+            ha="left", va="center", color=MUTED, fontsize=8.2)
     ax.text(n_cols + 0.05, -1.57, "quantenergy.tech · CC BY 4.0", ha="right", va="center",
             color=MUTED, fontsize=8.5)
 
     ax.set_xlim(-3.7, n_cols + 0.1)
-    ax.set_ylim(-1.9, n_rows + 1.7)
+    ax.set_ylim(-2.3, n_rows + 1.7)
     ax.axis("off")
     fig.tight_layout(pad=0.6)
     fig.savefig(path, facecolor=BG, bbox_inches="tight")

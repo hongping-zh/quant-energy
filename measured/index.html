@@ -221,7 +221,7 @@
     </p>
     <a href="/assets/coverage-matrix.png" target="_blank" rel="noopener" title="Open full size">
       <img src="/assets/coverage-matrix.png" loading="lazy"
-           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point moves with GPU architecture; llama.cpp Q4_0 has one cell at -63%. 26 of 56 cells are measured."
+           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point moves with GPU architecture; llama.cpp Q4_0 has one cell at -63%. 26 of 56 cells are measured. Each cell states its replication count (n) and its thermal mode (t): every measured cell is t=u — thermal state unknown, pre-thermal-block sessions."
            style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
     <p class="chartnote" style="margin-top:14px">
       Three things the grid says that no single number does.
@@ -248,6 +248,30 @@
       The grid is generated from the published CSVs by
       <a href="https://github.com/hongping-zh/quant-energy/blob/main/build/make_coverage_matrix.py" target="_blank" rel="noopener"><code>build/make_coverage_matrix.py</code></a>
       — if you think a cell is wrong, the input files are in the repo.
+    </p>
+    <p class="chartnote">
+      <b>Thermal mode, cell by cell.</b> The spec's rule is <b>compare within a mode, not across one</b>
+      (<a href="/spec/ecocompute-protocol-v1.1.html#s4-6-thermal-state">§4.6.3</a>): a hot card clocks
+      lower and reports more energy per token. So every cell in the grid now carries its thermal state —
+      <b>c&nbsp;=&nbsp;cold, s&nbsp;=&nbsp;steady, u&nbsp;=&nbsp;unknown</b> — printed next to its n. Today
+      <b>every measured cell reads t&nbsp;=&nbsp;u</b>: all sessions behind this grid were recorded before the
+      spec's thermal block existed, and per
+      <a href="/spec/ecocompute-protocol-v1.1.html#s4-6-thermal-state">§4.6.5</a> <b>unknown is not cold</b> —
+      a session without a recorded thermal block does not get to claim one. Practically: do not read these cells
+      against future cold- or steady-mode runs, and do not fold the September re-tests (which <em>do</em> carry
+      thermal blocks, cold mode) into the grid — they are versioned separately and deliberately not pooled here.
+      When a contributor submits a thermal-block run into a cell, that cell's tag changes — a u next to a c is
+      exactly the comparison the spec forbids.
+    </p>
+    <p class="chartnote">
+      <b>Two replication counts, deliberately distinct.</b> The homepage's “1&nbsp;/&nbsp;5 independent
+      replications” counts <b>distinct people</b> who have reproduced the protocol (one so far:
+      <a href="/replications/">gkgoing's RTX 3050&nbsp;Ti run</a>). The <b>filled/hollow markers</b> across this
+      page count <b>measurements per cell</b> — filled = n&nbsp;≥&nbsp;2, hollow or hatched = n&nbsp;=&nbsp;1 —
+      and those repeats are mostly our own repeated trials within one dataset, not independent people. So a
+      filled (n&nbsp;=&nbsp;2) cell can still have <b>zero</b> independent replications behind it. The two
+      counters answer different questions (“has anyone else run this?” vs “how many measurements does this
+      number rest on?”) and never substitute for each other.
     </p>
     <div class="cta" style="margin-top:14px">
       <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Fill an empty cell on a free Colab T4 →</a>
@@ -505,7 +529,9 @@
   <footer>
     <b>Reading rules for this page:</b> every number states its window (generation-only unless marked), its
     replication level (n per cell) and its backend (bitsandbytes/llama.cpp/torchao at recorded versions). Hollow
-    markers and hatched bars mean n&nbsp;=&nbsp;1 site-wide.
+    markers and hatched bars mean n&nbsp;=&nbsp;1 site-wide — that n counts <b>measurements</b>, not independent
+    people (see the matrix note for how it differs from the homepage's replication counter), and every coverage-grid
+    cell now also carries its thermal mode (<b>t&nbsp;=&nbsp;c/s/u</b>).
     <div class="footlinks">
       <a href="/">← Tool</a>
       <a href="/method/">Protocol</a>

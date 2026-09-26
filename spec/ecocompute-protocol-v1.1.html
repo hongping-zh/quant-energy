@@ -52,7 +52,7 @@
   </table>
 </header>
 
-<h2>Abstract</h2>
+<h2 id="abstract">Abstract</h2>
 <p class="abstract">This document specifies the EcoCompute Protocol: how to measure the effect of weight-only
 quantization (e.g. NF4, INT8) on the energy cost of large-language-model inference on a GPU, so that two
 measurements taken by different people on different cards can be compared. The protocol fixes the workload
@@ -63,7 +63,7 @@ are stated in the RFC 2119/8174 style. This document <b>is</b> the protocol, not
 measurement that satisfies its <span class="kw must">MUST</span> requirements and passes its validation entry
 point is an EcoCompute measurement.</p>
 
-<h2>Status of This Document</h2>
+<h2 id="status">Status of This Document</h2>
 <p>This is the normative text of EcoCompute Protocol v1.1. The website <code>quantenergy.tech</code> keeps a
 human-readable guide with worked examples at <code>/method/</code>, the measured evidence at
 <code>/measured/</code>, data changes at <code>/changelog/</code>, and exploratory write-ups at
@@ -73,15 +73,15 @@ a page and this document disagree, this document governs. The document is archiv
 that papers can cite “EcoCompute Protocol v1.1, DOI: 10.5281/zenodo.22958675” rather than a web page that can
 change; dataset DOIs and this protocol DOI are separate and correspond through the version table (§8).</p>
 
-<h2>1. Introduction</h2>
-<h3>1.1 Scope</h3>
+<h2 id="s1-introduction">1. Introduction</h2>
+<h3 id="s1-1-scope">1.1 Scope</h3>
 <p>Every quantization tool documents <i>how</i> to quantize; none measures <i>whether</i> it saves energy on a
 given card. The protocol exists to fill that gap with a measurement that is small enough to run on a rented or
 free-tier GPU (a free Colab T4 suffices) and strict enough that its results can be pooled, compared and
 falsified.</p>
 <p>The measured quantity is the <b>energy cost of generating tokens</b>, as a delta between a quantized
 configuration and an FP16 baseline measured under identical conditions (§3).</p>
-<h3>1.2 What this protocol is not</h3>
+<h3 id="s1-2-what-not">1.2 What this protocol is not</h3>
 <ul>
   <li>It is <b>not a certified benchmark</b> and is not affiliated with MLCommons, any energy-consulting body,
   or any vendor. <code>scenario</code> labels such as <code>SingleStream</code> are nominal descriptions of the
@@ -92,7 +92,7 @@ configuration and an FP16 baseline measured under identical conditions (§3).</p
   continuous batching has a different energy profile and is a separate measurement, see §4.8).</li>
 </ul>
 
-<h2>2. Conventions and Terminology</h2>
+<h2 id="s2-conventions">2. Conventions and Terminology</h2>
 <p>The key words <span class="kw must">MUST</span>, <span class="kw must">MUST NOT</span>,
 <span class="kw must">REQUIRED</span>, <span class="kw must">SHALL</span>,
 <span class="kw must">SHALL NOT</span>, <span class="kw should">SHOULD</span>,
@@ -113,7 +113,7 @@ RFC 2119 and RFC 8174 when, and only when, they appear in all capitals.</p>
   <li><b>Anchor</b> — a distinct (GPU × model × precision) point behind the fitted curves on the site.</li>
 </ul>
 
-<h2>3. The Measured Quantity</h2>
+<h2 id="s3-measured-quantity">3. The Measured Quantity</h2>
 <p>Energy per configuration is obtained by sampling GPU-package power while the model generates tokens, and
 integrating power over wall-clock time of the generation window. The reported quantities are:</p>
 <ul>
@@ -128,9 +128,9 @@ the measured anchors, and latency/throughput estimates — are modelled and labe
 <code>extrapolated</code> or <code>estimated</code>; measurements and estimates are never mixed silently, and
 an estimator output <span class="kw must">MUST NOT</span> be archived as a measurement.</p>
 
-<h2>4. Requirements</h2>
+<h2 id="s4-requirements">4. Requirements</h2>
 
-<h3>4.1 Power measurement — <span class="kw must">MUST</span></h3>
+<h3 id="s4-1-power-measurement">4.1 Power measurement — <span class="kw must">MUST</span></h3>
 <ol>
   <li>The power source <span class="kw must">MUST</span> be NVML on-device GPU-package power sampling.</li>
   <li>The sampling rate <span class="kw must">MUST</span> be at least 10 Hz. The report
@@ -157,7 +157,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   <code>throughput_tokens_per_s</code> uses the wall time of the synchronized iteration loop.</li>
 </ol>
 
-<h3>4.2 Baseline — <span class="kw must">MUST</span></h3>
+<h3 id="s4-2-baseline">4.2 Baseline — <span class="kw must">MUST</span></h3>
 <ol>
   <li>A <code>vs_fp16_energy_pct</code> value <span class="kw must">MUST</span> be computed against an FP16 run
   measured <b>in the same session on the same card</b>.</li>
@@ -168,7 +168,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   drift double-digit percent while the FP16-normalised delta moves only a few points.</li>
 </ol>
 
-<h3>4.3 Workload — <span class="kw must">MUST</span></h3>
+<h3 id="s4-3-workload">4.3 Workload — <span class="kw must">MUST</span></h3>
 <ol>
   <li>Single-stream decode, <b>batch 1</b>.</li>
   <li><b>256 generated tokens</b> per run; 10 decode iterations after a warm-up; greedy decoding.</li>
@@ -176,7 +176,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   <li>Warm-up <span class="kw must">MUST</span> precede measurement (§4.4 excludes it from the window).</li>
 </ol>
 
-<h3>4.4 Measurement window — <span class="kw must">MUST</span></h3>
+<h3 id="s4-4-measurement-window">4.4 Measurement window — <span class="kw must">MUST</span></h3>
 <ol>
   <li>The measurement window <span class="kw must">MUST</span> be the <b>generation window</b>: model load,
   quantization and warm-up excluded.</li>
@@ -188,7 +188,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   re-cut post hoc without re-running; this is <span class="kw should">RECOMMENDED</span>.</li>
 </ol>
 
-<h3>4.5 Report contents and validation — <span class="kw must">MUST</span></h3>
+<h3 id="s4-5-report-validation">4.5 Report contents and validation — <span class="kw must">MUST</span></h3>
 <ol>
   <li>The report <span class="kw must">MUST</span> contain the schema-required fields: GPU and architecture,
   driver, runtime/engine and version, model and <code>params_b</code>, precision, batch size, context length,
@@ -201,7 +201,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   flagged as not directly comparable (the <code>software</code> block diffs it; §6.2 governs pooling).</li>
 </ol>
 
-<h3>4.6 Thermal state — <span class="kw must">MUST</span></h3>
+<h3 id="s4-6-thermal-state">4.6 Thermal state — <span class="kw must">MUST</span></h3>
 <ol>
   <li>The report <span class="kw must">MUST</span> record a <code>thermal</code> block: the warm-up count and
   temperature at start, steady state, end and peak.</li>
@@ -219,7 +219,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   <code>--thermal_mode cold</code> and why their provenance says so.</li>
 </ol>
 
-<h3>4.7 Replication — <span class="kw should">SHOULD</span></h3>
+<h3 id="s4-7-replication">4.7 Replication — <span class="kw should">SHOULD</span></h3>
 <ol>
   <li>Each configuration <span class="kw should">SHOULD</span> be measured at least n = 2 in a reporting
   dataset (the main dataset's repeated trials carry CV &lt; 2%).</li>
@@ -231,7 +231,7 @@ an estimator output <span class="kw must">MUST NOT</span> be archived as a measu
   physical card is involved, <code>n_card</code> separately (see §6.3).</li>
 </ol>
 
-<h3>4.8 Additional measurements — <span class="kw may">MAY</span></h3>
+<h3 id="s4-8-additional-measurements">4.8 Additional measurements — <span class="kw may">MAY</span></h3>
 <p>A submitter <span class="kw may">MAY</span> measure under additional thermal modes (both <code>cold</code>
 and <code>steady</code>), batch sizes, context lengths, token counts, runtimes (vLLM, TensorRT-LLM, SGLang) and
 quantization formats (GPTQ, AWQ, FP8, <code>Q4_K_M</code>). Such measurements:</p>
@@ -246,7 +246,7 @@ quantization formats (GPTQ, AWQ, FP8, <code>Q4_K_M</code>). Such measurements:</
 submissions (§5, level C): the 2026-09 two-card re-test found that power limit, clock state and physical card
 identity were the three context fields whose absence cost the most when reconstructing a session.</p>
 
-<h2>5. Validation and Compliance</h2>
+<h2 id="s5-validation">5. Validation and Compliance</h2>
 <div class="note"><b>A conforming submission <span class="kw must">MUST</span> pass schema validation
 <span class="kw must">AND</span> the semantic checks of the <code>v1.1-core</code> profile — the two
 are not the same thing.</b> The machine-readable contract is
@@ -275,7 +275,7 @@ at schema <code>1.3</code> — until the container emits them, even the maintain
 re-test reports grade as schema-valid but not protocol-conformant, which the validator states
 rather than hides.</p>
 
-<h3>5.1 Pinned artifacts</h3>
+<h3 id="s5-1-pinned-artifacts">5.1 Pinned artifacts</h3>
 <p>GitHub links in this document resolve to <code>main</code> for readability; <code>main</code> moves.
 The immutable references for this version of the protocol are:</p>
 <table class="grid">
@@ -288,26 +288,26 @@ The immutable references for this version of the protocol are:</p>
 <p>A claim of "protocol-conformant" against this document is a claim against these pins (or a later
 release that supersedes them, with its own pins).</p>
 
-<h2>6. Versioning, Pooling and Comparability</h2>
-<h3>6.1 Reports are never rewritten</h3>
+<h2 id="s6-versioning">6. Versioning, Pooling and Comparability</h2>
+<h3 id="s6-1-reports-never-rewritten">6.1 Reports are never rewritten</h3>
 <p>A <code>1.2</code> report stays <code>1.2</code>. If its numbers are re-derived (window re-cut, baseline
 recomputed), the re-derivation is a <b>new artifact</b> with its own provenance entry, and the site changelog
 records what moved and why.</p>
-<h3>6.2 What invalidates a comparison</h3>
+<h3 id="s6-2-invalidates-comparison">6.2 What invalidates a comparison</h3>
 <p>Two reports may both be valid yet not comparable. A pair is not comparable if it differs in: software stack
 (quantization kernels move NF4/INT8 results between library versions), measurement window, thermal mode,
 locked vs unlocked clocks/power, or any workload field (batch, tokens, context). Supplementary sessions
 measured on a different stack <span class="kw must">MUST</span> be archived separately and
 <span class="kw must">MUST NOT</span> be silently pooled into seed counts or fitted curves; versioning is by
 session archive and the changelog says which counts, if any, a session entered.</p>
-<h3>6.3 Card vs session identity</h3>
+<h3 id="s6-3-card-session">6.3 Card vs session identity</h3>
 <p>The physical card (GPU UUID) and the session are different units of replication. A dataset that says n = 3
 for one configuration may contain three sessions on two physical cards — for questions about the card
 population the effective sample is <code>n_card</code> = 2, not 3. Reports <span class="kw should">SHOULD</span>
 state both counts, and <span class="kw should">SHOULD NOT</span> present a card-vs-session variance
 decomposition unless each card has at least two sessions.</p>
 
-<h2>7. Limitations</h2>
+<h2 id="s7-limitations">7. Limitations</h2>
 <ol>
   <li>NVML reports GPU-package power only: CPU, DRAM, PSU losses and cooling are excluded.</li>
   <li>Single-stream generation only (§1.2).</li>
@@ -323,7 +323,7 @@ equivalent NVML-based protocol, showing quantization saving energy below the pub
 architecture, or costing energy above it. Such runs are published on the replications page whether they agree
 or not.</p>
 
-<h2>8. Version Correspondence</h2>
+<h2 id="s8-version-correspondence">8. Version Correspondence</h2>
 <table class="grid">
   <tr><th>Protocol</th><th>Report schema</th><th>Thermal block</th><th>Environment block</th><th>Companion datasets (concept DOI)</th></tr>
   <tr><td>v1.0 (implicit, 2026-07 seed sessions)</td><td><code>ecocompute-energy/1.2</code></td><td>absent (thermal state unknown)</td><td>absent</td><td>main dataset <a href="https://doi.org/10.5281/zenodo.19647290">10.5281/zenodo.19647290</a></td></tr>
@@ -332,7 +332,7 @@ or not.</p>
 <p>Dataset DOIs and the protocol DOI are separate. Each dataset release states, in its metadata, the protocol
 version its sessions were measured under; the table above is the normative correspondence.</p>
 
-<h2>9. Acknowledgments</h2>
+<h2 id="s9-acknowledgments">9. Acknowledgments</h2>
 <p>The protocol is only useful if people other than its maintainer can run it. Each independent
 replication — an <code>energy.json</code> produced by someone else's hardware, electricity and time — is
 acknowledged here, in arrival order:</p>
@@ -352,7 +352,7 @@ of This Document) carries the version frozen at its publication date; the live c
 independent replications and the current contributor list are maintained at
 <code>quantenergy.tech/replications/</code>.</p>
 
-<h2>10. References</h2>
+<h2 id="s10-references">10. References</h2>
 <ul>
   <li>Bradner, S., “Key words for use in RFCs to Indicate Requirement Levels”, BCP 14, RFC 2119.</li>
   <li>Leiba, B., “Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words”, BCP 14, RFC 8174.</li>
@@ -366,7 +366,7 @@ independent replications and the current contributor list are maintained at
   (<a href="https://doi.org/10.5281/zenodo.21066652">archived: 10.5281/zenodo.21066652</a>).</li>
 </ul>
 
-<h2>Appendix A. Relationship to the Website</h2>
+<h2 id="appendix-a-website">Appendix A. Relationship to the Website</h2>
 <p>The site <code>quantenergy.tech</code> is organised in four layers, of which this document is the normative
 core:</p>
 <table class="grid">

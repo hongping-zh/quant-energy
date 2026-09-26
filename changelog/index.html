@@ -72,6 +72,32 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-26</span><span class="etag site">site</span><span class="etag protocol">protocol</span></div>
+      <h2>The last spec↔display gaps close: thermal mode on every matrix cell, one replication vocabulary, a stated version of record</h2>
+      <p>Three consistency fixes, each closing a place where the site's display lagged the spec's own rules:</p>
+      <ul style="margin:8px 0">
+        <li><b>Coverage matrix cells now carry their thermal mode</b> (<code>t&nbsp;=&nbsp;c/s/u</code>, next to n).
+        The spec says <i>compare within a mode, not across one</i> (§4.6.3) — and per §4.6.5 every session behind
+        the current grid predates the thermal block, so <b>every measured cell is t&nbsp;=&nbsp;u: unknown, not
+        cold</b>. The grid's footer says so explicitly, the CSV gains a <code>thermal_mode</code> column, and the
+        September thermal-block re-tests remain deliberately unpooled. When a thermal-block run enters a cell, the
+        tag changes — a u next to a c is exactly the comparison the spec forbids.
+        (<a href="https://github.com/hongping-zh/quant-energy/blob/main/build/make_coverage_matrix.py" target="_blank" rel="noopener"><code>build/make_coverage_matrix.py</code></a>,
+        <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/coverage_matrix_2026-09-09.csv" target="_blank" rel="noopener"><code>coverage_matrix_2026-09-09.csv</code></a>)</li>
+        <li><b>One mapping between the two replication vocabularies.</b> The homepage counts <i>independent
+        replications</i> (distinct people; 1&nbsp;/&nbsp;5), while this page's filled/hollow markers count
+        <i>measurements per cell</i> (filled = n&nbsp;≥&nbsp;2, hollow = n&nbsp;=&nbsp;1 — mostly our own repeated
+        trials). A note beside the matrix now states both definitions and that they never substitute for each
+        other: a filled cell can still have zero independent replications behind it.</li>
+        <li><b>The /method/ guide now states its version of record</b>: the normative text is the Zenodo record at
+        DOI&nbsp;10.5281/zenodo.22958675 (Protocol&nbsp;v1.1) and the guide is synced to that version, linking the
+        document's §8 protocol&nbsp;↔&nbsp;schema&nbsp;↔&nbsp;dataset version table. The specification's headings
+        also gained stable anchor ids, so requirements can be deep-linked (e.g.
+        <a href="/spec/ecocompute-protocol-v1.1.html#s4-6-thermal-state">§4.6 Thermal state</a>).</li>
+      </ul>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-26</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
       <h2>Protocol errata: measurement algorithm pinned, arm order a MUST, references pinned by checksum</h2>
       <p>Four clarifications to the <a href="/spec/ecocompute-protocol-v1.1.html">specification</a>, folded into the
