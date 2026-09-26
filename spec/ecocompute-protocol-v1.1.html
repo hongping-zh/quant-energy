@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>EcoCompute Protocol v1.1 — A Micro-Benchmark Specification for Quantization Energy in LLM Inference</title>
-<meta name="description" content="The normative text of the EcoCompute Protocol v1.1: workload, baseline, measurement, reporting and validation requirements in RFC 2119/8174 style. A conforming submission MUST pass ecocompute-energy/1.2+ schema validation." />
+<meta name="description" content="The normative text of the EcoCompute Protocol v1.1: workload, baseline, measurement, reporting and validation requirements in RFC 2119/8174 style. A conforming submission MUST pass schema validation AND the v1.1-core semantic checks — schema-valid is not protocol-conformant." />
 <meta name="author" content="Hongping Zhang" />
 <style>
   :root{--ink:#1a2233;--mut:#5b6779;--line:#d7dce5;--acc:#0b5cad;--must:#b42318;--may:#086b53}
@@ -229,23 +229,33 @@ submissions (§5, level C): the 2026-09 two-card re-test found that power limit,
 identity were the three context fields whose absence cost the most when reconstructing a session.</p>
 
 <h2>5. Validation and Compliance</h2>
-<div class="note"><b>A conforming submission <span class="kw must">MUST</span> pass validation against the
-EcoCompute report schema.</b> The machine-readable contract is
+<div class="note"><b>A conforming submission <span class="kw must">MUST</span> pass schema validation
+<span class="kw must">AND</span> the semantic checks of the <code>v1.1-core</code> profile — the two
+are not the same thing.</b> The machine-readable contract is
 <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json"><code>ecocompute-mlcube/schema/energy.schema.json</code></a>
-(JSON Schema draft-07) in the container repository; the reference implementation is the
+(JSON Schema draft-07), and the semantic checker is
+<a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/tools/validate.py"><code>ecocompute-mlcube/tools/validate.py</code></a>
+(<code>ecocompute validate --profile v1.1-core</code>) in the container repository. The schema sees
+structure; the validator sees the cross-field <span class="kw must">MUST</span>s the schema cannot
+express (same-session FP16 baseline, thermal block present and honest, pin-mismatch flagging). The
+reference implementation is the
 <a href="https://github.com/hongping-zh/ecocompute-mlcube">EcoCompute energy MLCube</a>, which validates every
 report it writes before emitting it, and whose test suite includes deliberately malformed reports (missing
 <code>results</code>, <code>basis: "measured"</code> with a fallback source, mismatched scenario labels) that
 must fail. A schema change that lets any of them pass is itself a bug.</div>
-<p>“Valid” is not one binary. A report is graded at the highest level it satisfies:</p>
+<p>“Valid” is not one binary. A report is graded at the highest level it satisfies, and each level is
+checked by a different mechanism:</p>
 <table class="grid">
-  <tr><th>Level</th><th>Name</th><th>Criteria</th><th>May be used for</th></tr>
-  <tr><td>A</td><td>Schema-valid</td><td>Passes <code>ecocompute-energy/1.3</code> validation; required keys present and consistent</td><td>Chart overlay; browser-side comparison; archived as-is</td></tr>
-  <tr><td>B</td><td>Submittable</td><td>A <b>plus</b> same-session FP16 baseline, <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, thermal state not violated (or violation disclosed)</td><td>Publication in <code>/replications/</code>, credited; enters the next dataset release after review</td></tr>
-  <tr><td>C</td><td>v1.0-grade <span style="color:var(--mut)">(draft)</span></td><td>B <b>plus</b> complete <code>environment</code> block, achieved sample rate, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported</td><td>Counted toward the v1.0 micro-standard bar</td></tr>
+  <tr><th>Level</th><th>Name</th><th>Criteria</th><th>Checked by</th><th>May be used for</th></tr>
+  <tr><td>A</td><td>Schema-valid</td><td>Passes <code>ecocompute-energy/1.3</code> validation; required keys present and consistent (version-conditional: at 1.3, <code>tokens_per_run</code>/<code>iterations</code>/<code>warmup</code>/<code>context_length</code>/<code>software</code> required; <code>sample_rate_hz</code> ≥ 10)</td><td>the JSON schema</td><td>Chart overlay; browser-side comparison; archived as-is</td></tr>
+  <tr><td>B</td><td>Protocol-conformant <span style="color:var(--mut)">(submittable)</span></td><td>A <b>plus</b> every §4 <span class="kw must">MUST</span>: same-session FP16 baseline, <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, batch 1 / 256 tokens / warm-up recorded, full <code>software</code> version set, thermal state not violated (or violation disclosed)</td><td>the semantic validator (<code>--profile v1.1-core</code>)</td><td>Publication in <code>/replications/</code>, credited; enters the next dataset release after review</td></tr>
+  <tr><td>C</td><td>Dataset-eligible <span style="color:var(--mut)">(v1.0-grade, draft)</span></td><td>B <b>plus</b> power-trace sidecar, achieved sample rate, complete <code>environment</code> block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported</td><td>validator (<code>--profile dataset-eligible</code>) <b>plus dataset-level review</b>; replication counts live in the build CSV, not in one report</td><td>Counted toward the v1.0 micro-standard bar</td></tr>
 </table>
 <p>Level-C criteria beyond level B are draft and tracked in the container issue tracker; the
-<code>environment</code> block is not yet emitted by the container at schema <code>1.3</code>.</p>
+<code>environment</code> block and the <code>thermal</code> block are not yet emitted by the container
+at schema <code>1.3</code> — until the container emits them, even the maintainer's own 2026-09-25
+re-test reports grade as schema-valid but not protocol-conformant, which the validator states
+rather than hides.</p>
 
 <h2>6. Versioning, Pooling and Comparability</h2>
 <h3>6.1 Reports are never rewritten</h3>

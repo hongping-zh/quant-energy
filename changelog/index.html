@@ -72,6 +72,26 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-26</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
+      <h2>The spec–schema loop is closed: schema-valid is no longer mistaken for protocol-conformant</h2>
+      <p>The public <code>energy.schema.json</code> checked structure only — a report could pass it while
+      violating Protocol v1.1 (no thermal block, no same-session FP16 baseline, arbitrary version strings,
+      <code>sample_rate_hz</code> below 10&nbsp;Hz). Two layers now close that gap in the
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">container repo</a>:
+      the schema itself is tightened (version-enum and const fields, minimum 10&nbsp;Hz sampling, and at
+      schema&nbsp;1.3 the workload/measurement/software MUST-fields become required — no existing valid report
+      breaks), and a new semantic validator
+      (<code>ecocompute validate --profile v1.1-core</code>) checks every machine-checkable §4 MUST with
+      clause-numbered violations and CI exit codes. The compliance levels are renamed to say what they actually
+      check: <b>Schema-valid / Protocol-conformant / Dataset-eligible</b> (A/B/C unchanged in substance; see
+      <a href="/schema/#levels">/schema/ §3</a> and the
+      <a href="/spec/ecocompute-protocol-v1.1.html">spec §5</a>). One honest consequence, stated rather than
+      hidden: the 2026-09-25 two-card re-test reports themselves grade as <b>schema-valid but not
+      protocol-conformant</b> — the container does not yet emit the thermal block (tracked issue), and the
+      validator's test suite pins exactly that verdict.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-25</span><span class="etag protocol">protocol</span></div>
       <h2>The spec layer becomes a standalone, DOI-tracked specification document</h2>
       <p>Protocol v1.1 is extracted from the <a href="/method/">method page</a> into an independent normative

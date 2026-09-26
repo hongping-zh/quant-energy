@@ -140,33 +140,57 @@ results                 total_energy_joules, tokens_generated, energy_per_token_
     is <code>null</code> with a reason — never omitted silently, never invented.</p>
     </div>
 
-    <h2>3 · Compliance levels</h2>
-    <p>"Valid" is not one binary. A report is graded at the highest level it satisfies:</p>
+    <h2 id="levels">3 · Compliance levels</h2>
+    <p>"Valid" is not one binary. A report is graded at the highest level it satisfies — and each
+    level is checked by a different mechanism, because the JSON schema can only see structure,
+    not semantics:</p>
     <table>
-      <tr><th>Level</th><th>Name</th><th>Criteria</th><th>What it may be used for</th></tr>
+      <tr><th>Level</th><th>Name</th><th>Criteria</th><th>Checked by</th><th>What it may be used for</th></tr>
       <tr>
         <td class="lvl a">A</td>
         <td>Schema-valid</td>
-        <td>Passes <code>ecocompute-energy/1.3</code> validation; all §1 required keys present and consistent</td>
+        <td>Passes <code>ecocompute-energy/1.3</code> validation; all §1 required keys present and consistent
+        (version-conditional: at 1.3, <code>tokens_per_run</code>/<code>iterations</code>/<code>warmup</code>/
+        <code>context_length</code>/<code>software</code> are required; <code>sample_rate_hz</code> ≥ 10)</td>
+        <td>the JSON schema</td>
         <td>Overlay on the charts; browser-side comparison; archived as-is</td>
       </tr>
       <tr>
         <td class="lvl b">B</td>
-        <td>Submittable</td>
-        <td>Level A <b>plus</b>: same-session FP16 baseline (<code>vs_fp16_energy_pct</code> present), stated
-        <code>basis: measured</code>, <code>measurement_source: direct-nvml</code>, thermal state not violated
-        (cooldown respected, or the violation disclosed in a note)</td>
+        <td>Protocol-conformant <span class="meta">(submittable)</span></td>
+        <td>Level A <b>plus</b>: every Protocol v1.1 MUST holds — same-session FP16 baseline
+        (<code>vs_fp16_energy_pct</code> present), stated <code>basis: measured</code>,
+        <code>measurement_source: direct-nvml</code>, batch 1 / 256 tokens / warm-up recorded, full
+        <code>software</code> version set, thermal block present and honest (cooldown respected, or the
+        violation disclosed in a note)</td>
+        <td>the semantic validator (<code>--profile v1.1-core</code>)</td>
         <td>Publication in <a href="/replications/">/replications/</a>, credited; enters the next dataset release after review</td>
       </tr>
       <tr>
         <td class="lvl c">C</td>
-        <td>v1.0-grade <span class="meta">(draft)</span></td>
-        <td>Level B <b>plus</b>: the §2 <code>environment</code> block complete (power limit, clocks, idle temperature,
-        GPU UUID), achieved sample rate recorded, and the configuration has n&nbsp;≥&nbsp;3 independent sessions or
-        ≥&nbsp;2 physical cards — cross-session/cross-card spread reported, not implied</td>
+        <td>Dataset-eligible <span class="meta">(v1.0-grade, draft)</span></td>
+        <td>Level B <b>plus</b>: whole-run power-trace sidecar, achieved sample rate recorded, the §2
+        <code>environment</code> block complete (power limit, clocks, idle temperature, GPU UUID), and the
+        configuration has n&nbsp;≥&nbsp;3 independent sessions or ≥&nbsp;2 physical cards —
+        cross-session/cross-card spread reported, not implied</td>
+        <td>validator (<code>--profile dataset-eligible</code>) <b>plus dataset-level review</b> — replication counts and cross-card spread live in the build CSV, not in one report</td>
         <td>Counted toward the <a href="/method/">v1.0 micro-standard bar</a> (per-configuration ≥3 sessions, ≥2–3 cards per architecture)</td>
       </tr>
     </table>
+
+    <div class="callout">
+      <b>Schema-valid ≠ protocol-conformant.</b> A report can pass the JSON schema and still violate the
+      protocol — no thermal block, no FP16 baseline, fabricated-looking pin consistency. The schema cannot
+      see cross-field semantics; that is what the validator is for. Run it on any report:
+      <pre>ecocompute validate --profile v1.1-core energy.json
+# or: python3 tools/validate.py energy.json   (container repo)
+
+# verdicts: schema-valid | protocol-conformant | dataset-eligible
+# exit codes: 0 conformant · 1 schema-valid but violating (clause-numbered) · 2 schema-invalid</pre>
+      Honest failure states <b>pass</b>: <code>steady_state_reached: false</code> and
+      <code>thermal.basis: "unavailable"</code> are valid reports of reality, not violations — only
+      fabrication fails.
+    </div>
 
     <h2>4 · Version migration and invalidation rules</h2>
     <ul>
@@ -197,8 +221,14 @@ results                 total_energy_joules, tokens_generated, energy_per_token_
       <li><b>Measurement report schema (live, 1.3):</b>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json" target="_blank" rel="noopener"><code>ecocompute-mlcube/schema/energy.schema.json</code></a> —
       JSON Schema draft-07; the container runs builtin validation on every report.</li>
+      <li><b>Semantic validator (live):</b>
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/tools/validate.py" target="_blank" rel="noopener"><code>ecocompute-mlcube/tools/validate.py</code></a> —
+      checks every machine-checkable Protocol v1.1 MUST the schema cannot express, with clause-numbered
+      violations. <code>ecocompute validate --profile v1.1-core</code> is the container alias. Its test
+      suite includes the real 2026-09-25 re-test report, which it grades schema-valid but not
+      protocol-conformant (thermal block not yet emitted by the container — tracked issue).</li>
       <li><b>Environment block (draft, §2):</b> proposed as <code>ecocompute-energy/1.4-draft</code>; tracked in the
-      container issues; will land together with a compliance-level checker script.</li>
+      container issues; will land together with the container emitting the thermal block.</li>
       <li><b>Estimator output schema:</b>
       <a href="/schema/quantization-energy-report-schema.yaml"><code>quantization-energy-report-schema.yaml</code></a> —
       describes the /?tab=estimate tool response. It is a <em>model output</em>: its <code>measurement_method</code>

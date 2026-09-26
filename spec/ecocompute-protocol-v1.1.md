@@ -186,25 +186,33 @@ when reconstructing a session.
 
 ## 5. Validation and Compliance
 
-**A conforming submission MUST pass validation against the EcoCompute report schema.** The
-machine-readable contract is
+**A conforming submission MUST pass schema validation AND the semantic checks of the `v1.1-core`
+profile — the two are not the same thing.** The machine-readable contract is
 [`schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json)
-(JSON Schema draft-07) in the container repository; the reference implementation is the
+(JSON Schema draft-07) in the container repository, and the semantic checker is
+[`tools/validate.py`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/tools/validate.py)
+(`ecocompute validate --profile v1.1-core`). The schema sees structure; the validator sees the
+cross-field MUSTs the schema cannot express (same-session FP16 baseline, thermal block present
+and honest, pin-mismatch flagging). The reference implementation is the
 [EcoCompute energy MLCube](https://github.com/hongping-zh/ecocompute-mlcube), which validates
 every report it writes before emitting it, and whose test suite includes deliberately malformed
 reports (missing `results`, `basis: "measured"` with a fallback source, mismatched scenario
 labels) that must fail. A schema change that lets any of them pass is itself a bug.
 
-"Valid" is not one binary. A report is graded at the highest level it satisfies:
+"Valid" is not one binary. A report is graded at the highest level it satisfies, and each level
+is checked by a different mechanism:
 
-| Level | Name | Criteria | May be used for |
-|---|---|---|---|
-| A | Schema-valid | Passes `ecocompute-energy/1.3` validation; required keys present and consistent | Chart overlay; browser-side comparison; archived as-is |
-| B | Submittable | A **plus** same-session FP16 baseline, `basis: measured`, `measurement_source: direct-nvml`, thermal state not violated (or violation disclosed) | Publication in `/replications/`, credited; enters the next dataset release after review |
-| C | v1.0-grade (draft) | B **plus** complete `environment` block, achieved sample rate, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported | Counted toward the v1.0 micro-standard bar |
+| Level | Name | Criteria | Checked by | May be used for |
+|---|---|---|---|---|
+| A | Schema-valid | Passes `ecocompute-energy/1.3` validation; required keys present and consistent (version-conditional: at 1.3, `tokens_per_run`/`iterations`/`warmup`/`context_length`/`software` required; `sample_rate_hz` ≥ 10) | the JSON schema | Chart overlay; browser-side comparison; archived as-is |
+| B | Protocol-conformant (submittable) | A **plus** every §4 MUST: same-session FP16 baseline, `basis: measured`, `measurement_source: direct-nvml`, batch 1 / 256 tokens / warm-up recorded, full `software` version set, thermal state not violated (or violation disclosed) | the semantic validator (`--profile v1.1-core`) | Publication in `/replications/`, credited; enters the next dataset release after review |
+| C | Dataset-eligible (v1.0-grade, draft) | B **plus** power-trace sidecar, achieved sample rate, complete `environment` block, and n ≥ 3 independent sessions or ≥ 2 physical cards for the configuration — cross-session/cross-card spread reported | validator (`--profile dataset-eligible`) **plus dataset-level review**; replication counts live in the build CSV, not in one report | Counted toward the v1.0 micro-standard bar |
 
 Level-C criteria beyond level B are draft and tracked in the container issue tracker; the
-`environment` block is not yet emitted by the container at schema `1.3`.
+`environment` block and the `thermal` block are not yet emitted by the container at schema
+`1.3` — until the container emits them, even the maintainer's own 2026-09-25 re-test reports
+grade as schema-valid but not protocol-conformant, which the validator states rather than
+hides.
 
 ## 6. Versioning, Pooling and Comparability
 
