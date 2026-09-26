@@ -51,6 +51,13 @@
   .three h3{margin:0 0 6px;font-size:14px;color:var(--accent)}
   .three p{margin:0;font-size:13px;color:var(--muted)}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  /* Progress toward the site goal: five independent replicators. */
+  .goal{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:16px 0}
+  .goal .goalbar{display:flex;gap:6px;margin:12px 0 10px}
+  .goal .goalbar i{flex:1;height:10px;border-radius:3px;background:var(--line)}
+  .goal .goalbar i.on{background:var(--accent)}
+  .goal .wholist{margin:8px 0 0;padding-left:20px;font-size:13.5px;line-height:1.8}
+  .goal .wholist li b{font-variant-numeric:tabular-nums}
   .stat{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px}
   .stat .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
   .stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
@@ -238,6 +245,7 @@
     the energy axis did not replicate at all. That contrast is the point of the whole project, and we did not have
     independent evidence for it until this run.</p>
   </div>
+  <div class="goal" id="goalTracker" style="display:none"></div>
   <div class="stats" id="stats"></div>
   <p class="meta" id="statsNote"></p>
   <div class="filters" id="filters" style="display:none">
@@ -599,6 +607,39 @@ function renderGallery(){
   }).join("");
 }
 
+/* ---------- goal tracker: n of 5 independent replicators ---------- */
+/* The site goal is five independent contributors (unique handles), not five entries.
+   The count reads the same replications.json as everything else - never a hand-set number. */
+var REPLICATION_GOAL = 5;
+function renderGoal(){
+  var el = document.getElementById("goalTracker");
+  if(!el) return;
+  var seen = {}, order = [];
+  GALLERY.forEach(function(e){
+    if(e.handle && !seen[e.handle]){ seen[e.handle] = e; order.push(e); }
+  });
+  var n = order.length;
+  var segs = "";
+  for(var i = 0; i < REPLICATION_GOAL; i++) segs += '<i class="' + (i < n ? "on" : "") + '"></i>';
+  var who = order.map(function(e){
+    return '<li><b>' + esc(e.handle) + '</b> \u2014 ' + esc(e.gpu || "GPU not stated") +
+      (e.arch ? " (" + esc(e.arch) + ")" : "") +
+      (e.date ? ", " + esc(e.date) : "") + "</li>";
+  }).join("");
+  el.style.display = "";
+  el.innerHTML =
+    '<b style="font-size:15px">Independent replications: ' + n + ' / ' + REPLICATION_GOAL + '</b>' +
+    ' <span class="meta">(goal: ' + REPLICATION_GOAL + ' contributors)</span>' +
+    '<div class="goalbar" role="img" aria-label="' + n + ' of ' + REPLICATION_GOAL + ' replications">' + segs + '</div>' +
+    (n
+      ? '<ul class="wholist">' + who + '</ul>'
+      : '<p class="meta" style="margin:6px 0 0">No replication yet \u2014 the slot above is real, not decorative: it stays empty until the first independent energy.json arrives.</p>') +
+    '<p class="meta" style="margin:10px 0 0">' + (n < REPLICATION_GOAL
+      ? (REPLICATION_GOAL - n) + ' to go. Every qualifying submission moves the count and is named here \u2014 ' +
+        '<a href="#submit">how to submit \u2192</a>'
+      : 'Goal reached \u2014 thank you all. The count keeps climbing.') + '</p>';
+}
+
 function renderStats(){
   var archs = {}, conf = 0, disp = 0, untested = 0;
   GALLERY.forEach(function(e){
@@ -620,6 +661,7 @@ function renderStats(){
   }).join("");
   document.getElementById("stats").innerHTML = html;
   document.getElementById("heroStats").innerHTML = html;
+  renderGoal();
   document.getElementById("statsNote").innerHTML = GALLERY.length
     ? "Counted from <code>replications.json</code>; a point is compared with the fitted curve's own 95% band (<a href=\"/method/#band\">how it is built</a>). “In untested territory” means the point sits outside the model sizes that curve was fitted on, where the band is too wide for the comparison to mean anything."
     : "Nothing here is a placeholder: these counters read <code>replications.json</code>, which is empty until the first real submission lands. Submit one that breaks our curve and it will be published just as prominently — disagreement is the mechanism, not the enemy.";

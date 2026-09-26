@@ -210,6 +210,10 @@
   .replstats b{color:var(--txt)}
   .replstats a{color:var(--accent);text-decoration:none;font-weight:700}
   .replstats a:hover{text-decoration:underline}
+  /* Progress toward the replication goal: GOAL segments, one per unique contributor. */
+  .replbar{display:inline-flex;gap:3px;margin:0 7px;vertical-align:-1px}
+  .replbar i{width:13px;height:8px;border-radius:2px;background:var(--line);display:inline-block}
+  .replbar i.on{background:var(--accent)}
   /* Do / Don't scope table */
   .scope{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0 0}
   .scope th,.scope td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.55}
@@ -1442,22 +1446,25 @@ decorate(document.getElementById("repoCta"));
 
 /* ----- hero: live count of independent replications (never a placeholder) ----- */
 (function(){
+  var GOAL=5; /* site goal: five independent replicators (counted as unique handles) */
   const el=document.getElementById("heroRepl");
   if(!el) return;
   fetch("/replications/replications.json",{cache:"no-store"})
     .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(d=>{
       const e=(d&&d.entries)||[];
-      if(!e.length){
-        el.innerHTML='<b>0</b> independent replications so far \u00b7 <b>0</b> GPU architectures \u2014 be the first: <a href="/replications/#submit">publish your run \u2192</a>';
-        return;
-      }
       REPLS=e;
       if(document.getElementById("estCross").innerHTML) renderEstimate();
       const archs=new Set(e.map(x=>x.arch).filter(Boolean)).size;
+      /* Count people, not entries: the goal is five contributors. */
+      const seen=new Set(), firsts=[];
+      e.forEach(x=>{ if(x.handle && !seen.has(x.handle)){ seen.add(x.handle); firsts.push(x); } });
+      const n=seen.size;
+      const segs=Array.from({length:GOAL},(_,i)=>'<i class="'+(i<n?'on':'')+'"></i>').join("");
       /* Name the contributors here, not only in the gallery: they paid for the electricity. */
-      const who=e.map(x=>esc(x.handle||"")).filter(Boolean).slice(0,4).join(", ");
-      el.innerHTML='<b>'+e.length+'</b> independent replication'+(e.length===1?"":"s")+
+      const who=firsts.slice(0,4).map(x=>esc(x.handle)).join(", ");
+      el.innerHTML='<b>'+n+'</b> / '+GOAL+' independent replication'+(GOAL===1?"":"s")+
+        '<span class="replbar" aria-hidden="true">'+segs+'</span>'+
         ' \u00b7 <b>'+archs+'</b> GPU architecture'+(archs===1?"":"s")+
         (who?' \u00b7 thanks to '+who:"")+
         ' \u2014 <a href="/replications/">see them against the curve \u2192</a>';

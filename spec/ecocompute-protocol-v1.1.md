@@ -258,7 +258,29 @@ Dataset DOIs and the protocol DOI are separate. Each dataset release states, in 
 the protocol version its sessions were measured under; the table above is the normative
 correspondence.
 
-## 9. References
+## 9. Acknowledgments
+
+The protocol is only useful if people other than its maintainer can run it. Each independent
+replication — an `energy.json` produced by someone else's hardware, electricity and time — is
+acknowledged here, in arrival order:
+
+- **@gkgoing** — first independent replication (2026-08): TinyLlama-1.1B in NF4 on an
+  RTX 3050 Ti Laptop GPU (Ampere), Windows, NVML package power, with a paired perplexity that
+  matches the maintainer's own RTX 4090 run to four decimals.
+  [Submission](https://github.com/hongping-zh/ecocompute-mlcube/issues/15) ·
+  [gallery entry](https://quantenergy.tech/replications/).
+
+*Reserved:* the first replication on a GPU architecture absent from the maintainer's own set
+(dataset v1.1.0 covers Turing, Ada Lovelace, Ampere, Blackwell — e.g. Hopper, or any
+architecture not listed there) will be named here in a separate line. That slot is still open;
+the first replication above is an Ampere laptop card, and Ampere is in the maintainer's set.
+
+This section is non-normative and grows as replications arrive. The Zenodo snapshot (§ Status
+of This Document) carries the version frozen at its publication date; the live count of
+independent replications and the current contributor list are maintained at
+`quantenergy.tech/replications/`.
+
+## 10. References
 
 - Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119.
 - Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174.
