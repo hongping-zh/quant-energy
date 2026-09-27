@@ -680,9 +680,17 @@
         <div id="runCross"></div>
         <p class="chartnote">Your point is placed at (model size, ΔE%) from the uploaded report and coloured by its <code>basis</code>. The fitted curve is calibrated to measured anchors for the report's GPU architecture — filled dots are replicated (n&nbsp;=&nbsp;2), hollow dots were measured once (n&nbsp;=&nbsp;1) — and beyond the largest anchor it is extrapolated. Nothing is uploaded to a server; parsing is 100% in your browser.</p>
         <div class="cta" style="margin-top:8px">
+          <button id="runIssueCopy" class="ghost" type="button">Copy issue-ready summary</button>
           <button id="runClear" class="ghost" type="button">Clear</button>
           <span class="badge">Compare several runs — drop more files to stack points.</span>
         </div>
+        <div id="runManual" style="display:none;margin-top:10px">
+          <textarea id="runManualText" readonly style="width:100%;height:200px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;background:rgba(56,189,248,.05);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
+        </div>
+        <p class="meta" style="margin:8px 0 0">The copy is Markdown — paste it into a new issue at
+          <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/new" target="_blank" rel="noopener">ecocompute-mlcube/issues/new</a>,
+          or use the full submission form (handle, n, consent checkboxes) on
+          <a href="/replications/#submit">the replications page</a>.</p>
       </div>
     </div>
   </div><!-- /runView -->
@@ -1538,7 +1546,7 @@ function parseEnergyReport(obj){
   if(!obj||typeof obj!=="object") return {ok:false,error:"Not a JSON object."};
   if(typeof obj.schema_version==="string" && obj.schema_version.indexOf("ecocompute-energy")!==0)
     return {ok:false,error:"Unexpected schema_version — expected an ecocompute-energy report."};
-  const w=obj.workload||{}, sut=obj.system_under_test||{}, res=obj.results||{};
+  const w=obj.workload||{}, sut=obj.system_under_test||{}, res=obj.results||{}, ms=obj.measurement||{};
   let N = (w.params_b!=null? +w.params_b : NaN);
   if(!(N>0)){ const m=String(w.model_name||"").match(/(\d+(?:\.\d+)?)\s*[bB]\b/); if(m) N=parseFloat(m[1]); }
   const dE = (res.vs_fp16_energy_pct!=null? +res.vs_fp16_energy_pct : NaN);
@@ -1547,7 +1555,15 @@ function parseEnergyReport(obj){
   if(!(N>0)) return {ok:false,error:"Could not find model size — set workload.params_b (or a size like \"7B\" in model_name)."};
   if(!isFinite(dE)) return {ok:false,error:"Missing results.vs_fp16_energy_pct (the ΔE% vs FP16)."};
   return {ok:true, N, dE, arch, precision:(w.precision||"NF4"), basis, model:(w.model_name||"your model"),
-          gpu:(sut.gpu||sut.gpu_arch||"—"), source:(obj.measurement_source||"") };
+          gpu:(sut.gpu||sut.gpu_arch||"—"), source:(obj.measurement_source||""),
+          iterations:(ms.iterations!=null?+ms.iterations:null),
+          sample_rate_hz:(ms.sample_rate_hz!=null?+ms.sample_rate_hz:null),
+          method:(ms.method||""),
+          schema_version:(obj.schema_version||""),
+          energy_per_token_mj:(res.energy_per_token_mj!=null?+res.energy_per_token_mj:null),
+          fp16_energy_per_token_mj:(res.fp16_energy_per_token_mj!=null?+res.fp16_energy_per_token_mj:null),
+          throughput:(res.throughput_tokens_per_s!=null?+res.throughput_tokens_per_s:null),
+          timestamp:(obj.timestamp_utc||"") };
 }
 let uploadedPoints=[];
 function basisClass(b){ b=String(b||"").toLowerCase();
@@ -1557,7 +1573,9 @@ function basisColor(b){ b=String(b||"").toLowerCase();
   if(b==="measured") return "#34d399"; if(b==="interpolated") return "#38bdf8";
   if(b==="extrapolated"||b==="estimated") return "#fbbf24"; return "#94a3b8"; }
 function showRunResult(pt){
+  lastRunPoint=pt;
   document.getElementById("runError").style.display="none";
+  document.getElementById("runManual").style.display="none";
   document.getElementById("runResult").style.display="";
   document.getElementById("rrModel").textContent=pt.model;
   document.getElementById("rrArch").textContent=(pt.arch?(CURVES.arch_label[pt.arch]||pt.arch):(pt.gpu||"unknown"));
@@ -1629,12 +1647,95 @@ function ingestEnergyJson(text){
   let obj; try{ obj=JSON.parse(text); }catch(_){ return runUploadError("That file isn't valid JSON."); }
   const p=parseEnergyReport(obj);
   if(!p.ok) return runUploadError(p.error);
+  p.raw=text;
   uploadedPoints.push(p); showRunResult(p);
   track("upload_energy_json",{arch:p.arch||"",precision:p.precision,basis:p.basis,params_b:p.N,delta_pct:p.dE});
 }
 function runUploadError(msg){ const e=document.getElementById("runError"); e.textContent=msg; e.style.display="";
   document.getElementById("runResult").style.display=uploadedPoints.length?"":"none"; }
 function handleFiles(files){ [...files].forEach(f=>{ const r=new FileReader(); r.onload=()=>ingestEnergyJson(r.result); r.readAsText(f); }); }
+/* ----- issue-ready summary: one click turns the parsed point into pasteable Markdown.
+   Same field contract as the replications form's issueText() — that page stays the
+   canonical submission path (handle, n, consent); this is the shortcut. ----- */
+let lastRunPoint=null;
+function runCurveFor(pt){
+  let src=pt.arch, prec=pt.precision; const curves=CURVES.curves;
+  if((!src||!curves[src]||!curves[src][prec]) && src && CURVES.borrow[src]) src=CURVES.borrow[src];
+  const c=(src&&curves[src]&&curves[src][prec])?curves[src][prec]:null;
+  return {src,c};
+}
+function runIssueText(pt){
+  const L=[];
+  L.push("### Replication submission");
+  L.push("");
+  L.push("| field | value |");
+  L.push("| --- | --- |");
+  L.push("| GPU | "+(pt.gpu||"—")+(pt.arch?" ("+pt.arch+")":"")+" |");
+  L.push("| model | "+pt.model+(isFinite(pt.N)?" ("+pt.N+"B)":"")+" |");
+  L.push("| precision | "+pt.precision+" |");
+  L.push("| ΔE vs FP16 | "+(pt.dE>0?"+":"")+pt.dE.toFixed(2)+"% |");
+  L.push("| basis | "+pt.basis+" |");
+  if(pt.iterations!=null) L.push("| decode iterations per run | "+pt.iterations+" |");
+  if(pt.sample_rate_hz!=null||pt.method) L.push("| sampling | "+(pt.sample_rate_hz!=null?pt.sample_rate_hz+" Hz":"rate not reported")+(pt.method?" · "+pt.method:"")+" |");
+  if(pt.energy_per_token_mj!=null) L.push("| energy per token | "+pt.energy_per_token_mj+" mJ ("+(pt.energy_per_token_mj>0?(1000/pt.energy_per_token_mj).toPrecision(3):"—")+" tokens/J, GPU package — not comparable to a wall-power figure) |");
+  if(pt.fp16_energy_per_token_mj!=null) L.push("| FP16 baseline | "+pt.fp16_energy_per_token_mj+" mJ/token |");
+  if(pt.throughput!=null) L.push("| decode throughput | "+pt.throughput+" tok/s |");
+  if(pt.schema_version) L.push("| schema_version | "+pt.schema_version+" |");
+  if(pt.timestamp) L.push("| captured at | "+pt.timestamp+" |");
+  L.push("");
+  const rc=runCurveFor(pt), c=rc.c, src=rc.src;
+  if(c){
+    const pred=modelCurve(pt.N,c);
+    const bb=curveBand(src,pt.precision,pt.N);
+    const Ns=c.anchors.map(a=>a.N), nMin=Math.min(...Ns), nMax=Math.max(...Ns);
+    const inRange=isFinite(pt.N)&&pt.N>=nMin&&pt.N<=nMax;
+    const agree=!!bb&&pt.dE>=bb.lo&&pt.dE<=bb.hi;
+    L.push("Compared against the fitted "+pt.precision+" curve for "+(CURVES.arch_label[src]||src)+
+      ": predicted "+(isFinite(pred)?pred.toFixed(1)+"%":"—")+
+      ", 95% band "+(bb?bb.lo.toFixed(1)+"% to "+bb.hi.toFixed(1)+"%":"not defined at this size")+
+      (inRange?"":" (extrapolated outside the fitted range "+nMin+"–"+nMax+"B)")+" → "+
+      (agree?"inside the band.":"outside the band."));
+  } else {
+    L.push("No fitted "+pt.precision+" curve for "+(CURVES.arch_label[pt.arch]||pt.arch||pt.gpu||"this arch")+" yet — this point would fill exactly that gap.");
+  }
+  if(String(pt.basis).toLowerCase()!=="measured"){
+    L.push("");
+    L.push("Note: basis = \""+pt.basis+"\" — derived, not a direct measurement; not eligible for the gallery as a measurement.");
+  }
+  L.push("");
+  L.push("- [x] This is a real run on the hardware named above.");
+  L.push("- [x] I understand this submission will be public and credited to my handle.");
+  L.push("");
+  L.push("The summary above was generated in the browser from the report; nothing was uploaded. The report itself is below — attaching the `energy.json` file to the issue as well is welcome but not required.");
+  if(pt.raw && pt.raw.length<=200000){
+    L.push("");
+    L.push("<details><summary>energy.json (pasted verbatim, in case the attachment does not go through)</summary>");
+    L.push("");
+    L.push("```json");
+    L.push(String(pt.raw).replace(/```/g,"``\u200b`").trim());
+    L.push("```");
+    L.push("");
+    L.push("</details>");
+  } else if(!pt.raw){
+    L.push("");
+    L.push("(Only the headline fields are known for this point. If you measured it yourself, drop the full `energy.json` on this page or on the replications form so the summary carries the whole report.)");
+  }
+  return L.join("\n");
+}
+function copyIssueText(t,btn){
+  const restore=()=>{ btn.textContent="Copied ✓"; setTimeout(()=>{ btn.textContent="Copy issue-ready summary"; },1600); };
+  const fallback=()=>{ const ta=document.createElement("textarea"); ta.value=t; ta.setAttribute("readonly","");
+      ta.style.position="fixed"; ta.style.top="-1000px"; ta.style.opacity="0"; document.body.appendChild(ta);
+      ta.select(); ta.setSelectionRange(0,t.length); let ok=false;
+      try{ ok=document.execCommand("copy"); }catch(_){ ok=false; }
+      document.body.removeChild(ta);
+      if(!ok){ const box=document.getElementById("runManual"); const area=document.getElementById("runManualText");
+        area.value=t; box.style.display=""; area.focus(); area.select(); }
+      else restore(); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(restore,fallback);
+  } else { fallback(); }
+}
 /* Decode a container-shared ?overlay=<base64url JSON> point (100% client-side, nothing uploaded). */
 function b64urlDecode(s){ s=String(s).replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
   let bin; try{ bin=atob(s); }catch(_){ return null; }
@@ -1664,9 +1765,13 @@ function loadOverlayFromURL(q){
   ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.add("drag"); }));
   ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.remove("drag"); }));
   dz.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
-  document.getElementById("runClear").addEventListener("click",()=>{ uploadedPoints=[];
+  document.getElementById("runClear").addEventListener("click",()=>{ uploadedPoints=[]; lastRunPoint=null;
     document.getElementById("runResult").style.display="none"; document.getElementById("runError").style.display="none";
-    document.getElementById("runCross").innerHTML=""; });
+    document.getElementById("runCross").innerHTML=""; document.getElementById("runManual").style.display="none"; });
+  document.getElementById("runIssueCopy").addEventListener("click",e=>{
+    if(!lastRunPoint) return;
+    copyIssueText(runIssueText(lastRunPoint),e.currentTarget);
+    track("copy_issue_summary",{arch:lastRunPoint.arch||"",precision:lastRunPoint.precision,basis:lastRunPoint.basis,params_b:lastRunPoint.N,delta_pct:lastRunPoint.dE}); });
   document.getElementById("copyRunCmd").addEventListener("click",e=>{
     const txt=document.getElementById("runCmd").textContent.replace(/^Copy/,"").trim();
     copyToClip(txt,e.currentTarget,"Copied!"); track("copy_run_cmd",{}); });
