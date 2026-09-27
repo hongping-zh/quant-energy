@@ -72,6 +72,28 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-27</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
+      <h2>Validator hardening: a negative probe that passed as "protocol-conformant" can no longer exist</h2>
+      <p>A hand-built report — non-NVML <code>method</code>, <code>iterations: 1</code>, no window statement,
+      no decoding record, no arm order, a thermal block with only <code>mode</code> and <code>basis</code> —
+      sailed through the semantic validator as <code>protocol violations: 0 / protocol-conformant</code>.
+      That broke the machine-verifiable-core claim, so the validator was rebuilt around one rule:
+      <b>a report that does not record a protocol-required fact is schema-valid, never
+      protocol-conformant</b>. Now enforced (release
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r2" target="_blank" rel="noopener"><code>schema-1.3-r2</code></a>,
+      commit <code>8778c42</code>, validator SHA-256 <code>3dc166d2…10bee3</code>, schema itself unchanged):
+      NVML method and ≥&nbsp;10&nbsp;Hz (§4.1.1/4.1.2); the FP16-baseline rule covers every non-FP16
+      precision (§4.2.1); 256 tokens, 10 iterations and greedy decoding must be present <em>and</em> correct
+      (§4.3.2); the window must be stated as generation (§4.4.1); conformance is floored at schema 1.2+
+      (§4.5.2); measured thermal blocks need warm-up, cooldown and start/end/peak temperatures, with the
+      steady temperature excused only by an honest <code>steady_state_reached: false</code> (§4.6.1/4.6.4);
+      arm order must be recorded or the deviation disclosed (§4.6.2). The probe itself is pinned as a
+      regression test; the suite is 20/20. Honest consequence: the container does not yet emit the
+      window/decoding/arm-order records, so its own reports are schema-valid only until it does — same
+      status as the thermal block, tracked together. §5.1 pins updated.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-27</span><span class="etag site">site</span></div>
       <h2>The Run-it-yourself tab writes your issue for you: one-click issue-ready summary</h2>
       <p>Dropping an <code>energy.json</code> on the <a href="/?tab=run">Run-it-yourself</a> tab already placed your point

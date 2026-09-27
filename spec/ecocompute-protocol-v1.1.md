@@ -238,10 +238,10 @@ hides.
 GitHub links in this document resolve to `main` for readability; `main` moves. The
 immutable references for this version of the protocol are:
 
-| Artifact | Pin (2026-09-26) |
+| Artifact | Pin (2026-09-26; validator amended 2026-09-27) |
 |---|---|
 | Report schema | release [`schema-1.3-r1`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1) · commit `05a3ffd` · SHA-256 `501dc1f328270f0bd3221e1ec5c81d740308bdd87090b93f54758ea79b6efb04` |
-| Semantic validator | `tools/validate.py` at the same release · SHA-256 `c5ca27907ffc68c91b6f28702515788210cc670e6d0330e9328788f5dd815205` |
+| Semantic validator | `tools/validate.py` at release [`schema-1.3-r2`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r2) · commit `8778c42` · SHA-256 `3dc166d2c2c0d7fbd6bbcb5a37a4cb2520feb04a432727a06e993f6d2310bee3` — hardened: a report that does not record a protocol-required fact (window, decoding, arm order, iterations, …) is schema-valid, never protocol-conformant |
 | Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube@sha256:595e6ddf9658237fdfe222a9929cada024ea2d4dd1c5ae41195d024082247568` (e52f878 build; container content identical to the release commit) |
 | Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `5664b5a131de9458f8dadda6389de44cfc24e9cc51dbac5128d02023482ac1a7` · run with `ECOCOMPUTE_REF=schema-1.3-r1` |
 
