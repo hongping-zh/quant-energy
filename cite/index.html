@@ -151,8 +151,9 @@
           session 2026-09-19/20, 0.5B-7B, container NF4/INT8 run twice across a full restart (n=2)
                               |A-B| mean 2.1 pp, max 5.2 pp
           plus a standalone torchao FP8 track, n=3, generation-only window -- not comparable to the above
-          v1.1.0 already has RTX 5090 NF4 rows; this session's stack moves the crossover ~5B -> ~1.8B
-                              -> a crossover belongs to a software stack, not to a card; do not pool</pre>
+          v1.1.0 already has RTX 5090 NF4 rows: the same card crosses at ~4.8B on the v1.1.0 stack
+                              and at ~1.8B on this session's newer stack
+                              -> a crossover belongs to the card-stack pair, not to either alone; do not pool</pre>
     <p>Concretely: <b>supplements</b> means the RTX 4090 run adds coverage v1.1.0 does not have (INT8 on Ada, and 7B
     on Ada) at a lower repeat count, so it is a deep dive rather than a replacement — and if you quote a
     figure from the RTX 4090 column, cite it; otherwise cite v1.1.0. <b>Supersedes</b> means v1 should no longer be
@@ -260,7 +261,7 @@
       <h3>6 · RTX 5090 (Blackwell) four-precision session — the same card on a newer stack</h3>
       <p class="kv"><b>Published</b> 2026-09-20 (measured 2026-09-19/20) · CC BY 4.0</p>
       <p class="kv"><b>Contents</b> one RTX 5090 (32&nbsp;GB, 575&nbsp;W, driver 580.76.05), five models 0.5B–7B. Container track: NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations, run twice with a full instance restart between sessions (n&nbsp;=&nbsp;2 per cell; |A&nbsp;−&nbsp;B| mean 2.1&nbsp;pp, max 5.2&nbsp;pp). Standalone track: torchao 0.18.0 FP8 weight-only and FP8 dynamic activation+weight, n&nbsp;=&nbsp;3, generation-only window. Raw reports, both scripts and the environment snapshot included; four reports that fell back to interpolation are shipped labelled as such and are not measurements.</p>
-      <p class="kv"><b>Cite it for</b> RTX 5090 INT8, the FP8 rows, and the claim that the NF4 crossover moves with the software stack. Not an MLPerf result, and not pooled with v1.1.0's rows for the same card.</p>
+      <p class="kv"><b>Cite it for</b> RTX 5090 INT8, the FP8 rows, and the card–stack-pair evidence: on this same card the NF4 crossover sits near <b>4.8B on the v1.1.0 stack</b> but near <b>1.8B on this newer stack</b>, while the same newer stack left Ada at break-even — the crossover tracks the card–stack pair, not the stack alone. Not an MLPerf result, and not pooled with v1.1.0's rows for the same card.</p>
 <pre>@dataset{zhang_ecocompute_rtx5090_2026,
   title     = {EcoCompute: LLM Inference Energy on NVIDIA RTX 5090 (Blackwell)
                --- FP16/NF4/INT8/FP8, 0.5B--7B, direct NVML, with
@@ -301,7 +302,8 @@
     inference energy per token across GPUs and model sizes.</p>
     <p><b>One paragraph:</b> Weight-only quantization (NF4, INT8) is widely assumed to save energy because it saves
     memory. Direct NVML power measurements across four NVIDIA GPU architectures show that below a model-size crossover
-    point it often <em>costs</em> energy instead. EcoCompute publishes those measurements, the fitted crossover curves,
+    point — whose location depends on both the card and the software stack — it often <em>costs</em> energy instead.
+    EcoCompute publishes those measurements, the fitted crossover curves,
     an interactive estimator, and — crucially — the <a href="/container/">MLCube-compatible container</a> that produced
     them, so anyone with an NVIDIA GPU can reproduce or contradict the result. It is independent research, not a
     certified benchmark.</p>
