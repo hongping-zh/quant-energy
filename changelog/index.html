@@ -72,6 +72,22 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-28</span><span class="etag site">site</span></div>
+      <h2>The crossover is a card–stack property: attribution wording fixed on every page that states it</h2>
+      <p>An external evaluation caught a real ambiguity: the coverage-matrix notes attributed the NF4 crossing
+      point to <b>GPU architecture alone</b> (2.1B Turing / 3.7B Ada / 4.8B Blackwell), while the 5090 re-test
+      section attributed it to <b>software stack alone</b> ("a property of the software stack, not of the
+      architecture"). Both are half-claims of the same fact, and a reader taking either one page in isolation
+      could walk away with a wrong model of what moves the crossover. Every page that states the attribution now
+      says the same thing: <b>the crossover is a property of the card–stack pair — the architecture sets one part
+      of it, the software stack sets another</b> (Turing/Ada/Blackwell cross at different sizes on a shared-era
+      stack; on one unchanged RTX 5090, a newer stack moved the crossing from ≈5B to ≈1.8B; the same newer stack
+      left Ada at break-even). Fixed on: the measured-page grid notes and 5090 section, the methodology page's
+      finding statement, and the Your-model tab's fit caveats. No numbers changed — this is a wording fix that
+      removes an overclaim in both directions.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-27</span><span class="etag protocol">protocol</span><span class="etag site">site</span></div>
       <h2>Validator hardening: a negative probe that passed as "protocol-conformant" can no longer exist</h2>
       <p>A hand-built report — non-NVML <code>method</code>, <code>iterations: 1</code>, no window statement,

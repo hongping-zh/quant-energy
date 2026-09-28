@@ -529,7 +529,7 @@
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
-      <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="/about/">About → How we measure</a>.<br><b>What each fitted curve rests on:</b> Ada NF4 9 anchors (RTX 4090 ×5, RTX 4090D ×4) · Ada INT8 6 (RTX 4090 only) · Blackwell NF4 4 · Turing NF4 4 · Ampere NF4 3 and INT8 3 (A800). <b>Ada is the only class that pools two different cards</b>, and they disagree by roughly 20 points at the same model size, so the Ada band is the widest of the four — see <a href="/method/">the methodology page</a> for the leave-one-out error per class.</p>
+      <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="/about/">About → How we measure</a>. <b>Each fitted curve also inherits the software stack its anchors were measured on</b> — the crossover is sensitive to the stack as well as the architecture (on one unchanged RTX 5090, a newer stack moved it from ≈5B to ≈1.8B; <a href="/measured/#rtx5090-2026-09">the re-test</a>), so treat the fitted crossing as card-plus-stack, not hardware destiny.<br><b>What each fitted curve rests on:</b> Ada NF4 9 anchors (RTX 4090 ×5, RTX 4090D ×4) · Ada INT8 6 (RTX 4090 only) · Blackwell NF4 4 · Turing NF4 4 · Ampere NF4 3 and INT8 3 (A800). <b>Ada is the only class that pools two different cards</b>, and they disagree by roughly 20 points at the same model size, so the Ada band is the widest of the four — see <a href="/method/">the methodology page</a> for the leave-one-out error per class.</p>
     </div>
 
     <div class="hint" id="estHint"></div>
@@ -1128,9 +1128,9 @@ function renderEstimate(){
   else { vEl.className="verdict"; vEl.style.cssText="margin-top:14px;background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)"; }
   vEl.innerHTML="<span class=\"big\">"+ico+"</span> "+r.verdict+"<br>"+quantizeNote;
   nEl.innerHTML=r.notes.map(n=>"<li>"+n+"</li>").join("");
-  mEl.textContent="Architecture used: "+(CURVES.arch_label[r.arch_used]||r.arch_used)+(r.arch_used!==pArch.value?" (borrowed)":"")+" · estimates are calibrated to measured anchors, not new measurements.";
+  mEl.textContent="Architecture used: "+(CURVES.arch_label[r.arch_used]||r.arch_used)+(r.arch_used!==pArch.value?" (borrowed)":"")+" · estimates are calibrated to measured anchors, not new measurements. The fitted crossover reflects the dataset's software stack too — a newer stack can move it (see the 5090 re-test on /measured/).";
   document.getElementById("estHint").innerHTML = r.recommendation==="quantize"
-    ? "This model is <b>above</b> the crossover on this architecture — NF4/INT8 already pays off."
+    ? "This model is <b>above</b> the crossover this architecture–stack fit shows — NF4/INT8 already pays off on it."
     : r.recommendation==="do_not_quantize"
       ? "This model is <b>below</b> the crossover — quantization likely <b>costs</b> energy here; keep FP16."
       : "You're <b>near the crossover</b> — the sign is uncertain. Measure on your own stack before deciding.";
