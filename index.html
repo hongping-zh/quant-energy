@@ -5,7 +5,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy</title>
-<meta name="description" content="An open, community-run micro-benchmark protocol for LLM quantization energy: a fixed measurement method, an MLCube-compatible container and a free-Colab notebook that emit the same schema-validated energy.json, and the seed data they produced on five GPU architectures. bitsandbytes INT8 never saved energy in any cell measured; NF4 changes sign with model size. 30 of 56 cells in the coverage matrix are still empty — contribute one." />
+<meta name="description" content="Open micro-benchmark for LLM quantization energy on NVIDIA GPUs: NF4 saves energy only above a model-size crossover; INT8 never saved energy in any cell measured." />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 <link rel="canonical" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
@@ -309,6 +310,12 @@
      behind a menu button (no truncation, no horizontal scroll); buttons stack
      full-width; hero text tightens. Button time-notes sit under the title at
      all widths (base rule above), so no side-by-side split can occur. */
+  /* Skip link: invisible until keyboard-focused (a11y) */
+  .skiplink{position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;
+    padding:10px 16px;border-radius:0 0 8px 0;z-index:999;font-weight:600;text-decoration:none}
+  .skiplink:focus{left:0;top:0}
+  .modetabs [role="tab"]{cursor:pointer}
+  .modetabs [role="tab"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   @media (max-width:720px){
     .navtoggle{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--accent);
       font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);padding:8px 12px;
@@ -337,6 +344,7 @@
 </script>
 </head>
 <body>
+<a class="skiplink" href="#maincontent">Skip to main content</a>
 <div class="wrap">
   <header>
     <button class="navtoggle" aria-expanded="false" aria-controls="topnav">☰ Menu</button>
@@ -361,8 +369,10 @@
     </div>
 
     <div class="cta hero">
-      <a id="contributeCta" class="btn" href="/method/#contribute">🧪&nbsp; Contribute a data point <span>from ~30 min · first run incl. downloads: up to 1 h</span></a>
-      <a id="crossoverCta" class="btn" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
+      <a id="testedCta" class="btn" href="#modetabs" data-view="measured">📈&nbsp; View tested models <span>29 anchors · 5 GPU architectures</span></a>
+      <a id="estimateCta" class="btn" href="#modetabs" data-view="estimate">🧮&nbsp; Estimate your model <span>no install · runs in this page</span></a>
+      <a id="contributeCta" class="ghost" href="/method/#contribute">🧪&nbsp; Contribute a data point <span>from ~30 min · first run incl. downloads: up to 1 h</span></a>
+      <a id="crossoverCta" class="ghost" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
       <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Start reproducing in 60 s <span>pure measurement: minutes · one timed end-to-end run: 57 min</span></a>
       <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
     </div>
@@ -413,14 +423,15 @@
 
   </header>
 
-  <div class="modetabs" role="tablist">
-    <button id="tabMeasured" class="active" type="button">Tested models</button>
-    <button id="tabRun" type="button">Run it yourself · container</button>
-    <button id="tabEstimate" type="button">Your model</button>
-    <button id="tabOptimize" type="button">Optimize (constraints)</button>
+  <main id="maincontent">
+  <div class="modetabs" id="modetabs" role="tablist" aria-label="Homepage tools">
+    <button id="tabMeasured" class="active" type="button" role="tab" aria-selected="true" aria-controls="measuredView">Tested models</button>
+    <button id="tabRun" type="button" role="tab" aria-selected="false" aria-controls="runView">Run it yourself · container</button>
+    <button id="tabEstimate" type="button" role="tab" aria-selected="false" aria-controls="estimateView">Your model</button>
+    <button id="tabOptimize" type="button" role="tab" aria-selected="false" aria-controls="optimizeView">Optimize (constraints)</button>
   </div>
 
-  <div id="measuredView">
+  <div id="measuredView" role="tabpanel" aria-labelledby="tabMeasured" tabindex="0">
   <div class="controls">
     <div class="field">
       <label for="gpu">GPU</label>
@@ -464,7 +475,7 @@
   <div class="hint" id="hint"></div>
   </div><!-- /measuredView -->
 
-  <div id="estimateView" style="display:none">
+  <div id="estimateView" style="display:none" role="tabpanel" aria-labelledby="tabEstimate" tabindex="0">
     <div class="controls">
       <div class="field">
         <label for="pN">Model size (parameters, B)</label>
@@ -546,7 +557,7 @@
     </details>
   </div><!-- /estimateView -->
 
-  <div id="optimizeView" style="display:none">
+  <div id="optimizeView" style="display:none" role="tabpanel" aria-labelledby="tabOptimize" tabindex="0">
     <p class="meta" style="margin:2px 0 14px">
       From <b>static query</b> to <b>constrained optimization</b>: give your GPU, model size, an objective and optional
       budgets — the tool exhaustively searches <b>precision × batch × context</b>, filters by your constraints and returns
@@ -618,7 +629,7 @@
     </div>
   </div><!-- /optimizeView -->
 
-  <div id="runView" style="display:none">
+  <div id="runView" style="display:none" role="tabpanel" aria-labelledby="tabRun" tabindex="0">
     <p class="meta" style="margin:2px 0 14px">
       Every published measurement on this site is accompanied by its reproducibility artifacts. The <b>EcoCompute energy MLCube</b> container runs the same
       measurement on <b>your</b> GPU — direct NVML power sampling, no TDP guesses — and writes an
@@ -704,6 +715,7 @@
       <span class="badge">Full history, each entry linked to its evidence: <a href="/changelog/" style="color:var(--accent)">the changelog →</a></span>
     </p>
   </div>
+  </main>
 
   <footer>
     Data: Hongping Zhang, <a href="https://hongping-zh.github.io/" target="_blank" rel="noopener">"Weight-Only Quantization Does Not Always Save Energy"</a>
@@ -1290,6 +1302,10 @@ function showView(which){ // "measured" | "estimate" | "optimize" | "run"
   tabE.classList.toggle("active",which==="estimate");
   tabO.classList.toggle("active",which==="optimize");
   tabR.classList.toggle("active",which==="run");
+  tabM.setAttribute("aria-selected",which==="measured");
+  tabR.setAttribute("aria-selected",which==="run");
+  tabE.setAttribute("aria-selected",which==="estimate");
+  tabO.setAttribute("aria-selected",which==="optimize");
   if(which==="estimate"){ fillPrec(); renderEstimate(); track("mode_estimate",{}); }
   if(which==="optimize"){ renderOptimize(); track("mode_optimize",{}); }
   if(which==="run"){ renderRunExample(); track("mode_run",{}); }
@@ -1299,6 +1315,22 @@ tabM.addEventListener("click",()=>showView("measured"));
 tabE.addEventListener("click",()=>showView("estimate"));
 tabO.addEventListener("click",()=>showView("optimize"));
 tabR.addEventListener("click",()=>showView("run"));
+/* Keyboard tabs pattern: ArrowLeft/Right/Home/End move focus+selection (WAI-ARIA). */
+const tabBtns=[tabM,tabR,tabE,tabO]; // DOM order of the tablist
+tabBtns.forEach((b,i)=>b.addEventListener("keydown",e=>{
+  let j=null;
+  if(e.key==="ArrowRight")j=(i+1)%tabBtns.length;
+  else if(e.key==="ArrowLeft")j=(i-1+tabBtns.length)%tabBtns.length;
+  else if(e.key==="Home")j=0;
+  else if(e.key==="End")j=tabBtns.length-1;
+  if(j!==null){ e.preventDefault(); tabBtns[j].focus(); tabBtns[j].click(); }
+}));
+/* Hero "quick tool" anchors: switch the tab in place instead of navigating away. */
+document.querySelectorAll("#testedCta,#estimateCta").forEach(a=>a.addEventListener("click",e=>{
+  e.preventDefault();
+  showView(a.id==="estimateCta"?"estimate":"measured");
+  document.getElementById("modetabs").scrollIntoView({behavior:"smooth",block:"start"});
+}));
 pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
 pPrec.addEventListener("change",renderEstimate);
 pN.addEventListener("input",renderEstimate);

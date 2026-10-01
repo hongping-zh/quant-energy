@@ -72,6 +72,23 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-01</span><span class="etag site">site</span></div>
+      <h2>Accessibility and SEO pass on the homepage: tabs, landmarks, sitemap</h2>
+      <p>An external review flagged four gaps, all verified and fixed. <b>(1) Tabs are now real ARIA tabs</b>:
+      the tab buttons carry <code>role="tab"</code> with <code>aria-selected</code> and <code>aria-controls</code>,
+      each panel is a <code>role="tabpanel"</code>, and ArrowLeft/ArrowRight/Home/End switch tabs from the keyboard.
+      <b>(2) Landmarks</b>: the tool area is wrapped in a <code>&lt;main&gt;</code> with a skip-to-content link as the
+      first focusable element. <b>(3) The two homepage tools are reachable from the first screen</b> —
+      "View tested models" and "Estimate your model" CTAs now switch the tab in place instead of only deep-linking
+      to subpages. <b>(4) Sitemap</b>: <code>/run/</code>, <code>/estimate/</code> and <code>/optimize/</code> added
+      (23 → 26 URLs) and nine stale <code>lastmod</code> values synced to actual commit dates. The meta description
+      was compressed to ~160 characters and a Referrer-Policy of <code>strict-origin-when-cross-origin</code> added.
+      Not fixable here, for the record: CSP, HSTS and <code>X-Content-Type-Options</code> are response headers, and
+      GitHub Pages does not allow custom response headers — they would require a CDN in front of the site. No
+      numbers or findings changed.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-28</span><span class="etag site">site</span></div>
       <h2>The crossover is a card–stack property: attribution wording fixed on every page that states it</h2>
       <p>An external evaluation caught a real ambiguity: the coverage-matrix notes attributed the NF4 crossing
