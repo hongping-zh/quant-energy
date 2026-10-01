@@ -179,7 +179,7 @@
   .verdict.up{background:rgba(244,63,94,.12);color:#fb7185;border:1px solid rgba(244,63,94,.3)}
   .verdict .big{font-size:22px}
   /* crossover */
-  .legend{display:flex;gap:18px;font-size:12px;color:var(--muted);margin:2px 0 8px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 12px;font-size:12px;color:var(--muted);margin:2px 0 8px}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .swatch{width:14px;height:3px;border-radius:2px;display:inline-block}
   .hint{font-size:15px;color:var(--txt);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);border-radius:10px;padding:13px 16px;margin-top:4px}
@@ -227,7 +227,8 @@
   .related td:first-child{white-space:nowrap;font-weight:700;color:var(--txt)}
   svg text{font-family:inherit}
   /* estimator mode */
-  .modetabs{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px}
+  .modetabs{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .modetabs > *{min-width:0;flex-shrink:0}
   .modetabs button{appearance:none;background:transparent;color:var(--muted);border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
   .modetabs button.active{background:var(--accent);color:#06223a}
   input[type=number]{width:100%;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px}
@@ -369,7 +370,7 @@
     </div>
 
     <div class="cta hero">
-      <a id="testedCta" class="btn" href="#modetabs" data-view="measured">📈&nbsp; View tested models <span>29 anchors · 5 GPU architectures</span></a>
+      <a id="testedCta" class="btn" href="#modetabs" data-view="measured">📈&nbsp; View tested models <span>29 anchors · 5 GPU models · 4 arch. classes</span></a>
       <a id="estimateCta" class="btn" href="#modetabs" data-view="estimate">🧮&nbsp; Estimate your model <span>no install · runs in this page</span></a>
       <a id="contributeCta" class="ghost" href="/method/#contribute">🧪&nbsp; Contribute a data point <span>from ~30 min · first run incl. downloads: up to 1 h</span></a>
       <a id="crossoverCta" class="ghost" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
@@ -378,7 +379,7 @@
     </div>
     <div class="trustbar" aria-label="What backs these numbers">
       <a href="/method/">Protocol v1.1 · normative</a>
-      <a href="/measured/" title="Crossover anchors: distinct GPU × model × precision points behind the fitted curves. Definition at /method/#glossary.">29 measured anchors · 5 architectures</a>
+      <a href="/measured/" title="Crossover anchors: distinct GPU × model × precision points behind the fitted curves. 5 GPU models across 4 architecture classes. Definition at /method/#glossary.">29 anchors · 5 GPU models · 4 arch. classes</a>
       <a href="/method/#glossary" title="Every count on this site, with its denominator.">All counts defined · glossary</a>
       <a href="/method/">NVML @ 10&nbsp;Hz · GPU package</a>
       <a href="/container/">MLCube-compatible</a>
@@ -762,7 +763,7 @@
   publisher = {Zenodo},
   version   = {1.1.0},
   note      = {Main dataset: 360+ measured configurations, 0.5B--14B,
-               four NVIDIA architectures, FP16/NF4/INT8/FP8},
+               5 GPU models across 4 NVIDIA architecture classes, FP16/NF4/INT8/FP8},
   doi       = {10.5281/zenodo.19647290},
   url       = {https://doi.org/10.5281/zenodo.19647290}
 }
@@ -796,6 +797,7 @@
 /* ===== Real measured data (J per 1k tokens) ===== */
 /* RTX 4090D: dataset.md (n=2 gradient); T4 / RTX 5090: *_benchmark_results.csv; A800: a800_summary.csv (int8_default) */
 /* RTX 4090: ecocompute-mlcube AutoDL sweep, direct NVML @10Hz, 256 tok/run, 10 iters, batch 1 (n=1) */
+const DATASET_VERSION = "v1.1.0"; // seed dataset these anchors and curves come from; keep in sync with /measured/ and the DAS
 const DATA = {
   "RTX 4090D": {
     label: "RTX 4090D · Ada · 24GB",
@@ -1165,7 +1167,7 @@ function renderEstimate(){
     recommendation: r.recommendation,
     eco_gate: N < thresh ? "lock_fp16" : "allow_quant",
     timestamp: new Date().toISOString(),
-    dataset_version: "v1.0"
+    dataset_version: DATASET_VERSION
   };
   document.getElementById("schemaJson").textContent = JSON.stringify(schemaReport, null, 2);
   renderEstCurve(pArch.value, pPrec.value, N, r);

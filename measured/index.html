@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Evidence — everything EcoCompute has measured</title>
-<meta name="description" content="The measured evidence behind quantenergy.tech: 26 of 56 coverage-matrix cells, 29 crossover anchors across five GPUs, the RTX 4090 deep dive, the RTX 5090 stack re-test, the two-card NF4 re-test, public replications, and the datasets they live in." />
+<meta name="description" content="The measured evidence behind quantenergy.tech: 26 of 56 coverage-matrix cells, 29 crossover anchors across 5 GPU models in 4 architecture classes, the RTX 4090 deep dive, the RTX 5090 stack re-test, the two-card NF4 re-test, public replications, and the datasets they live in." />
 <link rel="canonical" href="https://quantenergy.tech/measured/" />
 <meta property="og:title" content="Evidence — everything EcoCompute has measured" />
 <meta property="og:description" content="Coverage matrix, anchors, deep dives and re-tests — every measured claim, its replication level and its DOI, in one place." />
@@ -287,7 +287,7 @@
     <p class="meta" style="margin:0 0 14px;line-height:1.6">
       <b>15 of the 15 configurations in this one session are real hardware measurements</b> (<code>basis: "measured"</code>, <code>measurement_source: "direct-nvml"</code>)
       — five models (0.5B–7B) × FP16 / NF4 / INT8 on this single card, not a site-wide total; the site as a whole rests on
-      29 measured anchors across five cards. Produced by the
+      29 measured anchors across five cards (4 architecture classes). Produced by the
       <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">EcoCompute energy MLCube</a>
       container on a rented NVIDIA GeForce RTX 4090, July 2026. It extends the Ada data in two ways the earlier
       RTX 4090D anchor could not: <b>INT8 on Ada</b> and <b>7B models</b>.
@@ -503,7 +503,7 @@
       <tr><th>Archive</th><th>What it holds</th><th>Replication</th></tr>
       <tr>
         <td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Main dataset v1.1.0</a></td>
-        <td>360+ measured configurations, 0.5B–14B, four architectures, FP16/NF4/INT8/FP8 — the source of the seed counts and the fitted curves</td>
+        <td>360+ measured configurations, 0.5B–14B, 5 GPU models across four architecture classes, FP16/NF4/INT8/FP8 — the source of the seed counts and the fitted curves</td>
         <td>n = 2, CV &lt; 2%</td>
       </tr>
       <tr>

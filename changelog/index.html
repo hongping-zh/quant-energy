@@ -73,6 +73,19 @@
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-10-01</span><span class="etag site">site</span></div>
+      <h2>Consistency pass: dataset version in estimator output, GPU-count wording, mobile overflow</h2>
+      <p>A second external review flagged three defects, all verified and fixed. <b>(1) The estimator's JSON
+      export reported <code>dataset_version: "v1.0"</code></b> while every page cites v1.1.0; the field is now
+      generated from a single <code>DATASET_VERSION</code> constant set to <code>v1.1.0</code>. <b>(2) GPU counts
+      were stated two incompatible ways</b> — "5 GPU architectures" on badges versus "four NVIDIA architectures"
+      in the BibTeX note. The truth is both at once: 29 anchors span 5 GPU models across 4 architecture classes
+      (Ada pools the RTX 4090D and RTX 4090). Badges, meta description, the cite page, the evidence page and the
+      glossary now all use that form. <b>(3) Horizontal overflow at 390px and below</b>: the fitted-curve legend
+      now wraps, and the mode tabs scroll horizontally instead of clipping at 320px. No numbers changed.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-01</span><span class="etag site">site</span></div>
       <h2>Accessibility and SEO pass on the homepage: tabs, landmarks, sitemap</h2>
       <p>An external review flagged four gaps, all verified and fixed. <b>(1) Tabs are now real ARIA tabs</b>:
       the tab buttons carry <code>role="tab"</code> with <code>aria-selected</code> and <code>aria-controls</code>,
