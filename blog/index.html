@@ -43,6 +43,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype. <b>Positioning:</b> this is the <b>exploratory layer</b> of the site — deeper write-ups, work-in-progress analyses and how-to guides. Results here are <b>not counted</b> in the <a href="/measured/#matrix">coverage matrix</a> or the seed counts; measurements that have been accepted into the grid live in the <a href="/measured/">evidence layer</a>, and the estimator and optimizer tools are <a href="/?tab=estimate">separately labelled</a> as model output.</p>
 
     <article class="post">
+      <div class="date">2026-10-02 · Commentary</div>
+      <h2><a href="/blog/jevons-is-now-a-product-name.html">Jevons is now a product name</a></h2>
+      <p>A decision model named after the Jevons paradox advertises 193.6×; the community-measured median is 7×. Between the two stand four causes — baseline choice, task asymmetry, propagation echo, deployment physics — and one craft: choosing the measurement window where the invoice reads zero. "Outputs are free" is a pricing policy, not a physics result; every window has bills outside it, and some of them are fifty cents per successful attack. A commentary; no independent measurements of Jev.</p>
+      <p><a href="/blog/jevons-is-now-a-product-name.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-09-07</div>
       <h2><a href="/blog/rerunning-a-number-you-do-not-trust.html">Re-running a number we didn't trust: 89% of the session was cooldown</a></h2>
       <p>We published an energy measurement and called it a probable overestimate in the same breath. This is the rerun, written as a protocol note: forced cooldown before every run, randomized order, <code>--ignore-eos</code>, a third token length to test the differencing assumption (R² ≥ 0.9966), and NVML's hardware energy counter — which reads <b>14.9% higher</b> than integrating the same run's 100 Hz power trace. The headline moved 1.7 points; of the 50 minutes of GPU time, <b>45 were spent waiting for the card to cool down</b>.</p>

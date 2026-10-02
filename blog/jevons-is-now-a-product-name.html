@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jevons is now a product name — EcoCompute</title>
+<meta name="description" content="A decision model named after the Jevons paradox claims 193.6×; the community-measured median is 7×. A commentary on chosen measurement windows — and the bills that arrive outside them." />
+<link rel="canonical" href="https://quantenergy.tech/blog/jevons-is-now-a-product-name.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="Jevons is now a product name" />
+<meta property="og:description" content="TypeSafe AI named their decision model after the paradox this site cites as the reason efficiency is not enough. The unit price is honest. The physics is not in the invoice." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/jevons-is-now-a-product-name.html" />
+<meta name="twitter:card" content="summary" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"Jevons is now a product name",
+  "datePublished":"2026-10-02",
+  "inLanguage":"en",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/jevons-is-now-a-product-name.html",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .sub{color:var(--muted);font-size:15px;margin:0 0 6px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul,ol{color:#d3dcf6}
+  li{margin:6px 0}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  blockquote{border-left:3px solid var(--accent);margin:16px 0;padding:4px 16px;color:#c3cff2;font-style:italic}
+  .src{font-size:14px}
+  .src li{margin:10px 0}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Findings</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/measured/">Evidence</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>Jevons is now a product name</h1>
+    <p class="sub">Jev, the 193.6×, and every measurement window that was chosen for you</p>
+    <div class="date">Commentary · 2026-10-02 · Hongping Zhang</div>
+
+    <div class="callout">
+      <strong>What this note is.</strong> A commentary — the exploratory layer of this site, not a
+      measurement. It contains no independent measurement of Jev; we cannot make one, and every number
+      below is quoted from the nine public sources listed at the end. It argues one trade thesis:
+      Jev has turned the measurement window — the oldest craft in metrology — into a pricing art, and
+      every window has bills outside it. This note first appeared in Chinese on Tencent Cloud
+      Developer Community (2026-10-02); this is the author's English version.
+    </div>
+
+    <p>On September 15, 2026, a company called TypeSafe AI released Jev. The naming is honest — Jev
+    is short for the Jevons paradox: the cheaper and more efficient a resource becomes, the more of
+    it gets consumed in total. A hundred and fifty years ago, that was economics warning the cult of
+    efficiency; after September 15, it is a product name.</p>
+
+    <p>A warning becoming a selling point is reason enough to write something. But the angle I care
+    about is not "is this model any good" — the past two weeks have produced plenty of praise and
+    plenty of scorn. What I care about is this: Jev has turned the <em>measurement window</em> — the
+    oldest craft in metrology — into a pricing art. And every window has bills outside it.</p>
+
+    <h2>"Outputs are free": a window that was chosen</h2>
+
+    <p>First, the basics. Jev is a "System One" model: unstructured state goes in, typed
+    probabilistic decisions come out. Three question primitives — judge the probability that a
+    statement holds, choose one option from up to 255, score against a rubric. It generates no text,
+    so type errors are structurally impossible and there are no hallucinations. The price is $0.042
+    per million input tokens; outputs are free. Claimed latency: 70–500&nbsp;ms.</p>
+
+    <p>"Outputs are free" — three words worth stopping on.</p>
+
+    <p>That is not a physical fact; it is a pricing policy — OpenChamber's analysis classifies it
+    exactly that way: <em>a pricing policy, not a measured result</em>. Physically, the compute on
+    the output side of course happens; commercially, it has been moved outside the billing window.</p>
+
+    <p>My own industry has a counterpart. When measuring GPU energy, NVML reads <em>GPU package
+    power</em> — the draw on the chip-package side. It does not include the CPU, memory,
+    power-conversion losses, or fans. So whenever someone takes my numbers to size a machine-room
+    power bill, I have to say: this is a lower bound; a whole node adds CPU, memory, conversion and
+    cooling on top; I do not provide a conversion factor — that would be another estimate without
+    provenance — measure at the wall with a power meter. Choosing a window is not the error. The
+    error is not <em>declaring</em> the window.</p>
+
+    <p>"Outputs are free" is the pricing edition of the same craft. Cut the window at the input side,
+    and:</p>
+
+    <ul>
+      <li>the speed claim of <strong>193.6×</strong>: the denominator is a large model generating a
+      complete answer token by token; the numerator is the latency of one parallel Jev decision;</li>
+      <li>the cost claim of <strong>444.6×</strong>: the denominator is the large model's total bill,
+      input plus output; the numerator counts only the input side.</li>
+    </ul>
+
+    <p>More interesting: TypeSafe's own homepage carries a worked example — $0.013880 / 8.566&nbsp;s
+    on the TypeSafe side. Work it out by hand and you get roughly 75× on speed and 171× on cost. One
+    page, two sets of numbers, a factor of 2.6 apart — with the difference hidden in a footnote
+    pointing to "System One tasks."</p>
+
+    <p>Credit where due: in the launch blog, they voluntarily listed biases against themselves,
+    including, in their own words, that their numbers are not empirical; that they cannot prove the
+    pricing is not subsidized; that the comparison group is the average of GPT-6 Astra and Fable
+    5.1; and that evaluations were generally run on their West Coast laptop. A company that writes
+    down, in advance, that its own numbers will not survive scrutiny — in my vocabulary, the
+    equivalent of a dataset card reading <em>n&nbsp;=&nbsp;1, CV unknown, adopt with caution</em> —
+    gains credibility by doing so.</p>
+
+    <p>But acknowledging a bias is not correcting it. As of 2026-10-01, the homepage still showed
+    193.6×.</p>
+
+    <h2>From 193.6× to 7×: four reasons a claim decays</h2>
+
+    <p>Three days after launch, OpenChamber delivered a piece of Twitter archaeology: September 15–18,
+    26,896 tweets collected, 12,759 valid, with "numbers the author measured themselves" and "numbers
+    the author relayed from the vendor" counted separately:</p>
+
+    <table>
+      <tr><th>Metric</th><th>Vendor claim</th><th>User-measured median</th><th>First-hand sample</th><th>IQR</th></tr>
+      <tr><td>Speedup</td><td>193.6× (homepage) / 20–200× (launch post)</td><td>7×</td><td>215 numbers</td><td>2×–20×</td></tr>
+      <tr><td>Cost reduction</td><td>444.6× (homepage) / 40–400× (launch post)</td><td>30×</td><td>180 numbers</td><td>5×–85×</td></tr>
+      <tr><td>End-to-end latency</td><td>70–500 ms</td><td>76 ms</td><td>333 numbers</td><td>2 ms–270 ms</td></tr>
+    </table>
+
+    <p>From 193.6× to 7×, nobody is lying; four causes are at work in sequence:</p>
+
+    <ol>
+      <li><strong>The choice of baseline.</strong> The comparison group is the average of GPT-6 Astra
+      and Fable 5.1 — a choice TypeSafe itself disclosed. The denominator is not "the model best at
+      classification tasks"; it is "the most expensive model doing what it is worst at." It is a
+      professor's itemized invoice for turning screws, submitted as evidence that a tricycle is
+      cheap.</li>
+      <li><strong>The asymmetry of tasks.</strong> The numerator of 193.6× is Jev doing closed-set
+      selection; the denominator is a large model doing open-ended generation — two different
+      workloads, stitched together by the "System One tasks" footnote. The footnote is legal; the
+      seam leaks.</li>
+      <li><strong>The echo of propagation.</strong> OpenChamber separately counted the numbers that
+      traveled by retweet: the median of the repeatedly relayed speedups is almost exactly 193×,
+      matching the homepage number. The 7× from 215 first-hand measurements lost the loudness war to
+      a relayed 193×. Repetition is not independent evidence, but repetition shapes perception — an
+      old result in communication research, a fresh lever in AI marketing.</li>
+      <li><strong>The physics of deployment.</strong> Independent developer Daniele Teti built his own
+      benchmark from 105 real customer emails (61 of them hard cases): Jev is 4.1–8.5× faster than
+      the cheapest LLM of equal accuracy; and for 25 decisions over 1,000 emails, the cost is Jev
+      $0.08, GPT-5.6 Terra $2.17, Gemini 3.1 Pro $11.82. These are honest, reproducible,
+      still-worth-deploying multiples.</li>
+    </ol>
+
+    <p>So 7×/30× is not the bankruptcy of a lie; it is the shape 193.6× takes when it hits the
+    ground. I have seen this plot many times in energy datasets: FLOPs saved on paper is one thing,
+    energy measured at the task level is another, and between the two always stand baseline choice,
+    workload, and measurement boundary.</p>
+
+    <h2>The coverage matrix: every claim should say which cell it lives in</h2>
+
+    <p>I maintain a public dataset of GPU inference energy. Its <a href="/measured/#matrix">coverage
+    matrix</a> is GPU model × quantization precision × model size, and 30 of its 56 cells are empty.
+    There is no INT8 curve on the T4 — so when someone asks me "does INT8 save energy on a T4," the
+    only honest answer is: no data, no conclusion, here is the plan to measure it. Empty cells are
+    the dataset's discipline, not its shame.</p>
+
+    <p>Jev's claimed numbers live in a sparse matrix of their own; nobody has drawn it. The rows are
+    task domains (spam classification, intent routing, risk judgment, tool-call review, …); the
+    columns are baseline, measurement boundary, repetitions, variance. 193.6× lives in one cell, 7×
+    in another — they cannot refute each other, because they are not in the same cell. And
+    extrapolating any single cell across the whole matrix is a larger error than the window choice
+    itself. In my line of work: presenting the <em>extrapolated</em> as <em>measured</em> is the
+    cardinal sin of data provenance.</p>
+
+    <p>In the week after launch, the community started filling that matrix in, cell by independent
+    cell:</p>
+
+    <ul>
+      <li><strong>JevBench</strong> (a community four-axis benchmark): intelligence, calibration,
+      speed, cost, geometric mean. Jev 1.13.0 scores 74.4; the best open replication, SemIf (formerly
+      OpenJev, Qwen3.5-4B), scores 73.1 — 1.3 points behind, at roughly half the price. The benchmark
+      author's own note: a ~1-point gap may be within noise. Open replications appeared in batches
+      within days of launch; the architecture has no moat — calibration and distribution do — and
+      calibration is precisely the hardest thing to evaluate without large-scale deployment data.</li>
+      <li><strong>Teti's Delphi benchmark:</strong> at 3 and 10 decisions, no LLM beats Jev; at 25
+      decisions only Gemini 3.1 Pro is better, by 2.3 points. The Italian-vs-English quality
+      difference is negligible.</li>
+      <li><strong>webofmike's 60-case benchmark:</strong> agent tool-call risk classification,
+      accuracy 91.7%, calibration error ECE 0.0712 — with the author's own annotation: "n&nbsp;=&nbsp;60
+      is too small; two runs differ 91.7% vs 93.3%; please do not cite a single 60-case accuracy as
+      a conclusion."</li>
+    </ul>
+
+    <p>Note the craft of that last author: 60 cases mixing clear, ambiguous and adversarial classes;
+    raw per-call results public; disputed labels can be changed and the run repeated; the analysis
+    script re-executed before publishing to check the numbers. That is the honest use of n&nbsp;=&nbsp;60.
+    This is how the matrix gets filled — not by one 193.6× homepage, but by a few hundred small
+    cells, each labeled with its boundary conditions.</p>
+
+    <h2>Fifty cents and 17.3 microdollars: the other side of cheap</h2>
+
+    <p>On September 24, Check Point published the widely cited test: <em>Jev Is Not a Language Model,
+    but It Breaks Like One</em>. Due-diligence-assistant scenario: a high-risk company report that is
+    red flags all the way down; the attacker controls only one small section of the document; the
+    goal is to flip "high risk / do not invest" into "low risk / recommended."</p>
+
+    <p>The result: across 9 attacker × difficulty combinations, every one was broken at least once;
+    the strongest attacker succeeded 25 of 27 times, on average by round 4, at roughly fifty cents
+    per success. Jev's per-call cost, on webofmike's accounting, is about 17.3 microdollars.</p>
+
+    <p>The defense-side findings are even more worth copying down: structured input did not help;
+    marking the document "untrusted" did not help (16/27, same as unmarked); explicit anti-injection
+    instructions moved breaches from 18 to 17 — noise. The only effective defense was the reasoning
+    tier, which raised the cost per successful break from $0.56 to $4.39, an eight-fold improvement
+    — but the comparison models have a reasoning tier, and Jev does not. Why not? Because reasoning
+    would break the 70–500&nbsp;ms latency window.</p>
+
+    <p>The window choice showed its price for the first time.</p>
+
+    <p>A paper posted by Nanyang Technological University on September 23 (arXiv:2609.28613, 54,060
+    preregistered calls) reached the finer-grained conclusion: typed output did hold what it
+    promised — Jev never returned an undeclared action, and the attacker's target option was selected
+    only 1.8% of the time — but injected text reliably pushed probability mass toward the attacker's
+    side. Check Point's summary became the sentence worth remembering: <strong>output format
+    constrains what a model can say, not what it can be convinced of.</strong> The model did not
+    fail; it "did its job correctly, on false evidence."</p>
+
+    <p>Now put the Jevons paradox back in. It says: efficiency up → unit price down → call volume
+    rises faster → total consumption up. Jev's pricing is that curve, engineered: input two orders
+    of magnitude cheaper, outputs free, median latency 76&nbsp;ms — every parameter lowers the
+    psychological threshold of one more call. Vercel reported 13% of paid teams integrated it within
+    24 hours (the fastest in AI Gateway history, twice the pace of GPT-5.6); OpenRouter request
+    volume climbed visibly in the days after launch; Vercel's engineers have already switched their
+    internal safety classifier to Jev.</p>
+
+    <p>The adoption curve is the overture to the consumption curve. A DCVC partner says TypeSafe is
+    already profitable — if the paradox holds, the vendor's revenue curve and the customers' call
+    curves will steepen together, and the customers' total bills will not necessarily fall. Cheap
+    never means spending less; that sentence is not mine — it is printed on the product name.</p>
+
+    <h2>Four measurement protocols for API providers</h2>
+
+    <p>Having said all this about windows, do not misread it as doom. The 7×/30× are real; the
+    calibration is real — 96.5% accuracy above 0.95 confidence, and "never errs at 1.000 confidence"
+    holds stably in independent replication; "one function call replacing half a year of a team's
+    engineering" is real too. These are the measured parts, and they deserve respect.</p>
+
+    <p>As someone who deals with data provenance every day, what I want is four things — the same
+    four things I demand of my own dataset:</p>
+
+    <ol>
+      <li><strong>Claims should carry their measurement protocol.</strong> Which baseline, which
+      task, how many repetitions, what variance. TypeSafe itself wrote that its numbers are not
+      empirical — so add what would make them empirical.</li>
+      <li><strong>Write the pricing window into the documentation.</strong> "Outputs are free" is a
+      pricing policy; label it as one. 444.6× should not carry the reputation of a physical fact.</li>
+      <li><strong>Publish the coverage matrix.</strong> Which task domains were measured, which were
+      not — draw it. My matrix has 30 of 56 cells empty, and it still hangs on the <a
+      href="/measured/">evidence page</a>; empty cells are part of credibility, not its enemy.</li>
+      <li><strong>Make independent measurement easy.</strong> JevBench shipped within days, at a
+      community cost measured in dollars. Do not stand in the way of people who want to do this —
+      thank them.</li>
+    </ol>
+
+    <h2>Coda</h2>
+
+    <p>The real lesson of the Jevons paradox was never "cheap is useless"; it is "cheap changes
+    behavior" — the unit price you save gets spent twice over on call volume. Making it a product
+    name is clever marketing, and an honest preview.</p>
+
+    <p>And the measurer's job is to remember that behind every "free" there is a window somebody
+    chose: the billing window at the input side, the task window of System One, the latency window
+    of 70–500&nbsp;ms. The bills outside the window always arrive — to the caller paying by the
+    token, to the platform that swapped its classifier for Jev, and perhaps to the next attacker
+    holding fifty cents.</p>
+
+    <h2>Sources</h2>
+    <ol class="src">
+      <li>OpenChamber, <em>Jev by TypeSafe AI: What 12,759 tweets tell us</em>, 2026-09 (26,896
+      tweets collected, 12,759 valid; medians 7× / 30× / 76&nbsp;ms; samples 215 / 180 / 333).</li>
+      <li>TypeSafe AI homepage and launch blog (193.6× / 444.6× claims, worked example, four
+      self-disclosed biases; homepage figures as of 2026-10-01).</li>
+      <li><a href="https://github.com/fstandhartinger/jevbench" target="_blank" rel="noopener">JevBench
+      community four-axis benchmark</a>, fstandhartinger/jevbench, v1.3.0 (Jev 74.4 / SemIf 73.1;
+      GPT-5.6 Luna tops the intelligence axis at 95.3 but its overall rank is dragged down by cost).</li>
+      <li>Daniele Teti, <em>Jev, the AI that decides without writing</em>, danieleteti.it (105
+      customer-email benchmark; 4.1–8.5×; per-1,000-email cost Jev $0.08 / GPT-5.6 Terra $2.17 /
+      Gemini 3.1 Pro $11.82).</li>
+      <li>Web of Mike, <em>I Benchmarked Jev on Agent Tool-Call Risk</em>, webofmike.com (n&nbsp;=&nbsp;60,
+      91.7%, ECE 0.0712, with the author's own sample-size caveat).</li>
+      <li>Check Point Research, <em>Jev Is Not a Language Model, but It Breaks Like One</em>,
+      2026-09-24 (25/27; ~$0.56 → $4.39).</li>
+      <li>T. Wu, W. Y. B. Lim (Nanyang Technological University), <em>Decision Hijacking: Prompt
+      Injection Attacks on Jev's Typed Probabilistic Decisions</em>, <a
+      href="https://arxiv.org/abs/2609.28613" target="_blank" rel="noopener">arXiv:2609.28613</a>,
+      2026-09-23 (54,060 calls; ASR 1.8%/3.5%).</li>
+      <li>Vercel AI Gateway adoption data (13% of paid teams within 24 hours, ~2× GPT-5.6 and 6×
+      Fable 5.1; engineers switched the internal safety classifier to Jev; see the <a
+      href="https://vercel.com/changelog/ai-gateway-now-supports-typesafe-clients-and-http-api-for-jev"
+      target="_blank" rel="noopener">Vercel AI Gateway changelog</a>).</li>
+      <li>DCVC-led $40M seed round ($200M valuation, per Forbes citing informed sources) and James
+      Hardiman's profitability remarks.</li>
+    </ol>
+
+    <footer>
+      Context on this site: the measurement-window discipline in action —
+      <a href="/blog/it-was-never-the-format.html">It was never the format. It's the kernel.</a> ·
+      the <a href="/measured/#matrix">coverage matrix</a> and its empty cells ·
+      <a href="/replications/">contribute a measurement</a>, especially if it disagrees.
+      <br>This note first appeared in Chinese on Tencent Cloud Developer Community, 2026-10-02.
+      Commentary notes are the exploratory layer of this site and are not counted in the coverage
+      matrix. Not affiliated with, reviewed by, or endorsed by TypeSafe AI; product names are used
+      nominatively. This note contains no independent measurements of Jev.
+    </footer>
+  </div>
+</body>
+</html>

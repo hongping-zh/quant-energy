@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Mon, 07 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Jevons is now a product name</title>
+      <link>https://quantenergy.tech/blog/jevons-is-now-a-product-name.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/jevons-is-now-a-product-name.html</guid>
+      <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
+      <description>A commentary, not a measurement. TypeSafe AI named its decision model after the Jevons paradox and claims 193.6x speed / 444.6x cost; a community analysis of 12,759 launch tweets puts the user-measured medians at 7x / 30x / 76 ms. The gap decomposes into four causes (baseline choice, task asymmetry, propagation echo, deployment physics), and the thread through all of them is the chosen measurement window: inputs billed, outputs free, latency 70-500 ms. Drawing on the site's own discipline (NVML package power, coverage matrix with 30 of 56 cells empty, measured vs extrapolated), the note asks four things of API providers: claims with measurement protocols, pricing windows labeled as policy, published coverage matrices, and easy independent measurement. Fifty cents per successful prompt-injection break (Check Point, 25/27) is what a window costs outside the invoice. First published in Chinese on Tencent Cloud Developer Community, 2026-10-02.</description>
+    </item>
     <item>
       <title>Re-running a number we didn't trust: 89% of the session was cooldown</title>
       <link>https://quantenergy.tech/blog/rerunning-a-number-you-do-not-trust.html</link>
