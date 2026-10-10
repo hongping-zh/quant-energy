@@ -167,6 +167,85 @@ FILES = [
         "measurement_window": "generation-only (container)",
         "doi": None,
     },
+    # --- repeatability ledger, derived ----------------------------------------
+    {
+        "path": "data/uncertainty_report_2026-09-25.csv",
+        "title": "Repeatability ledger: how many sessions and cards sit behind each cell",
+        "kind": "roll-up",
+        "description": (
+            "Derived, not a session: one row per measured configuration with the number "
+            "of sessions and physical cards behind it, the observed min-max spread, the "
+            "scope of that spread (within-session replicates / across-restart sessions / "
+            "across-cards sessions / single trial) and its status against the v1.0 bar "
+            "of >= 3 sessions or >= 2 cards. Exactly one configuration currently meets "
+            "the bar - RTX 4090 Qwen2.5-3B NF4, n=3 across two cards, spread 3.0 pp - "
+            "everything else is still pending, most of it at n=1 or at n=2 within one "
+            "session. Read it as a to-do list of what needs repeating, not as error bars."
+        ),
+        "gpu": None,
+        "gpu_arch": None,
+        "session_date": "2026-09-25",
+        "measurement_window": "generation-only (all rows)",
+        "doi": None,
+        "regenerate": "python3 build/make_uncertainty_report.py",
+    },
+    # --- RTX 4090 anchor session measured on a third software stack, 2026-09-30 --
+    {
+        "path": "data/rtx4090_anchor_2026-09-30.csv",
+        "title": "RTX 4090 anchors re-measured on the 2026-07-24 stack, per run",
+        "kind": "session",
+        "description": (
+            "Qwen2-1.5B and Qwen2-7B at FP16 / NF4 / INT8, two trials per arm on one "
+            "RTX 4090 — the four cells this site already had anchors for, re-measured "
+            "on the same software stack those anchors came from: torch 2.4.1+cu121 / "
+            "transformers 4.46.3 / bitsandbytes 0.45.5 / accelerate 1.0.1 — the "
+            "versions recorded for the 2026-07-24 RTX 4090 session that supplies the "
+            "Ada rows in build/measured.csv (Python version not recorded in this "
+            "archive). Every report carries matches_reference_pins: false; "
+            "that flag compares against the container image's default pins (bnb 0.43.3, "
+            "what the 2026-08 sessions used), not against the July rows this repeats. "
+            "Read as the same-stack repeat it is: against July, NF4 1.5B moves +15.11% "
+            "-> +22.6% and INT8 1.5B +180.73% -> +197.05%, while NF4 7B -28.46% -> "
+            "-28.25% and INT8 7B +49.54% -> +50.75% agree within 1.2 points. The "
+            "trial-to-trial ranges inside this session are 0.1-4.5 pp and the FP16 "
+            "baselines agree to 0.26% (1.5B) and 0.50% (7B). The reports are schema 1.3, "
+            "schema-valid but NOT protocol-conformant: they carry no window, decoding or "
+            "arm-order record (the arm order below is recovered from timestamps, "
+            "FP16 -> NF4 -> INT8, fixed, not randomized). Card identity and start "
+            "temperature come from a single environment snapshot, not per-run logs. "
+            "Kept out of build/measured.csv and the coverage matrix on purpose: folding "
+            "repeats into either changes published numbers and is a separate, visible "
+            "decision."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-30",
+        "measurement_window": "generation-only (container)",
+        "window_note": (
+            "NVML sampling starts after load, quantization and warm-up. No power-trace "
+            "sidecar exists for these runs, so unlike the 2026-09-24 window-comparison "
+            "session this window cannot be re-cut post hoc."
+        ),
+        "doi": None,
+        "companion_of": "data/rtx4090_anchor_2026-09-30.summary.csv",
+        "regenerate": "python3 build/make_rtx4090_anchor_csv.py <unpacked_bundle_dir> data",
+    },
+    {
+        "path": "data/rtx4090_anchor_2026-09-30.summary.csv",
+        "title": "RTX 4090 anchor re-measurement on a third stack, per cell",
+        "kind": "summary",
+        "description": (
+            "One row per (model, precision) cell at n=2: mean/min/max vs-FP16 and the "
+            "trial-to-trial range - 4.5 pp for INT8 1.5B, 0.6 pp for NF4 1.5B, 1.3 pp "
+            "for INT8 7B, 0.1 pp for NF4 7B - plus paired delta-perplexity (NF4 costs "
+            "+6.9% at 1.5B and +12.1% at 7B; INT8 +0.48% and +1.07%)."
+        ),
+        "gpu": "RTX 4090",
+        "gpu_arch": "ada",
+        "session_date": "2026-09-30",
+        "measurement_window": "generation-only (container)",
+        "doi": None,
+    },
     # --- RTX 5090, 2026-09-19/20 ---------------------------------------------
     {
         "path": "data/rtx5090_bnb_2026-09-20.csv",
