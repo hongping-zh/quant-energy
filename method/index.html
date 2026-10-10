@@ -184,7 +184,7 @@
     repeated trials of the <em>same</em> configuration with a measured CV&nbsp;&lt;&nbsp;2%, and these are not that.
     The NF4 numbers above come from container validation runs and are not in the dataset.</p>
 
-    <h3>Run-to-run noise vs between-session scatter: they differ by 30–50×</h3>
+    <h3 id="session-scatter">Run-to-run noise vs between-session scatter: they differ by 30–50×</h3>
     <p>On 2026-08-20 we ran all five INT8 configurations <b>three times each</b> on one instance, which finally
     separates the two kinds of variation the point above conflates
     (<a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_int8_repeats_2026-08-20.csv" target="_blank" rel="noopener">raw</a>,
@@ -203,10 +203,24 @@
     <p class="meta">Consequence for anyone using or citing energy deltas, ours included: <b>a quantization
     penalty measured once on one rented instance can be off by a factor of two</b>, and the run-to-run CV does not
     warn you about it. The leading hypothesis for our own gap is the <code>LLM.int8()</code> kernel path, which changes
-    with the torch build — and <b>no two of our sessions ran the same one</b>: the 2026-07-24 anchors were recorded
-    with <code>torch 2.4.1+cu121</code> (Python 3.8), the August native path got <code>torch 2.5.1+cu121</code>, and
-    the container image pins <code>torch 2.13.0</code>. It is untested; the control is a repeat of one 1.1B INT8 run
-    with the July build (or with the image, on a host that can nest Docker — ours cannot). The decomposition constrains it: INT8 energy rose 1.41–1.58× at unchanged package
+    with the torch build — and until recently <b>no two of our sessions ran the same one</b>: the 2026-07-24 anchors
+    were recorded with <code>torch 2.4.1+cu121</code> (Python 3.8), the August native path got
+    <code>torch 2.5.1+cu121</code>, and the container image pins <code>torch 2.13.0</code>. So the kernel explanation
+    could not be separated from everything else that differs between two rented instances two months apart.</p>
+    <p class="meta">That control now exists. On <b>2026-09-30</b> four July anchor cells (Qwen2-1.5B and Qwen2-7B at
+    NF4 and INT8) were repeated on the <b>identical stack</b> — <code>torch 2.4.1+cu121</code>,
+    <code>transformers 4.46.3</code>, <code>bitsandbytes 0.45.5</code>, <code>accelerate 1.0.1</code> — on another
+    RTX 4090. Holding the kernel version fixed did <b>not</b> make the drift go away; it redistributed it by size.
+    The two 7B cells returned to within <b>1.2 points</b> of July (−28.46%&nbsp;→&nbsp;−28.25% NF4,
+    +49.54%&nbsp;→&nbsp;+50.75% INT8), while the two 1.5B cells moved <b>7.5 and 16.3 points</b>
+    (+15.11%&nbsp;→&nbsp;+22.6% NF4, +180.73%&nbsp;→&nbsp;+197.05% INT8). Read that with the sentence above: this is
+    what a single measurement is worth when nothing about the software changed — <b>about a point at 7B, and up to
+    sixteen points at 1.5B</b>. Two trials 48 minutes apart on one card agreed to 0.1–4.5 points, so the number by
+    which these rows disagree with July is several times their own within-session noise.
+    (<a href="/changelog/">Changelog · 2026-09-30</a>; data:
+    <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_anchor_2026-09-30.csv" target="_blank" rel="noopener"><code>rtx4090_anchor_2026-09-30.csv</code></a>.)</p>
+    <p class="meta">Still untested: whether the same holds on today's image build. The <code>LLM.int8()</code>
+    decomposition constrains the mechanism: INT8 energy rose 1.41–1.58× at unchanged package
     power, i.e. purely a throughput effect. One caveat on the repeats: the perplexity column is bit-identical
     across replicates because teacher forcing is deterministic, so the quality axis has CV&nbsp;=&nbsp;0 by
     construction and is not independently replicated.</p>

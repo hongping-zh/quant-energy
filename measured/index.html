@@ -193,7 +193,8 @@
       identified, so it is retained as a divergent historical observation and excluded from current-stack conclusions.
       <b>3 · No direction flip at the 3B anchor</b> — the same stack that moved the 5090 crossover by 3B left this
       card at break-even. Only the 3B anchor was re-measured; whether the full Ada crossover curve moves under this
-      stack awaits the 1.5B and 7B points.
+      stack awaits the 1.5B and 7B points — <b>still open as of 2026-09-30</b>: that session supplied both sizes, but
+      on the <em>July</em> stack rather than the current one (<a href="/changelog/">changelog</a>).
       <b>4 · Card and session gaps, described — not decomposed:</b> the two cards' observations differ by
       ≈ <b>2.8 points</b>; the two sessions on card 2 differ by ≈ <b>0.2 points</b>. Card 1 was measured only once,
       so this is not a formal variance decomposition — and for card-population questions the physical sample is
@@ -488,6 +489,12 @@
       <li><b>2026-07-24 session — the anchors the Ada curves are fitted on:</b> Python 3.8 ·
       <code>torch 2.4.1+cu121</code> · <code>transformers 4.46.3</code> · <code>bitsandbytes 0.45.5</code> ·
       <code>accelerate 1.0.1</code>.</li>
+      <li><b>2026-09-30 session — a same-stack repeat of the July anchors:</b> <code>torch 2.4.1+cu121</code> ·
+      <code>transformers 4.46.3</code> · <code>bitsandbytes 0.45.5</code> · <code>accelerate 1.0.1</code> ·
+      driver <code>535.54.03</code> — the <b>same stack as 2026-07-24</b> above, deliberately, not the image pins.
+      The reports still carry <code>matches_reference_pins: false</code>, because that flag compares a report against
+      the container's own default pins; it says nothing about whether it matches the session the published curves
+      were fitted on. Python version is not recorded in the archive.</li>
       <li><b>2026-08-19 / 08-20 native sessions:</b> Python 3.10.20 · <code>torch 2.5.1+cu121</code>, the other four
       matching the pins above.</li>
       <li><b>2026-09-25 re-test session:</b> Python 3.10.21 · <code>torch 2.14.0</code> · CUDA 13.0 ·
@@ -521,6 +528,11 @@
         <td><a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_bnb_2026-09-25.csv" target="_blank" rel="noopener">RTX 4090 NF4 two-card re-test</a></td>
         <td>2026-09-25: 3 sessions × 2 physical cards, schema-1.3 reports with whole-run power-trace sidecars (window re-cuttable)</td>
         <td>n = 3 across 2 cards; separate archive, not pooled</td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_anchor_2026-09-30.csv" target="_blank" rel="noopener">RTX 4090 same-stack anchor re-measurement</a></td>
+        <td>2026-09-30: the four cells the Ada curve borrows most from (Qwen2-1.5B and Qwen2-7B × NF4 and INT8) repeated on <b>the same stack those anchors were measured on</b>, two months later, on another rented RTX 4090 — the kernel versions held constant so that whatever moves is not a version change</td>
+        <td>n = 2 trials, one card, one session; 7B reproduces to 1.2 pp, 1.5B moves 7.5–16.3 pp; separate archive, not pooled</td>
       </tr>
       <tr>
         <td><a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">llama.cpp kernel study</a></td>

@@ -119,6 +119,39 @@
     </div>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-09-30</span><span class="etag data">data</span><span class="etag finding">finding</span></div>
+      <h2>Four anchors re-measured on their own stack, two months later: 7B holds to a point, 1.5B does not</h2>
+      <p>The cells the Ada curve leans hardest on — Qwen2-1.5B and Qwen2-7B at NF4 and INT8 — were re-run on
+      <b>the same software stack they were originally measured on</b> (<code>torch 2.4.1+cu121</code>,
+      <code>transformers 4.46.3</code>, <code>bitsandbytes 0.45.5</code>, <code>accelerate 1.0.1</code>, the
+      2026-07-24 configuration), on another rented RTX 4090, two months later. Holding the kernel versions fixed does
+      not remove the drift — it sorts it by model size. Against the July values (−28.46%, +49.54%, +15.11%,
+      +180.73%), this session reads: NF4 7B <b>−28.25%</b> (<b>0.2 points</b> away), INT8 7B <b>+50.75%</b>
+      (<b>1.2 points</b>), NF4 1.5B <b>+22.6%</b> (<b>7.5 points</b>), INT8 1.5B <b>+197.05%</b>
+      (<b>16.3 points</b>). The two trials on which each cell rests were ~48&nbsp;minutes apart on one card and
+      agree to 0.1–4.5 points, so the gap to July is several times the row's own within-session noise.</p>
+      <p><b>What this licenses, and what it does not.</b> It licenses saying that the n&nbsp;=&nbsp;1 risk in this
+      dataset is concentrated at the small end: at 7B the same configuration returns to about a point across two
+      months and two rented hosts, while at 1.5B the same configuration can move by more than fifteen points with no
+      version change to attribute it to — inside a cell whose published range already spans −28% to +199%. It does
+      <b>not</b> license folding these rows into the published curves, and it does not answer the question left open
+      on 2026-09-25 (whether the full Ada crossover moves under the <em>current</em> stack) — this session repeated
+      the July stack, so that question stands.</p>
+      <p class="rule-note">Published as a separate versioned session, <b>not pooled</b> into the seed counts, the
+      anchor set or the fitted curves — same policy as every session since 2026-09-20. Data:
+      <a href="https://github.com/hongping-zh/quant-energy/blob/main/data/rtx4090_anchor_2026-09-30.csv" target="_blank" rel="noopener"><code>data/rtx4090_anchor_2026-09-30.csv</code></a>
+      (+ <code>.summary.csv</code>, generator script). Two disclosures travel with it: the reports are
+      <b>schema-valid but not protocol-conformant</b> — they carry no measurement-window, decoding or arm-order
+      record (the arm order FP16&nbsp;→&nbsp;NF4&nbsp;→&nbsp;INT8 is recovered from timestamps, fixed, not
+      randomized); and card identity plus the 36&nbsp;°C start temperature come from <b>one environment snapshot
+      for the whole session</b>, not per-run logs, so this is within-session trial replication — not across-restart,
+      and not across cards, replication. No existing number changed. One correction elsewhere on the site comes out
+      of it: <a href="/method/#session-scatter">/method/</a> used to say that no two sessions ran the same torch
+      build.
+      Since this one, that is no longer true.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-09-28</span><span class="etag site">site</span></div>
       <h2>The crossover is a card–stack property: attribution wording fixed on every page that states it</h2>
       <p>An external evaluation caught a real ambiguity: the coverage-matrix notes attributed the NF4 crossing
