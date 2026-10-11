@@ -1,0 +1,373 @@
+openapi: 3.0.3
+info:
+  title: EcoCompute service-layer API (CONTRACT ONLY — not implemented)
+  version: "0.1.0-draft"
+  description: |
+    This file defines the seam between the public research layer
+    (quantenergy.tech, static, Apache-2.0) and a future product / service layer.
+
+    **Nothing here is implemented.** The public site currently runs entirely on
+    static files and a manual GitHub-issue submission flow. This contract exists
+    so that:
+      1. the static layer can be pointed at an API later by setting
+         `window.ECO_API_BASE` (see assets/data-source.js);
+      2. whatever gets built stays compatible with the published data contract,
+         so private results remain comparable against the public curves.
+
+    Hard rule: every measurement object accepted or returned by this API MUST
+    validate against `energy.schema.json` from the public research layer. That
+    schema is the only thing the two layers share.
+
+  license:
+    name: See repository — public layer is Apache-2.0; service layer licensing TBD
+servers:
+  - url: https://api.quantenergy.tech/v1
+    description: Planned production (NOT deployed)
+  - url: https://{region}-{project}.cloudrun.app/v1
+    description: Cloud Run style deployment
+    variables:
+      region: { default: asia-east1 }
+      project: { default: ecocompute }
+  - url: http://localhost:8080/v1
+    description: Local development
+
+security:
+  - ApiKeyAuth: []
+  - OAuth2: [results.read, results.write]
+
+tags:
+  - name: benchmarks
+    description: Submit and query measurement runs
+  - name: reports
+    description: Server-side report generation
+  - name: orgs
+    description: Organisation and project management
+  - name: results
+    description: Private / scoped measurement results
+
+paths:
+  /benchmarks:
+    post:
+      tags: [benchmarks]
+      summary: Submit a measurement run
+      description: |
+        Accepts one `energy.json` report. The payload MUST validate against the
+        public `energy.schema.json`; the server runs the same validation as the
+        browser checker on /replications/ (schema, GPU name ↔ architecture,
+        sample rate ≥ 10 Hz, same-session FP16 baseline, outlier flagging) and
+        returns the validation verdict rather than silently accepting.
+        Contradictory results are stored and surfaced exactly like confirming
+        ones — moderation checks format only, never the numbers.
+      operationId: submitBenchmark
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnergyReport"
+      responses:
+        "201":
+          description: Accepted and stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Benchmark"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "422":
+          description: Schema-valid but not comparable (e.g. no same-session FP16 baseline)
+    get:
+      tags: [benchmarks]
+      summary: List runs visible to the caller
+      operationId: listBenchmarks
+      parameters:
+        - $ref: "#/components/parameters/Visibility"
+        - $ref: "#/components/parameters/Precision"
+        - $ref: "#/components/parameters/GpuArch"
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Benchmark" }
+                  nextCursor: { type: string, nullable: true }
+
+  /benchmarks/{id}:
+    get:
+      tags: [benchmarks]
+      summary: Fetch one run
+      operationId: getBenchmark
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Benchmark" }
+        "404": { description: Not found or not visible to the caller }
+
+  /reports:
+    post:
+      tags: [reports]
+      summary: Generate a report from one or more runs
+      description: |
+        Server-side rendering of the same report the browser builds on
+        /replications/ (hardware, software stack, thermal, workload, result),
+        plus shareable link and PDF. Honest failure states are preserved:
+        a missing thermal block or image digest is shown as missing, never
+        filled in.
+      operationId: createReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [benchmarkIds]
+              properties:
+                benchmarkIds:
+                  type: array
+                  items: { type: string }
+                format:
+                  type: string
+                  enum: [json, html, pdf]
+                  default: html
+                includeRaw: { type: boolean, default: true }
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+
+  /reports/{id}:
+    get:
+      tags: [reports]
+      summary: Fetch a generated report
+      operationId: getReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /orgs/{orgId}/projects:
+    get:
+      tags: [orgs]
+      summary: List projects in an organisation
+      operationId: listProjects
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Project" }
+    post:
+      tags: [orgs]
+      summary: Create a project
+      operationId: createProject
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                defaultVisibility:
+                  type: string
+                  enum: [private, org, public]
+                  default: private
+      responses:
+        "201": { description: Created }
+
+  /results:
+    get:
+      tags: [results]
+      summary: Query measurement results with visibility scoping
+      description: |
+        Returns only what the caller is allowed to see.
+        **Private results never enter the public dataset by default.**
+        A customer may opt a result into the public replication gallery; it then
+        goes through exactly the same validation as anyone else's submission and
+        is attributed in the changelog.
+      operationId: queryResults
+      parameters:
+        - $ref: "#/components/parameters/Visibility"
+        - $ref: "#/components/parameters/Precision"
+        - $ref: "#/components/parameters/GpuArch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Benchmark" }
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.quantenergy.tech/oauth/authorize
+          tokenUrl: https://api.quantenergy.tech/oauth/token
+          scopes:
+            results.read: Read results visible to you
+            results.write: Submit measurement runs
+
+  parameters:
+    Visibility:
+      name: visibility
+      in: query
+      schema:
+        type: string
+        enum: [private, org, public]
+    Precision:
+      name: precision
+      in: query
+      schema:
+        type: string
+        enum: [FP16, NF4, INT8]
+    GpuArch:
+      name: gpuArch
+      in: query
+      schema:
+        type: string
+        enum: [turing, ampere, ada, blackwell, hopper]
+
+  responses:
+    ValidationFailed:
+      description: The report failed validation; the verdict is returned, never a silent accept
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              checks:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name: { type: string }
+                    status: { type: string, enum: [pass, warn, fail] }
+                    note: { type: string }
+
+  schemas:
+    EnergyReport:
+      description: |
+        One measurement report. MUST validate against the public
+        `energy.schema.json` (ecocompute-energy/1.x). Representative shape only —
+        the schema file is authoritative.
+      type: object
+      required: [schema_version, system_under_test, workload, measurement, results]
+      properties:
+        schema_version: { type: string, example: "ecocompute-energy/1.3" }
+        system_under_test:
+          type: object
+          properties:
+            gpu: { type: string }
+            gpu_arch: { type: string }
+        workload:
+          type: object
+          properties:
+            model_name: { type: string }
+            params_b: { type: number, nullable: true }
+            precision: { type: string, enum: [FP16, NF4, INT8] }
+            batch_size: { type: integer }
+        measurement:
+          type: object
+          properties:
+            sample_rate_hz: { type: integer, minimum: 10 }
+            tokens_per_run: { type: integer }
+        software:
+          type: object
+          properties:
+            nvidia_driver: { type: string }
+            torch_cuda: { type: string, nullable: true }
+            matches_reference_pins: { type: boolean }
+        thermal:
+          type: object
+          properties:
+            mode: { type: string, enum: [cold, steady] }
+            basis: { type: string, enum: [measured, unavailable] }
+        results:
+          type: object
+          properties:
+            energy_per_token_mj: { type: number, nullable: true }
+            fp16_energy_per_token_mj: { type: number, nullable: true }
+            vs_fp16_energy_pct: { type: number, nullable: true }
+            basis: { type: string, enum: [measured, interpolated, extrapolated, unavailable] }
+
+    Benchmark:
+      type: object
+      properties:
+        id: { type: string }
+        visibility: { type: string, enum: [private, org, public] }
+        submittedBy: { type: string, description: "handle or org member id" }
+        orgId: { type: string, nullable: true }
+        projectId: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        validation:
+          type: object
+          properties:
+            blocking: { type: integer, description: "count of failing checks" }
+            warnings: { type: integer }
+        report:
+          $ref: "#/components/schemas/EnergyReport"
+
+    Report:
+      type: object
+      properties:
+        id: { type: string }
+        format: { type: string, enum: [json, html, pdf] }
+        url: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    Project:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        orgId: { type: string }
+        defaultVisibility: { type: string, enum: [private, org, public] }
+        runCount: { type: integer }

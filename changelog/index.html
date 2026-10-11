@@ -72,6 +72,53 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
+      <h2>Architecture: the seam to a future service layer is now documented — contract only, nothing implemented</h2>
+      <p>An external design review proposed separating the project into a <b>public research layer</b> (this site:
+      static pages, Apache-2.0/CC-BY code and data, immutable DOIs) and a <b>product/service layer</b> (benchmark
+      submissions, report generation, private results). We adopted the documentation half and deliberately none of
+      the implementation: <b>(1)</b> <code>ARCHITECTURE.md</code> defines the boundary — what the research layer will
+      never gain (logins, billing, private data), the single coupling point between the layers (the
+      <code>energy.json</code> contract), license and trademark rules, an explicit "not building yet" list, and the
+      signals (e.g. five independent replications) that would justify starting a service layer at all.
+      <b>(2)</b> <code>assets/data-source.js</code> is a small adapter so a future page can switch from static JSON to
+      an API by injecting one line (<code>window.ECO_API_BASE</code>); no page references it yet. <b>(3)</b>
+      <code>api/openapi.yaml</code> is a contract-only draft of that future API — <b>nothing is deployed</b>, and its
+      hard rule is that every object must validate against the same public <code>energy.json</code> schema, so private
+      results stay comparable with the published curves. The estimator Cloudflare Worker that already lives in
+      <code>api/</code> is unrelated and untouched. No page behavior, number or measurement changed.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
+      <h2>curl | bash retired: the quickstart is now a verified release asset, the image runs non-root</h2>
+      <p>An external security review flagged the documented entry point — piping a moving <code>main</code> branch
+      into a shell — as the site's most urgent fix. Agreed, and fixed at the source
+      (<a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">ecocompute-mlcube schema-1.3-r3</a>),
+      then on every page that taught the old pattern: the homepage run command, the container page, and both Chinese
+      guides. The documented way in is now download → verify → run against an immutable release:
+      <code>curl -fsSLO …/releases/download/schema-1.3-r3/quickstart.sh</code>, <code>curl -fsSLO …/SHA256SUMS</code>,
+      <code>sha256sum -c SHA256SUMS</code>, <code>bash quickstart.sh</code>. What executes is a specific, checksummed
+      version — not whatever <code>main</code> holds at the moment you type the command.</p>
+      <p>The release also carries the rest of the review's list: a <b>CycloneDX SBOM</b> generated from the pinned
+      <code>requirements.lock.txt</code>; the image <b>digest</b> for pinning instead of the mutable <code>:latest</code>
+      (<code>sha256:5c812e66…e275</code>, built by CI with the non-root smoke test green); the container now runs
+      <b>non-root</b> (unprivileged default user; the script has always passed <code>--user $(id -u):$(id -g)</code>);
+      <code>ECOCOMPUTE_READONLY=1</code> optionally adds <code>--read-only</code> + a tmpfs <code>/tmp</code>, leaving
+      only the two bind mounts writable; and <code>bash quickstart.sh --dry-run</code> prints the complete plan —
+      mode, every directory it would touch on your host, the exact commands — and executes nothing. The script header
+      now states in full what it changes on the host and what it never touches. No measurement, protocol or schema
+      semantics changed: the validator and the pinned dependency set are byte-identical to schema-1.3-r2.</p>
+      <p><b>And one defect found on the way, now corrected:</b> the schema-1.3-r1 pins were computed over Windows
+      working-tree bytes (CRLF) instead of the repository blobs (LF). Its schema pin never verified against what
+      <code>raw.githubusercontent.com</code> serves, and its <code>quickstart.sh</code> asset carries CRLF line endings
+      — which makes <code>bash quickstart.sh</code> fail on Linux at <code>set -euo pipefail</code>. A correction is
+      appended to the <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1" target="_blank" rel="noopener">r1
+      release notes</a>, and the <a href="/spec/ecocompute-protocol-v1.1.html">spec's §5.1 pin table</a> now pins r3 —
+      including the schema's actual LF-blob hash, which the r1 pin had wrong.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-02</span><span class="etag site">site</span></div>
       <h2>New note: "Jevons is now a product name" — a commentary on measurement windows in AI pricing claims</h2>
       <p>Published <a href="/blog/jevons-is-now-a-product-name.html">a commentary note</a> (the blog's exploratory
@@ -118,34 +165,6 @@
       numbers or findings changed.</p>
     </div>
 
-    <div class="entry">
-      <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
-      <h2>curl | bash retired: the quickstart is now a verified release asset, the image runs non-root</h2>
-      <p>An external security review flagged the documented entry point — piping a moving <code>main</code> branch
-      into a shell — as the site's most urgent fix. Agreed, and fixed at the source
-      (<a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">ecocompute-mlcube schema-1.3-r3</a>),
-      then on every page that taught the old pattern: the homepage run command, the container page, and both Chinese
-      guides. The documented way in is now download → verify → run against an immutable release:
-      <code>curl -fsSLO …/releases/download/schema-1.3-r3/quickstart.sh</code>, <code>curl -fsSLO …/SHA256SUMS</code>,
-      <code>sha256sum -c SHA256SUMS</code>, <code>bash quickstart.sh</code>. What executes is a specific, checksummed
-      version — not whatever <code>main</code> holds at the moment you type the command.</p>
-      <p>The release also carries the rest of the review's list: a <b>CycloneDX SBOM</b> generated from the pinned
-      <code>requirements.lock.txt</code>; the image <b>digest</b> for pinning instead of the mutable <code>:latest</code>
-      (<code>sha256:5c812e66…e275</code>, built by CI with the non-root smoke test green); the container now runs
-      <b>non-root</b> (unprivileged default user; the script has always passed <code>--user $(id -u):$(id -g)</code>);
-      <code>ECOCOMPUTE_READONLY=1</code> optionally adds <code>--read-only</code> + a tmpfs <code>/tmp</code>, leaving
-      only the two bind mounts writable; and <code>bash quickstart.sh --dry-run</code> prints the complete plan —
-      mode, every directory it would touch on your host, the exact commands — and executes nothing. The script header
-      now states in full what it changes on the host and what it never touches. No measurement, protocol or schema
-      semantics changed: the validator and the pinned dependency set are byte-identical to schema-1.3-r2.</p>
-      <p><b>And one defect found on the way, now corrected:</b> the schema-1.3-r1 pins were computed over Windows
-      working-tree bytes (CRLF) instead of the repository blobs (LF). Its schema pin never verified against what
-      <code>raw.githubusercontent.com</code> serves, and its <code>quickstart.sh</code> asset carries CRLF line endings
-      — which makes <code>bash quickstart.sh</code> fail on Linux at <code>set -euo pipefail</code>. A correction is
-      appended to the <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1" target="_blank" rel="noopener">r1
-      release notes</a>, and the <a href="/spec/ecocompute-protocol-v1.1.html">spec's §5.1 pin table</a> now pins r3 —
-      including the schema's actual LF-blob hash, which the r1 pin had wrong.</p>
-    </div>
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-09-30</span><span class="etag data">data</span><span class="etag finding">finding</span></div>
