@@ -292,6 +292,19 @@ replications page whether they agree or not.
 
 ## 8. Version Correspondence
 
+For a reader who just needs to know what to run and cite *today*, the current snapshot is:
+
+| Layer | Current version | DOI / release | Role |
+|---|---|---|---|
+| Protocol | v1.1 | [10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) | Normative requirements |
+| Report schema | `ecocompute-energy/1.3` | [GitHub release schema-1.3-r3](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) | Machine validation |
+| Container | schema-1.3-r3 | [GitHub release - image digest in SHA256SUMS](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) | Executable measurement |
+| Main dataset | v1.1.0 | [10.5281/zenodo.19647290](https://doi.org/10.5281/zenodo.19647290) | Published measurements (360+ configurations) |
+| Supplement | RTX 4090 deep dive v3 | [10.5281/zenodo.22037483](https://doi.org/10.5281/zenodo.22037483) | Deep re-test (Ada): repeatability, paired perplexity |
+
+The layers above version independently; the detailed correspondence across protocol revisions follows. Each dataset release states, in its metadata, the protocol version its sessions were measured under.
+
+
 | Protocol | Report schema | Thermal block | Environment block | Companion datasets (concept DOI) |
 |---|---|---|---|---|
 | v1.0 (implicit, 2026-07 seed sessions) | `ecocompute-energy/1.2` | absent (thermal state unknown) | absent | main dataset [10.5281/zenodo.19647290](https://doi.org/10.5281/zenodo.19647290) |

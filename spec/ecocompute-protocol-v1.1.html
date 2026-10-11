@@ -325,6 +325,17 @@ architecture, or costing energy above it. Such runs are published on the replica
 or not.</p>
 
 <h2 id="s8-version-correspondence">8. Version Correspondence</h2>
+<p>For a reader who just needs to know what to run and cite <i>today</i>, the current snapshot is:</p>
+<table class="grid">
+    <tr><th>Layer</th><th>Current version</th><th>DOI / release</th><th>Role</th></tr>
+    <tr><td>Protocol</td><td>v1.1</td><td><a href="https://doi.org/10.5281/zenodo.22958675" target="_blank" rel="noopener">10.5281/zenodo.22958675</a></td><td>Normative requirements</td></tr>
+    <tr><td>Report schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release schema-1.3-r3</a></td><td>Machine validation</td></tr>
+    <tr><td>Container</td><td>schema-1.3-r3</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release · image digest in SHA256SUMS</a></td><td>Executable measurement</td></tr>
+    <tr><td>Main dataset</td><td>v1.1.0</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></td><td>Published measurements (360+ configurations)</td></tr>
+    <tr><td>Supplement</td><td>RTX 4090 deep dive v3</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td><td>Deep re-test (Ada): repeatability, paired perplexity</td></tr>
+  </table>
+<p>The layers above version independently; the detailed correspondence across protocol revisions follows. Each dataset release states, in its metadata, the protocol version its sessions were measured under.</p>
+
 <table class="grid">
   <tr><th>Protocol</th><th>Report schema</th><th>Thermal block</th><th>Environment block</th><th>Companion datasets (concept DOI)</th></tr>
   <tr><td>v1.0 (implicit, 2026-07 seed sessions)</td><td><code>ecocompute-energy/1.2</code></td><td>absent (thermal state unknown)</td><td>absent</td><td>main dataset <a href="https://doi.org/10.5281/zenodo.19647290">10.5281/zenodo.19647290</a></td></tr>
