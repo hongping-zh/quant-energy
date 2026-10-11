@@ -501,7 +501,7 @@
       <code>transformers 4.57.6</code> · <code>bitsandbytes 0.50.2</code> · driver 595.71.05 — the current stack, same
       as the <a href="#rtx5090-2026-09">5090 re-test</a>.</li>
       <li><b>Quality probe corpus SHA-256:</b> <code>22ac091a6383740d30f8e41ae144032c873c772db5e1c901112c1c330fdc5504</code>.</li>
-      <li><b>One-container command:</b> <code>docker run --rm --gpus all -v "$PWD/out:/workspace/outputs" ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 --precision INT8 --gpu_arch auto --output_dir /workspace/outputs</code> — writes a schema-validated <code>energy.json</code>; drop it into <a href="/replications/">/replications/</a> to overlay it on the curve.</li>
+      <li><b>One-container command:</b> <code>mkdir -p out && docker run --rm --gpus all --user "$(id -u):$(id -g)" -v "$PWD/out:/workspace/outputs" ghcr.io/hongping-zh/ecocompute-mlcube:latest energy_estimate --model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --params_b 1.1 --precision INT8 --gpu_arch auto --output_dir /workspace/outputs</code> — writes a schema-validated <code>energy.json</code>; drop it into <a href="/replications/">/replications/</a> to overlay it on the curve. (The image's default user is unprivileged; <code>--user</code> makes the report land in a directory you own. Or skip Docker entirely with the <a href="/container/">verified quickstart</a>.)</li>
     </ul>
   </div>
 

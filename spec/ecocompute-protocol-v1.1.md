@@ -10,7 +10,7 @@
 | **License** | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | **Validation** | `ecocompute-energy/1.2` or later (live: `1.3`) |
 | **Canonical** | [DOI 10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) (concept: [10.5281/zenodo.22958674](https://doi.org/10.5281/zenodo.22958674)) · rendered at `quantenergy.tech/spec/` |
-| **Machine contract** | [`ecocompute-mlcube/schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json) — pinned: release `schema-1.3-r1`, commit `05a3ffd`, SHA-256 `501dc1f3…b6efb04` (full pins in §5) |
+| **Machine contract** | [`ecocompute-mlcube/schema/energy.schema.json`](https://github.com/hongping-zh/ecocompute-mlcube/blob/main/schema/energy.schema.json) — pinned: release `schema-1.3-r3`, commit `8afc0bf`, SHA-256 `255ba067…48335a0` (full pins in §5) |
 
 ---
 
@@ -238,12 +238,13 @@ hides.
 GitHub links in this document resolve to `main` for readability; `main` moves. The
 immutable references for this version of the protocol are:
 
-| Artifact | Pin (2026-09-26; validator amended 2026-09-27) |
+| Artifact | Pin (2026-10-11, schema-1.3-r3) |
 |---|---|
-| Report schema | release [`schema-1.3-r1`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r1) · commit `05a3ffd` · SHA-256 `501dc1f328270f0bd3221e1ec5c81d740308bdd87090b93f54758ea79b6efb04` |
-| Semantic validator | `tools/validate.py` at release [`schema-1.3-r2`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r2) · commit `8778c42` · SHA-256 `3dc166d2c2c0d7fbd6bbcb5a37a4cb2520feb04a432727a06e993f6d2310bee3` — hardened: a report that does not record a protocol-required fact (window, decoding, arm order, iterations, …) is schema-valid, never protocol-conformant |
-| Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube@sha256:595e6ddf9658237fdfe222a9929cada024ea2d4dd1c5ae41195d024082247568` (e52f878 build; container content identical to the release commit) |
-| Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `5664b5a131de9458f8dadda6389de44cfc24e9cc51dbac5128d02023482ac1a7` · run with `ECOCOMPUTE_REF=schema-1.3-r1` |
+| Report schema | release [`schema-1.3-r3`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) · commit `8afc0bf` · SHA-256 `255ba06777d1da911eeb594fe8a0c2b8f959636e69033d733d10c65b048335a0` (content unchanged since `e52f878`; the r1 pin `501dc1f3…` was computed over CRLF working-tree bytes and never matched the LF blob — see the correction in the r1 release notes) |
+| Semantic validator | `tools/validate.py` at release [`schema-1.3-r3`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) · commit `8afc0bf` · SHA-256 `3dc166d2c2c0d7fbd6bbcb5a37a4cb2520feb04a432727a06e993f6d2310bee3` (hardened in r2: a report that does not record a protocol-required fact — window, decoding, arm order, iterations, … — is schema-valid, never protocol-conformant) |
+| Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube@sha256:5c812e66c34fcdab436bdcf4c1135dc91a6a86b1f94d3efb6118947a7492e275` (8afc0bf build; non-root default user) |
+| Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `491e8c381dfdb826b5093a0dc6b77c8544d0f3463d6bc9b14d0ec5df0382ba24` · run with `ECOCOMPUTE_REF=schema-1.3-r3` (the r1 asset carried CRLF line endings and failed on Linux — superseded) |
+| SBOM | `sbom.cdx.json` (CycloneDX 1.6, from the pinned `requirements.lock.txt`) · SHA-256 `4bdcb3a5d35daf2b5f726c5ccdc158f302f96dce6e5779e1715d6019cf9bd740` |
 
 A claim of "protocol-conformant" against this document is a claim against these pins (or a
 later release that supersedes them, with its own pins).
