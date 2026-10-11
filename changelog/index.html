@@ -73,6 +73,32 @@
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
+      <h2>Information architecture: three entry paths, conclusion boundaries beside every verdict, and a self-service replication mechanism</h2>
+      <p>An external review's sharpest point: the homepage was everything at once — paper abstract, dataset readme, protocol,
+      estimator, optimizer, install guide, Colab, submission flow, changelog and citation, all on one screen. Restructured
+      <b>without removing any content</b>: <b>(1)</b> the first screen now answers "what can this site do for me" in one line
+      and three buttons — <i>Estimate my model / Run a real measurement / See the full evidence</i> — followed by a three-path
+      overview (<i>just want the answer</i> → tool · <i>want to verify it</i> → Colab, container, submission · <i>want to cite
+      or audit</i> → protocol, DOIs, limitations, changelog). <b>(2)</b> Conclusion-boundary boxes now sit directly beside both
+      verdicts (full version) and all three core charts (compact): the evidence scope as chips (NVIDIA only · single-stream
+      decode · batch 1 · 256 tokens · main dataset n&nbsp;=&nbsp;2 · GPU-package energy · outside-the-fit-is-not-a-measurement)
+      plus the three-state legend — <b>filled</b> = repeated runs, <b>hollow</b> = a single run, <b>curve</b> = a fit, never a
+      new measurement. <b>(3)</b> A six-question first-visitor FAQ (paper, tool, dataset or company? no GPU? production? which
+      role am I?) and the four-layers card moved into a full content index at the bottom.</p>
+      <p>The replications page becomes a self-service mechanism: a <b>browser-side deep validator</b> (13 checks — schema
+      version, required blocks, GPU name ↔ declared architecture, sample rate ≥ 10&nbsp;Hz, thermal state, reference pins,
+      timestamp, measurement window, image digest, code version, same-session FP16 baseline, outlier range, basis) with an
+      <b>environment report card</b> (driver, CUDA, torch / transformers / bitsandbytes, package power, thermal), a
+      paste-JSON alternative to drag-and-drop, and an <b>architecture × precision coverage matrix</b> that shows exactly which
+      cells of the independent-replication grid are still empty. The honest gaps stay honest: digest and commit hash are
+      warnings, not failures, because the container does not emit them yet. Both pages now read
+      <code>replications.json</code> through the <code>assets/data-source.js</code> adapter shipped earlier today. The
+      four-line download → verify → run command from this morning is untouched, as is every tool, number, filter, the 1/5
+      goal tracker and the existing submission flow. No measurement, protocol or schema change.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
       <h2>Architecture: the seam to a future service layer is now documented — contract only, nothing implemented</h2>
       <p>An external design review proposed separating the project into a <b>public research layer</b> (this site:
       static pages, Apache-2.0/CC-BY code and data, immutable DOIs) and a <b>product/service layer</b> (benchmark

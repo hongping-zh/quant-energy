@@ -4,21 +4,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy</title>
-<meta name="description" content="Open micro-benchmark for LLM quantization energy on NVIDIA GPUs: NF4 saves energy only above a model-size crossover; INT8 never saved energy in any cell measured." />
+<title>Measure LLM Inference Energy: Does Quantization Actually Save Power? | EcoCompute</title>
+<meta name="description" content="Open benchmark for measuring NF4 and INT8 inference energy on NVIDIA GPUs. Not TDP estimates — NVML power sampled on your own card. Enter a GPU and model size for a direction, or run the container for your own measured number." />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <link rel="canonical" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
 <meta property="og:url" content="https://quantenergy.tech/" />
-<meta property="og:title" content="EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy" />
-<meta property="og:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
+<meta property="og:title" content="Measure LLM Inference Energy: Does Quantization Actually Save Power? | EcoCompute" />
+<meta property="og:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta property="og:image" content="https://quantenergy.tech/preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy" />
-<meta name="twitter:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling; the site plots what it produced. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
+<meta name="twitter:title" content="Measure LLM Inference Energy: Does Quantization Actually Save Power? | EcoCompute" />
+<meta name="twitter:description" content="An MLCube-compatible container measures LLM inference energy with direct NVML sampling. See whether NF4/INT8 raises or lowers energy for your model and GPU — then reproduce it on yours." />
 <meta name="twitter:image" content="https://quantenergy.tech/preview.png" />
 <meta name="author" content="Hongping Zhang" />
 <meta name="keywords" content="quantization energy efficiency, LLM inference energy, NF4, INT8, GPU power measurement, sustainable computing, crossover effect, NVML, MLCube container, reproducible energy benchmark, energy per token" />
@@ -332,6 +332,74 @@
     .cta{flex-direction:column;align-items:stretch;gap:10px}
     .cta a.btn,.cta a.ghost,.cta button.ghost{justify-content:center;text-align:center}
   }
+
+    /* ---- three-pathway first screen / faq (grafted 2026-10-11) ---- */
+    html{scroll-behavior:smooth}
+    .eyebrow{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.6}
+    .hero-title{font-size:29px;line-height:1.34;font-weight:800;margin:20px 0 10px;letter-spacing:-.2px;color:var(--txt)}
+    .hero-sub{font-size:15px;line-height:1.75;color:var(--txt);margin:0 0 20px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+    .hero-btn{display:inline-flex;align-items:center;justify-content:center;min-width:150px;padding:14px 20px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;background:var(--card);color:var(--txt);border:1px solid var(--line);transition:transform .15s,box-shadow .15s}
+    .hero-btn:hover{transform:translateY(-1px)}
+    .hero-btn.primary{background:var(--accent);color:#06223a;border-color:transparent;box-shadow:0 6px 20px rgba(56,189,248,.22)}
+    .hero-btn.ghost{background:transparent}
+    .hero-scope{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:0 0 6px}
+    .chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+    .sec-title{font-size:19px;font-weight:700;margin:36px 0 12px;line-height:1.4}
+    .seclead{font-size:14px;line-height:1.75;color:var(--muted);margin:0 0 14px}
+    .seclead b{color:var(--txt)}
+    .seclead .warn{color:var(--int8)}
+    .path-list{display:grid;gap:10px}
+    .path{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+    .path-num{flex:0 0 28px;height:28px;border-radius:8px;background:var(--accent);color:#06223a;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .path-body{flex:1;min-width:0}
+    .path h3{margin:0 0 5px;font-size:15px;font-weight:700}
+    .path p{margin:0;font-size:13px;color:var(--muted);line-height:1.65}
+    .path-links{margin-top:7px}
+    .path-links a,.linklist a{color:var(--accent);text-decoration:none}
+    .path-links a:hover,.linklist a:hover{text-decoration:underline}
+    .pathsec{scroll-margin-top:16px}
+    .linklist{margin:0;padding-left:18px;font-size:13px;line-height:1.95;color:var(--muted)}
+    .linklist b{color:var(--txt)}
+    .faq{border-top:1px solid var(--line);margin-top:36px;padding-top:4px}
+    .faq details{border-bottom:1px solid var(--line);padding:12px 0}
+    .faq summary{cursor:pointer;font-weight:600;font-size:14.5px;line-height:1.5}
+    .faq p{font-size:13.5px;color:var(--muted);line-height:1.8;margin:10px 0 0}
+    .faq b{color:var(--txt)}
+    .roles{display:grid;gap:8px;margin-top:10px}
+    .role{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13px;line-height:1.7;color:var(--muted)}
+    .role b{color:var(--txt)}
+    .role a{color:var(--accent);text-decoration:none}
+    .sitemap{border-top:1px solid var(--line);margin-top:30px;padding-top:2px}
+    /* ---- conclusion boundary (scope box) ---- */
+    .scopebox{margin:14px 0 0;background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--int8);border-radius:10px;padding:12px 14px}
+    .scope-head{font-size:12.5px;font-weight:800;color:var(--int8);letter-spacing:.2px;margin-bottom:6px}
+    .scope-lead{font-size:12.5px;line-height:1.7;color:var(--txt);margin:0 0 9px}
+    .scope-lead b{color:#fff}
+    .scope-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+    .scope-chips .chip{font-size:11.5px;padding:3px 9px}
+    .scope-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--muted);line-height:1.6}
+    .scope-legend span{display:inline-flex;align-items:center;gap:6px}
+    .scope-legend b{color:var(--txt)}
+    .mk{flex:0 0 auto;display:inline-block}
+    .mk.filled{width:10px;height:10px;border-radius:50%;background:var(--nf4)}
+    .mk.hollow{width:10px;height:10px;border-radius:50%;border:2px solid var(--nf4);background:transparent}
+    .mk.curve{width:16px;height:0;border-top:2px solid var(--accent)}
+    .scopebox.mini{padding:10px 12px}
+    .scope-mini-lead{font-size:11.5px;line-height:1.65;color:var(--muted);margin:8px 0 0}
+    .scope-mini-lead b{color:var(--txt)}
+    .scope-mini-lead a{color:var(--accent);text-decoration:none}
+    @media(max-width:520px){
+      .hero-title{font-size:24px}
+      .hero-btn{width:100%;min-width:0}
+    }
+    /* ---- chart captions + two-layer note (a11y graft) ---- */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+    .chartcap{font-size:12px;line-height:1.65;color:var(--muted);margin:10px 0 0;padding:9px 12px;background:var(--card2);border:1px solid var(--line);border-radius:8px}
+    .chartcap b{color:var(--txt)}
+    button:focus-visible,a:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .layernote{margin:26px 0 0;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:12px;line-height:1.7;color:var(--muted)}
+    .layernote b{color:var(--txt)}
 </style>
 <script>
 /* Old homepage anchors now live in the four layers — silently forward deep links. */
@@ -345,6 +413,7 @@
 </script>
 </head>
 <body>
+<script src="/assets/data-source.js"></script>
 <a class="skiplink" href="#maincontent">Skip to main content</a>
 <div class="wrap">
   <header>
@@ -357,27 +426,22 @@
       <a class="aboutlink" href="/container/">Container</a>
       <a class="aboutlink" href="/about/">About</a>
     </nav>
-    <h1>EcoCompute<span class="dot">.</span></h1>
-    <p>EcoCompute Protocol v1.1 — an open micro-benchmark for quantization energy · 量化能耗微基准协议</p>
-    <p class="tagline" style="margin-top:12px;font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.3px">Every quantization tool tells you <em>how</em> to quantize. Few open tools measure <em>whether</em> it saves energy on your card — so this is a protocol for measuring it, not a table to trust.</p>
-
-    <div class="card" style="border-left:3px solid var(--accent);margin-top:16px;padding:18px 20px 16px">
-      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-        <span style="font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1">26<span style="color:var(--muted);font-size:24px"> / 56</span></span>
-        <span style="font-size:14px;color:var(--txt);line-height:1.55">cells of the <a href="/measured/#matrix" style="color:var(--accent)">coverage matrix</a> have a measurement. The other <b>30</b> are not an oversight — they are the reason this site exists. <a href="/method/#glossary" style="color:var(--accent)">What these counts mean →</a></span>
-      </div>
-      <p class="badge" style="margin:12px 0 0;line-height:1.65"><b>Scope of every number on this site:</b> GPU-package power (NVML), not whole-system draw — no PSU losses, CPU, DRAM, cooling, PUE or CO₂e · single-stream decode, <b>batch 1, 256 tokens</b> · <b>generation window</b> (model load, quantization and warm-up excluded) · replication stated per point: main dataset n&nbsp;=&nbsp;2 (CV&nbsp;&lt;&nbsp;2%), deep dives n&nbsp;=&nbsp;1, re-tests and their stacks versioned separately · thermal mode: the seed coverage grid is <b>unknown</b> (pre-thermal-block sessions, spec&nbsp;§4.6.5 — unknown is not cold), the September re-tests are <b>cold</b> and modes are never crossed. In one line: bitsandbytes <code>LLM.int8()</code> <b>never saved energy in any cell we measured</b>, and NF4 <b>changes sign with model size and GPU</b> — the <a href="/measured/" style="color:var(--accent)">evidence layer</a> holds every number, its n and its DOI. <a href="/method/#limits" style="color:var(--accent);text-decoration:underline">Limits and how to disprove us →</a></p>
+        <h1>EcoCompute<span class="dot">.</span></h1>
+    <p class="eyebrow">An open micro-benchmark for LLM quantization energy: a measurement protocol, a runnable container and an archived dataset. An independent, single-maintainer research project — not a company.</p>
+    <h2 class="hero-title">Measure whether LLM quantization actually saves energy — on your GPU.</h2>
+    <p class="hero-sub">Not TDP estimates: power is sampled directly from the GPU (NVML).<br>Enter your GPU and model size to get a direction; run the container to get your own measured number.</p>
+    <div class="hero-actions">
+      <a class="hero-btn primary" href="#modetabs" data-view="estimate">Estimate my model</a>
+      <a class="hero-btn" href="/container/">Run a real measurement</a>
+      <a class="hero-btn ghost" href="/measured/">See the full evidence</a>
     </div>
-
-    <div class="cta hero">
-      <a id="testedCta" class="btn" href="#modetabs" data-view="measured">📈&nbsp; View tested models <span>29 anchors · 5 GPU models · 4 arch. classes</span></a>
-      <a id="estimateCta" class="btn" href="#modetabs" data-view="estimate">🧮&nbsp; Estimate your model <span>no install · runs in this page</span></a>
-      <a id="contributeCta" class="ghost" href="/method/#contribute">🧪&nbsp; Contribute a data point <span>from ~30 min · first run incl. downloads: up to 1 h</span></a>
-      <a id="crossoverCta" class="ghost" href="/measured/#matrix">📊&nbsp; See the coverage matrix</a>
-      <a id="containerCta" class="ghost" href="/container/">▶&nbsp; Start reproducing in 60 s <span>pure measurement: minutes · one timed end-to-end run: 57 min</span></a>
-      <a id="wattCta" class="ghost" href="/watt/">⚡&nbsp; Ask Watt in WorkBuddy</a>
-    </div>
-    <div class="trustbar" aria-label="What backs these numbers">
+    <p class="hero-scope">
+      <span class="chip">GPU-package power · not whole-system</span>
+      <span class="chip">single-stream batch 1 · 256 tokens</span>
+      <span class="chip">26 / 56 cells measured</span>
+      <a href="/method/#limits">Full scope and limitations →</a>
+    </p>
+<div class="trustbar" aria-label="What backs these numbers">
       <a href="/method/">Protocol v1.1 · normative</a>
       <a href="/measured/" title="Crossover anchors: distinct GPU × model × precision points behind the fitted curves. 5 GPU models across 4 architecture classes. Definition at /method/#glossary.">29 anchors · 5 GPU models · 4 arch. classes</a>
       <a href="/method/#glossary" title="Every count on this site, with its denominator.">All counts defined · glossary</a>
@@ -387,44 +451,45 @@
       <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Zenodo DOI</a>
       <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0</a>
     </div>
-    <p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
-    <div class="cta" style="margin-top:6px">
-      <a id="repoCta" class="ghost" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · GitHub →</a>
-      <a id="zenodoCta" class="ghost" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">Measured RTX 4090 dataset · Zenodo DOI →</a>
-      <a id="ssrnCta" class="ghost" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN →</a>
-    </div>
-
-        <div class="card" id="layers" style="border-left:3px solid var(--accent)">
-      <h2 style="margin:0 0 4px">Four layers · 这个网站怎么读</h2>
-      <p class="meta" style="margin:0 0 14px;line-height:1.6">The site is deliberately split so that <b>what we require</b>,
-      <b>what we measured</b>, <b>what changed</b> and <b>what we are still exploring</b> never blur into one page.</p>
-      <div class="stackgrid">
-        <div>
-          <h3>1 · Spec — 规范</h3>
-          <p>What makes two submissions comparable. The normative protocol, the container and schema that enforce it.</p>
-          <p><a href="/method/">Protocol v1.1</a> · <a href="/method/#glossary">Number glossary</a> · <a href="/container/">Container guide</a> · <a href="/run/">Run it yourself</a> · <a href="/schema/">Schema</a></p>
-        </div>
-        <div>
-          <h3>2 · Evidence — 证据</h3>
-          <p>Everything measured, at its replication level — and every count with its denominator.</p>
-          <p><a href="/measured/">Evidence hub</a> · <a href="/measured/#matrix">Coverage matrix</a> · <a href="/measured/#nf4-retest-2026-09">Latest: two-card NF4 re-test</a> · <a href="/replications/">Public replications</a> · <a href="/cite/">Cite</a></p>
-        </div>
-        <div>
-          <h3>3 · Changelog — 版本更新</h3>
-          <p>What changed in the data, protocol and site — dated, typed, linked to its evidence.</p>
-          <p><a href="/changelog/">All entries</a> · <a href="/changelog/">Window unification (09-24)</a> · <a href="/changelog/">NF4 two-card re-test (09-25)</a></p>
-        </div>
-        <div>
-          <h3>4 · Findings — 探索性结果</h3>
-          <p>Deeper write-ups and tools whose output is a model, not a measurement — never counted in the matrix.</p>
-          <p><a href="/blog/">Notes &amp; findings</a> · <a href="/variables/">Variable matrix</a> · <a href="/?tab=estimate">Estimator</a> · <a href="/?tab=optimize">Optimizer</a></p>
-        </div>
-      </div>
-    </div>
-
-  </header>
+    
+<p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
+</header>
 
   <main id="maincontent">
+    <section class="paths" aria-label="Three entry points">
+      <h2 class="sec-title">What do you want to do? Pick one path</h2>
+      <div class="path-list">
+        <div class="path">
+          <div class="path-num">1</div>
+          <div class="path-body">
+            <h3>I just want the answer</h3>
+            <p>Enter a GPU and a model size and get a directional verdict: does quantization save energy in your configuration, or cost more?</p>
+            <p class="path-links"><a href="#path-a">Open the estimator ↓</a> · <a href="/measured/#matrix">Coverage matrix</a> · <a href="/variables/">Variable matrix</a></p>
+          </div>
+        </div>
+        <div class="path">
+          <div class="path-num">2</div>
+          <div class="path-body">
+            <h3>I want to verify it</h3>
+            <p>No GPU needed: a free Colab T4 produces your own <code>energy.json</code>. With a GPU, run the container.</p>
+            <p class="path-links"><a href="#path-b">Verification steps ↓</a> · <a href="/container/">Container</a> · <a href="/replications/">Submit a replication</a></p>
+          </div>
+        </div>
+        <div class="path">
+          <div class="path-num">3</div>
+          <div class="path-body">
+            <h3>I want to cite or audit the research</h3>
+            <p>Protocol, dataset DOIs, the limitations statement, the changelog and BibTeX — all checkable primary material.</p>
+            <p class="path-links"><a href="#path-c">Audit entry ↓</a> · <a href="/method/">Protocol</a> · <a href="/cite/">DOI / citation</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="path-a" class="pathsec">
+      <h2 class="sec-title">① I just want the answer</h2>
+      <p class="seclead">Enter a GPU and a model size and get a <b>directional</b> verdict. The tool is right below: <b>Tested models</b> picks a card and model we actually measured; <b>Your model</b> takes your own model size and extrapolates the fit; <b>Optimize</b> searches precision × batch × context under your constraints.<br><span class="warn">Directional is not a production decision. See the <a href="/method/#limits">limitations</a> for the boundary of every number.</span></p>
+
   <div class="modetabs" id="modetabs" role="tablist" aria-label="Homepage tools">
     <button id="tabMeasured" class="active" type="button" role="tab" aria-selected="true" aria-controls="measuredView">Tested models</button>
     <button id="tabRun" type="button" role="tab" aria-selected="false" aria-controls="runView">Run it yourself · container</button>
@@ -447,7 +512,27 @@
   <div class="card">
     <h2>Inference energy per 1M tokens</h2>
     <div id="bars"></div>
-    <div id="verdict" class="verdict"></div>
+      <div class="chartcap"><b>Chart — inference energy per 1M tokens.</b> Bars compare FP16, NF4 and INT8 on the selected GPU. Above zero means quantization <b>costs</b> more energy, below zero means it <b>saves</b>; the verdict line states the same result in words.</div>
+    <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
+      <div class="scopebox" role="note" aria-label="Conclusion boundary">
+        <div class="scope-head">⚠ Conclusion boundary — read this before quoting the number</div>
+        <p class="scope-lead">This is <b>not</b> a universal law for all GPUs, models or inference frameworks. Within the GPUs, software stacks, batch sizes, context lengths and measurement windows measured so far, NF4 shows a <b>crossover that depends on model size and hardware</b> — not “NF4 saves energy on big models, INT8 never does”.</p>
+        <div class="scope-chips">
+          <span class="chip">NVIDIA GPUs only</span>
+          <span class="chip">single-stream decode</span>
+          <span class="chip">batch size = 1</span>
+          <span class="chip">256 tokens</span>
+          <span class="chip">main dataset n = 2</span>
+          <span class="chip">GPU-package energy, not wall-plug</span>
+          <span class="chip">outside the fitted range is not a measurement</span>
+        </div>
+        <div class="scope-legend">
+          <span><i class="mk filled"></i><b>Filled</b> repeated runs — most trustworthy</span>
+          <span><i class="mk hollow"></i><b>Hollow</b> a single run — directional only</span>
+          <span><i class="mk curve"></i><b>Curve</b> fitted / extrapolated — not a new measurement</span>
+        </div>
+      </div>
+
     <p class="meta" id="barMeta"></p>
     <p class="provenance" id="barProv"></p>
     <p class="meta" id="barNote" style="display:none"></p>
@@ -469,6 +554,16 @@
       <span>Above zero = penalty (more energy) · below = savings</span>
     </div>
     <div id="cross"></div>
+      <div class="chartcap"><b>Chart — measured crossover curve.</b> Energy change vs FP16 against model size. Marker shape encodes replication: <b>filled</b> = repeated runs, <b>hollow</b> = a single run. Shape and sign, not colour alone.</div>
+      <div class="scopebox mini" role="note" aria-label="Conclusion boundary">
+        <div class="scope-legend">
+          <span><i class="mk filled"></i><b>Filled</b> repeated runs</span>
+          <span><i class="mk hollow"></i><b>Hollow</b> single run — directional</span>
+          <span><i class="mk curve"></i><b>Curve</b> fitted / extrapolated</span>
+        </div>
+        <p class="scope-mini-lead">Not a universal law: NVIDIA GPUs · single-stream decode · batch 1 · 256 tokens · n = 2 · GPU-package energy, not wall-plug. Beyond the fitted range the curve is <b>not</b> a measurement. <a href="/method/#limits">Full scope →</a></p>
+      </div>
+
     <p class="meta" id="crossAnchors" style="margin:6px 0 10px"></p>
     <p class="chartnote">Solid lines connect <b>measured points only</b> (direct NVML). <b>Marker fill encodes replication, not accuracy:</b> filled dots are points repeated at least twice in the main dataset (<a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">v1.1.0</a>, n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); hollow dots on a faded line were measured <b>once</b> (n&nbsp;=&nbsp;1) — the July&nbsp;2026 <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep dive</a> and one early RTX 4090D point — so they carry no measured spread and should be read as a single observation, not as a distribution. INT8 was measured on A800 and RTX 4090 only, and sizes outside each GPU's measured range aren't drawn here. For fitted extrapolation beyond the measured range, use the <b>Your model</b> tab.</p>
   </div>
@@ -517,14 +612,33 @@
     <div class="card">
       <h2>Estimated energy change vs FP16</h2>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <div id="estVal" class="estval"></div>
+        <div id="estVal" class="estval" role="status" aria-live="polite"></div>
         <span id="estBasis" class="tag"></span>
         <span id="estConf" class="tag"></span>
       </div>
       <div id="estCi" class="estci"></div>
       <div id="estVram" class="estvram"></div>
       <div id="estEnergy" class="estvram"></div>
-      <div id="estVerdict" class="verdict" style="margin-top:14px"></div>
+      <div id="estVerdict" class="verdict" style="margin-top:14px" role="status" aria-live="polite"></div>
+      <div class="scopebox" role="note" aria-label="Conclusion boundary">
+        <div class="scope-head">⚠ Conclusion boundary — read this before quoting the number</div>
+        <p class="scope-lead">This is <b>not</b> a universal law for all GPUs, models or inference frameworks. Within the GPUs, software stacks, batch sizes, context lengths and measurement windows measured so far, NF4 shows a <b>crossover that depends on model size and hardware</b> — not “NF4 saves energy on big models, INT8 never does”.</p>
+        <div class="scope-chips">
+          <span class="chip">NVIDIA GPUs only</span>
+          <span class="chip">single-stream decode</span>
+          <span class="chip">batch size = 1</span>
+          <span class="chip">256 tokens</span>
+          <span class="chip">main dataset n = 2</span>
+          <span class="chip">GPU-package energy, not wall-plug</span>
+          <span class="chip">outside the fitted range is not a measurement</span>
+        </div>
+        <div class="scope-legend">
+          <span><i class="mk filled"></i><b>Filled</b> repeated runs — most trustworthy</span>
+          <span><i class="mk hollow"></i><b>Hollow</b> a single run — directional only</span>
+          <span><i class="mk curve"></i><b>Curve</b> fitted / extrapolated — not a new measurement</span>
+        </div>
+      </div>
+
       <ul id="estNotes" class="estnotes"></ul>
       <p class="meta" id="estMeta" style="margin-top:10px"></p>
     </div>
@@ -541,6 +655,16 @@
         <span>Above zero = penalty · below = savings</span>
       </div>
       <div id="estCross"></div>
+      <div class="chartcap"><b>Chart — fitted crossover curve with a 95% band.</b> Your model is marked with its uncertainty. The line is a fit through measured anchors, not new measurements.</div>
+      <div class="scopebox mini" role="note" aria-label="Conclusion boundary">
+        <div class="scope-legend">
+          <span><i class="mk filled"></i><b>Filled</b> repeated runs</span>
+          <span><i class="mk hollow"></i><b>Hollow</b> single run — directional</span>
+          <span><i class="mk curve"></i><b>Curve</b> fitted / extrapolated</span>
+        </div>
+        <p class="scope-mini-lead">Not a universal law: NVIDIA GPUs · single-stream decode · batch 1 · 256 tokens · n = 2 · GPU-package energy, not wall-plug. Beyond the fitted range the curve is <b>not</b> a measurement. <a href="/method/#limits">Full scope →</a></p>
+      </div>
+
       <p class="chartnote"><b>Hollow anchors were measured once</b> (n&nbsp;=&nbsp;1, the RTX 4090 deep dive) and filled anchors come from the replicated main dataset (n&nbsp;=&nbsp;2, CV&nbsp;&lt;&nbsp;2%); both feed the fit, but a hollow point carries no measured spread. The curve is a <b>fitted extrapolation</b> calibrated to the measured anchors (dots) — not new measurements. Beyond the largest measured anchor the slope is <b>not measurement-anchored</b>, and INT8 on non-A800 architectures is fitted. Treat large-model (≈≥7B) points as directional — see <a href="/about/">About → How we measure</a>. <b>Each fitted curve also inherits the software stack its anchors were measured on</b> — the crossover is sensitive to the stack as well as the architecture (on one unchanged RTX 5090, a newer stack moved it from ≈5B to ≈1.8B; <a href="/measured/#rtx5090-2026-09">the re-test</a>), so treat the fitted crossing as card-plus-stack, not hardware destiny.<br><b>What each fitted curve rests on:</b> Ada NF4 9 anchors (RTX 4090 ×5, RTX 4090D ×4) · Ada INT8 6 (RTX 4090 only) · Blackwell NF4 4 · Turing NF4 4 · Ampere NF4 3 and INT8 3 (A800). <b>Ada is the only class that pools two different cards</b>, and they disagree by roughly 20 points at the same model size, so the Ada band is the widest of the four — see <a href="/method/">the methodology page</a> for the leave-one-out error per class.</p>
     </div>
 
@@ -606,7 +730,16 @@
 
     <div class="card" id="oRecCard">
       <h2>Recommended configuration</h2>
-      <div id="oRec"></div>
+      <div id="oRec" role="status" aria-live="polite"></div>
+      <div class="scopebox mini" role="note" aria-label="Conclusion boundary">
+        <div class="scope-legend">
+          <span><i class="mk filled"></i><b>Filled</b> repeated runs</span>
+          <span><i class="mk hollow"></i><b>Hollow</b> single run — directional</span>
+          <span><i class="mk curve"></i><b>Curve</b> fitted / extrapolated</span>
+        </div>
+        <p class="scope-mini-lead">Not a universal law: NVIDIA GPUs · single-stream decode · batch 1 · 256 tokens · n = 2 · GPU-package energy, not wall-plug. Beyond the fitted range the curve is <b>not</b> a measurement. <a href="/method/#limits">Full scope →</a></p>
+      </div>
+
     </div>
 
     <div class="card" id="oAltCard">
@@ -640,6 +773,12 @@
       does the same measurement on a free T4.
       Full guide, output schema, scope and how to contribute a run: <a href="/container/">the container page</a>.
     </p>
+
+        </section>
+
+    <section id="path-b" class="pathsec">
+      <h2 class="sec-title">② I want to verify it</h2>
+      <p class="seclead">The answer should not rest on us alone. This path gets you a comparable number on your own hardware — a result that contradicts ours is as welcome as one that confirms it.</p>
 
     <div class="card">
       <h2>1 · No GPU? Run the notebook in Colab</h2>
@@ -709,8 +848,116 @@ sha256sum -c SHA256SUMS && bash quickstart.sh</div>
     </div>
   </div><!-- /runView -->
 
-  <div class="card" id="recent">
-    <h2>Recent updates · 最近更新</h2>
+    </section>
+
+    <section id="path-c" class="pathsec">
+      <h2 class="sec-title">③ I want to cite or audit the research</h2>
+      <p class="seclead">This layer is for anyone citing, checking or recomputing. Every number carries its n, its window and its DOI.</p>
+
+      <div class="card">
+        <h2>Protocol &amp; data</h2>
+        <ul class="linklist">
+          <li><a href="/method/">Protocol v1.1 (normative)</a> — what makes two submissions comparable</li>
+          <li><a href="/method/#glossary">Number glossary</a> — 26/56, 29, 42, 144 and 360+ each has its own denominator</li>
+          <li><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Main dataset v1.1.0 · Zenodo DOI</a> — 360+ measured configurations</li>
+          <li><a id="zenodoCta" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep-dive dataset</a> · <a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">llama.cpp raw data</a></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Limitations — read before citing</h2>
+        <ul class="linklist">
+          <li><a href="/method/#limits">Limitations and how to disprove us</a> — the site's own statement of its methodological weaknesses</li>
+          <li><b>26 of 56</b> coverage-matrix cells have a number; the other 30 are empty. The seed data's thermal state is <b>unknown</b>, which is not cold.</li>
+          <li>Backends are almost entirely <b>bitsandbytes</b> (llama.cpp has exactly one cell), and everything is <b>batch 1</b>.</li>
+          <li>Stack versions drift: the fitted curves inherit the software stack their anchors were measured on — the crossover is card-plus-stack, not hardware destiny (<a href="/measured/#rtx5090-2026-09">the RTX 5090 re-test</a>).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Citation &amp; versions</h2>
+        <ul class="linklist">
+          <li><a href="/cite/">Artifacts &amp; citation · BibTeX</a></li>
+          <li><a id="ssrnCta" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">Preprint · SSRN #6854700</a></li>
+          <li><a href="/changelog/">Changelog</a> — every change to data, protocol and site, dated and linked to its evidence</li>
+          <li><a id="repoCta" href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source · Apache-2.0</a></li>
+        </ul>
+      </div>
+
+    </section>
+
+    <section class="faq" aria-label="Frequently asked questions">
+      <h2 class="sec-title">First time here? Six questions answered</h2>
+
+      <details open>
+        <summary>Is this a paper, a tool, a dataset, or a company?</summary>
+        <p>Not a company. It is three things: an <b>open measurement protocol</b> (Protocol v1.1 — what makes two submissions comparable), an <b>MLCube container</b> (anyone can reproduce the same measurement on their own GPU), and a <b>dataset archived on Zenodo</b> (360+ measured configurations, with a DOI); plus an SSRN preprint stating the conclusions. Single maintainer (Hongping Zhang), Apache-2.0.</p>
+      </details>
+
+      <details>
+        <summary>Should I read the conclusions or the protocol first?</summary>
+        <p>Conclusions first: spend a minute with the tool above to get a direction. You only need the protocol and the limitations when you are about to cite it or make a decision on it — the site deliberately splits “what we require / what we measured / what changed / what we are still exploring” into four layers so you never have to wade through methodology up front.</p>
+      </details>
+
+      <details>
+        <summary>I have no GPU — can I use this?</summary>
+        <p>Yes. The estimator is pure front-end and needs no hardware at all. To get your own measured number, a <b>free Colab T4</b> is enough (20–35 minutes, nothing to install) and produces the same <code>energy.json</code> as the container; both arms have to fit, which on a 16&nbsp;GB T4 means models up to about <b>3B</b>.</p>
+      </details>
+
+      <details>
+        <summary>Can these results guide a production deployment?</summary>
+        <p><b>At this stage they give a direction, not a production decision.</b> Every number is GPU-package power (NVML) — excluding PSU losses, CPU, DRAM, cooling and PUE — measured at single-stream <b>batch 1</b> over 256 tokens, in the generation window only. It is neither whole-system power nor any certified benchmark result. For a production decision, measure your own stack, batch and workload — which is exactly what the container is for.</p>
+      </details>
+
+      <details>
+        <summary>I'm a researcher, a cloud provider, or a developer — where should I click?</summary>
+        <div class="roles">
+          <div class="role"><b>Researcher / about to cite it</b> → <a href="/method/">Protocol</a> &amp; number glossary · <a href="/measured/">coverage matrix</a> · <a href="/cite/">DOI &amp; BibTeX</a> · <a href="/method/#limits">limitations</a></div>
+          <div class="role"><b>Cloud vendor / platform team / anyone with a cluster</b> → <a href="/container/">container, batch runs</a> · <a href="/replications/">contribute data</a> · <a href="/variables/">variable matrix</a> (batch and context are entirely empty — that is the biggest gap)</div>
+          <div class="role"><b>Developer / just deciding whether to quantize</b> → the estimator above · <a href="/blog/when-not-to-quantize.html">when not to quantize</a> · <a href="/watt/">ask Watt</a> · or run Colab on your own model</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Does “NF4 saves energy” hold for my model?</summary>
+        <p>It depends on your <b>model size and your GPU</b> — there is no unconditional answer. The fitted crossovers sit near <b>Turing 2.1B / Ada 3.7B / Blackwell 4.8B</b>: below the crossover quantization usually costs more energy, above it, it starts to save. And coverage is almost entirely bitsandbytes at batch 1, so <b>changing the runtime can flip the sign</b> — on the same card, llama.cpp <code>Q4_0</code> is −61.9% while bitsandbytes <code>LLM.int8()</code> is +106%. So: get a direction from the estimator, then verify on your own stack with the container.</p>
+      </details>
+    </section>
+
+    <section class="sitemap" aria-label="Site map">
+      <h2 class="sec-title">Full content index · how to read this site</h2>
+<div class="card" id="layers" style="border-left:3px solid var(--accent)">
+      <h2 style="margin:0 0 4px">Four layers · how to read this site</h2>
+      <p class="meta" style="margin:0 0 14px;line-height:1.6">The site is deliberately split so that <b>what we require</b>,
+      <b>what we measured</b>, <b>what changed</b> and <b>what we are still exploring</b> never blur into one page.</p>
+      <div class="stackgrid">
+        <div>
+          <h3>1 · Spec — the normative protocol</h3>
+          <p>What makes two submissions comparable. The normative protocol, the container and schema that enforce it.</p>
+          <p><a href="/method/">Protocol v1.1</a> · <a href="/method/#glossary">Number glossary</a> · <a href="/container/">Container guide</a> · <a href="/run/">Run it yourself</a> · <a href="/schema/">Schema</a></p>
+        </div>
+        <div>
+          <h3>2 · Evidence — what we measured</h3>
+          <p>Everything measured, at its replication level — and every count with its denominator.</p>
+          <p><a href="/measured/">Evidence hub</a> · <a href="/measured/#matrix">Coverage matrix</a> · <a href="/measured/#nf4-retest-2026-09">Latest: two-card NF4 re-test</a> · <a href="/replications/">Public replications</a> · <a href="/cite/">Cite</a></p>
+        </div>
+        <div>
+          <h3>3 · Changelog — what changed</h3>
+          <p>What changed in the data, protocol and site — dated, typed, linked to its evidence.</p>
+          <p><a href="/changelog/">All entries</a> · <a href="/changelog/">Window unification (09-24)</a> · <a href="/changelog/">NF4 two-card re-test (09-25)</a></p>
+        </div>
+        <div>
+          <h3>4 · Findings — what we are still exploring</h3>
+          <p>Deeper write-ups and tools whose output is a model, not a measurement — never counted in the matrix.</p>
+          <p><a href="/blog/">Notes &amp; findings</a> · <a href="/variables/">Variable matrix</a> · <a href="/?tab=estimate">Estimator</a> · <a href="/?tab=optimize">Optimizer</a></p>
+        </div>
+      </div>
+    </div>
+
+  
+
+<div class="card" id="recent">
+    <h2>Recent updates</h2>
     <p class="meta" style="line-height:1.9;margin:0">
       <b>2026-09-25</b> · <span class="tag estimated" style="font-size:10px">data</span> RTX 4090 NF4 re-tested across two physical cards — July's +0.8% anchor holds (mean +1.6%, n=3); the −15.1% historical reading was not reproduced and stays a divergent observation; no direction flip at the 3B anchor under the current stack. <a href="/changelog/" style="color:var(--accent)">→</a><br>
       <b>2026-09-24</b> · <span class="tag interpolated" style="font-size:10px">data</span> All energy numbers unified on the generation measurement window; the llama.cpp row re-cut from its 100 Hz traces (−62.9% at 576 tokens, counter basis). <a href="/changelog/" style="color:var(--accent)">→</a><br>
@@ -718,6 +965,18 @@ sha256sum -c SHA256SUMS && bash quickstart.sh</div>
       <span class="badge">Full history, each entry linked to its evidence: <a href="/changelog/" style="color:var(--accent)">the changelog →</a></span>
     </p>
   </div>
+  
+    </section>
+
+    <div class="layernote">
+      <b>Public research layer.</b> This site is static: documentation, charts, dataset, DOIs and reproducible
+      materials — Apache-2.0, no login, no result tracking. A future service layer (benchmark API, report
+      generation, organisation &amp; project management, private measurement results, enterprise permissions)
+      is defined as a <b>contract only</b> and is deliberately not deployed. The two layers share exactly one
+      thing: the <code>energy.json</code> schema — which is what keeps any future private result comparable
+      with the curves published here.
+    </div>
+
   </main>
 
   <footer>
@@ -1330,9 +1589,9 @@ tabBtns.forEach((b,i)=>b.addEventListener("keydown",e=>{
   if(j!==null){ e.preventDefault(); tabBtns[j].focus(); tabBtns[j].click(); }
 }));
 /* Hero "quick tool" anchors: switch the tab in place instead of navigating away. */
-document.querySelectorAll("#testedCta,#estimateCta").forEach(a=>a.addEventListener("click",e=>{
+document.querySelectorAll(".hero-btn[data-view],#testedCta,#estimateCta").forEach(a=>a.addEventListener("click",e=>{
   e.preventDefault();
-  showView(a.id==="estimateCta"?"estimate":"measured");
+  showView(a.dataset.view||"measured");
   document.getElementById("modetabs").scrollIntoView({behavior:"smooth",block:"start"});
 }));
 pArch.addEventListener("change",()=>{ fillPrec(); renderEstimate(); });
@@ -1498,7 +1757,7 @@ decorate(document.getElementById("repoCta"));
   var GOAL=5; /* site goal: five independent replicators (counted as unique handles) */
   const el=document.getElementById("heroRepl");
   if(!el) return;
-  fetch("/replications/replications.json",{cache:"no-store"})
+  fetch((window.EcoData ? window.EcoData.url("replications") : "/replications/replications.json"),{cache:"no-store"})
     .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(d=>{
       const e=(d&&d.entries)||[];

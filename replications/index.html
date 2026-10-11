@@ -95,9 +95,37 @@
   .empty b{color:var(--txt)}
   .err{color:var(--bad);font-size:13px;margin-top:10px}
   svg text{font-family:inherit}
+
+    /* ---- deep validator + coverage matrix (grafted 2026-10-11) ---- */
+    .checklist{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    .checklist .row{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.6}
+    .checklist .row:last-child{border-bottom:none}
+    .st{flex:0 0 56px;font-weight:800;font-size:11px;padding:2px 0;text-align:center;border-radius:5px}
+    .st.pass{background:rgba(16,185,129,.14);color:var(--good)}
+    .st.warn{background:rgba(245,158,11,.14);color:#f59e0b}
+    .st.fail{background:rgba(244,63,94,.14);color:var(--bad)}
+    .checklist .row .txt{flex:1;min-width:0}
+    .checklist .row .txt b{color:var(--txt)}
+    .checklist .row .txt span{color:var(--muted);display:block;margin-top:2px}
+    .reportcard{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
+    .reportcard h3{margin:0;padding:11px 14px;background:var(--panel);font-size:13px}
+    .rgrid{display:grid;grid-template-columns:190px 1fr;font-size:12.5px}
+    .rgrid div{padding:7px 14px;border-bottom:1px solid var(--line)}
+    .rgrid div:nth-child(odd){color:var(--muted)}
+    .rgrid div:nth-child(even){color:var(--txt)}
+    .missing{color:#f59e0b}
+    .neg{color:var(--good)} .pos{color:var(--bad)}
+    .tblwrap{overflow-x:auto;margin:12px 0 0;border:1px solid var(--line);border-radius:10px}
+    table.cov{border-collapse:collapse;width:100%;font-size:12.5px}
+    table.cov th,table.cov td{padding:9px 14px;border-bottom:1px solid var(--line);text-align:center;font-size:12px}
+    table.cov tr:last-child td,table.cov tr:last-child th{border-bottom:none}
+    table.cov th{background:var(--panel);color:var(--muted);font-weight:600}
+    table.cov td.has{background:rgba(16,185,129,.16);color:var(--good);font-weight:700}
+    table.cov td.gap{color:var(--muted)}
 </style>
 </head>
 <body>
+<script src="/assets/data-source.js"></script>
 <div class="wrap">
   <div class="top">
     <div class="brand">Eco<span>Compute</span> · Public replications</div>
@@ -164,12 +192,28 @@
     ⬇ Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
   </div>
   <input type="file" id="fi" accept=".json,application/json" style="display:none" />
+  <details style="margin-top:10px">
+    <summary class="meta" style="cursor:pointer">No file at hand? Paste the energy.json text instead</summary>
+    <textarea id="pasteArea" rows="5" placeholder='{"schema_version": "ecocompute-energy/1.0", ...}' style="width:100%;margin-top:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#0a0f22;color:#cfe0ff;border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
+    <button class="ghost" id="pasteBtn" type="button" style="margin-top:8px">Check the pasted JSON</button>
+  </details>
   <div class="parsed" id="parsed">
     <span class="chip">file: <b>—</b></span>
     <span class="chip">schema: <b>—</b></span>
     <span class="chip">basis: <b>—</b></span>
   </div>
   <div class="err" id="err" style="display:none"></div>
+
+  <div id="deepCheck" style="display:none">
+    <h3 style="margin-top:20px">Automatic checks &amp; environment report — run in this page, nothing uploaded</h3>
+    <p class="meta" id="checkSummary"></p>
+    <div id="checkOut"></div>
+    <div id="reportOut"></div>
+    <p class="meta" style="margin-top:10px">A <b>warn</b> is an honest gap — the thermal block, the image digest and the commit
+    hash are not emitted by the container yet, and a warning never blocks a submission. A <b>fail</b> means the report cannot
+    be compared at all (fix it before submitting). The outlier check uses the ranges observed on this site so far; landing
+    outside them is explicitly <em>not</em> a rejection.</p>
+  </div>
 
   <div id="preview" style="display:none">
     <h3>Your point against the published curve</h3>
@@ -257,6 +301,13 @@
     <button data-f="INT8" type="button">INT8</button>
   </div>
   <div id="entries"></div>
+
+  <h2 id="coverage">Coverage matrix — what has been independently re-tested</h2>
+  <p class="meta">Rows are GPU architectures, columns the two precision formats this site makes claims about. Each cell counts
+  independent replication entries in <code>replications.json</code>. <b>empty</b> is the honest state: that combination has
+  never been re-measured by anyone outside the maintainer's own cards. Pick a cell and make it non-empty —
+  <a href="#submit">submit an energy.json</a>.</p>
+  <div class="tblwrap"><table class="cov"><thead><tr><th style="text-align:left">arch \ precision</th><th>NF4</th><th>INT8</th></tr></thead><tbody id="covBody"></tbody></table></div>
 
   <h2>Honesty guardrails</h2>
   <ul>
@@ -565,7 +616,189 @@ function ingest(txt, name){
   showParsed(POINT, out.missing);
   document.getElementById("parsed").insertAdjacentHTML("afterbegin", chip("file", name));
   drawPreview(POINT);
+  runDeepCheck(txt);
   refreshButtons();
+}
+
+/* ---------- deep validator: 11 checks + environment report ---------- */
+var GPU_ARCH_RULES = [
+  [/RTX\s*50\d0/i, "blackwell"],
+  [/RTX\s*40\d0|RTX\s*40\d0D|Ada/i, "ada"],
+  [/H100|H800|H200/i, "hopper"],
+  [/RTX\s*30\d0|RTX\s*30\d0\s*Ti|A100|A800|RTX\s*3090/i, "ampere"],
+  [/RTX\s*20\d0|Tesla\s*T4|GTX\s*16/i, "turing"]
+];
+function archFromName(name){
+  for(var i = 0; i < GPU_ARCH_RULES.length; i++){
+    if(GPU_ARCH_RULES[i][0].test(name || "")) return GPU_ARCH_RULES[i][1];
+  }
+  return null;
+}
+/* observed ranges on this site - outside them we warn, never reject */
+var DE_BANDS = { NF4: [-60, 60], INT8: [-20, 500] };
+
+function deepValidate(j){
+  var out = [], sut = j.system_under_test || {}, wl = j.workload || {},
+      sw = j.software || {}, ms = j.measurement || {}, rs = j.results || {}, th = j.thermal;
+  var sv = j.schema_version;
+  if(!sv) out.push(["fail", "Schema version", "<b>schema_version</b> is missing - the report cannot be checked against a contract."]);
+  else if(!/^ecocompute-energy\/1\.[0-9]$/.test(sv)) out.push(["warn", "Schema version", "Unrecognised <b>" + esc(sv) + "</b>."]);
+  else out.push(["pass", "Schema version", "<b>" + esc(sv) + "</b>"]);
+
+  var need = ["system_under_test", "workload", "measurement", "results"];
+  var miss = need.filter(function(k){ return !j[k]; });
+  if(miss.length) out.push(["fail", "Required blocks", "Missing: <b>" + miss.join(", ") + "</b>"]);
+  else out.push(["pass", "Required blocks", "system_under_test \u00b7 workload \u00b7 measurement \u00b7 results"]);
+
+  var derived = archFromName(sut.gpu);
+  if(!sut.gpu) out.push(["fail", "GPU name", "<b>system_under_test.gpu</b> missing - the point cannot be placed on a curve."]);
+  else if(!derived) out.push(["warn", "GPU name", "\u201c" + esc(sut.gpu) + "\u201d is not a name we can map to an architecture; it will be recorded by its NVML name rather than guessed."]);
+  else if(sut.gpu_arch && derived !== sut.gpu_arch) out.push(["warn", "GPU name", "Name implies <b>" + derived + "</b> but the report declares <b>" + esc(sut.gpu_arch) + "</b>."]);
+  else out.push(["pass", "GPU name", esc(sut.gpu) + " \u2192 <b>" + derived + "</b>"]);
+
+  var hz = ms.sample_rate_hz;
+  if(hz == null) out.push(["fail", "Sample rate", "<b>measurement.sample_rate_hz</b> missing; Protocol v1.1 \u00a74.1.2 requires \u2265 10 Hz."]);
+  else if(hz < 10) out.push(["fail", "Sample rate", hz + " Hz is below the 10 Hz floor - not comparable."]);
+  else out.push(["pass", "Sample rate", hz + " Hz (\u2265 10 Hz)"]);
+
+  if(!th) out.push(["warn", "Thermal state", "No <b>thermal</b> block. The container does not emit one yet, so this run cannot be sorted into a thermal mode."]);
+  else if(th.basis === "unavailable") out.push(["warn", "Thermal state", "Reported honestly as <b>unavailable</b> - comparable within that mode only."]);
+  else out.push(["pass", "Thermal state", esc(th.mode) + " \u00b7 start " + esc(th.temperature_start_c) + "\u00b0C \u00b7 peak " + esc(th.temperature_peak_c) + "\u00b0C"]);
+
+  if(sw.matches_reference_pins === false) out.push(["warn", "Software pins", "Differs from reference pins: <b>" + esc((sw.differs_from_reference_pins || []).join(", ")) + "</b> - quantization kernels change between releases, so this number is not directly comparable with image runs."]);
+  else if(sw.matches_reference_pins === true) out.push(["pass", "Software pins", "Matches the reference pins."]);
+  else out.push(["warn", "Software pins", "<b>matches_reference_pins</b> not reported."]);
+
+  var ts = j.timestamp_utc ? Date.parse(j.timestamp_utc) : NaN;
+  if(isNaN(ts)) out.push(["fail", "Time window", "<b>timestamp_utc</b> missing or unparseable."]);
+  else if(ts > Date.now() + 60000) out.push(["fail", "Time window", "Timestamp is in the future."]);
+  else out.push(["pass", "Time window", esc(j.timestamp_utc)]);
+  var pt = j.power_trace;
+  if(pt && pt.files && pt.files.length){
+    var f0 = pt.files[0], ph = (f0.phases || {});
+    if(ph.measure_end_s != null && ph.measure_start_s != null){
+      var dur = ph.measure_end_s - ph.measure_start_s;
+      if(dur <= 0) out.push(["fail", "Measurement window", "measure_end_s \u2264 measure_start_s - the window is inverted."]);
+      else out.push(["pass", "Measurement window", dur.toFixed(1) + " s integrated [" + ph.measure_start_s + " \u2192 " + ph.measure_end_s + " s] \u00b7 " + esc(pt.window || "")]);
+    }
+  } else {
+    out.push(["warn", "Measurement window", "No <b>power_trace</b> sidecar, so the window cannot be re-cut post hoc."]);
+  }
+
+  var pv = j.provenance || {};
+  var dig = pv.image_digest || pv.container_digest;
+  if(dig && /^sha256:[a-f0-9]{64}$/.test(dig)) out.push(["pass", "Image digest", esc(dig.slice(0, 19) + "\u2026")]);
+  else out.push(["warn", "Image digest", "Not present. The report does not yet record a container digest, so \u201cthe image I ran\u201d is not provable - pull by <b>@sha256:</b> and paste the digest into your submission."]);
+  var cm = pv.commit || pv.code_version || pv.git_commit;
+  if(cm && /^[0-9a-f]{7,40}$/i.test(cm)) out.push(["pass", "Code version", esc(cm)]);
+  else out.push(["warn", "Code version", "Not present. The report does not yet record a commit hash; include it from the repo you ran (<code>git rev-parse HEAD</code>)."]);
+
+  if(rs.fp16_energy_per_token_mj == null) out.push(["fail", "FP16 baseline", "No same-session FP16 baseline - a \u0394E% cannot be computed from this report alone."]);
+  else out.push(["pass", "FP16 baseline", esc(rs.fp16_energy_per_token_mj) + " mJ/token measured in the same run"]);
+
+  var dE = rs.vs_fp16_energy_pct;
+  if(dE == null) out.push(["fail", "Result", "<b>results.vs_fp16_energy_pct</b> missing."]);
+  else {
+    var band = DE_BANDS[wl.precision];
+    var inside = !band || (dE >= band[0] && dE <= band[1]);
+    out.push([inside ? "pass" : "warn", "Outlier check",
+      (dE > 0 ? "+" : "") + dE + "% - observed range for " + esc(wl.precision || "?") + " so far is " + (band ? band[0] + "% \u2026 " + band[1] + "%" : "unknown") +
+      (inside ? "." : " - <b>outside it</b>. That is not a rejection: check the stack and the window, and if it holds you may have found the most interesting point on this site.")]);
+  }
+
+  if(rs.basis && rs.basis !== "measured") out.push(["warn", "Basis", "<b>" + esc(rs.basis) + "</b> - not a direct measurement."]);
+  else out.push(["pass", "Basis", "measured (direct NVML)"]);
+  return out;
+}
+
+function renderReportCard(j){
+  var sut = j.system_under_test || {}, wl = j.workload || {}, sw = j.software || {},
+      rs = j.results || {}, th = j.thermal || {}, pk = (sw.packages || {}), pv = j.provenance || {};
+  function row(k, v){ return "<div>" + k + "</div><div>" + v + "</div>"; }
+  function m(v, label){ return (v == null || v === "") ? '<span class="missing">' + (label || "not emitted") + "</span>" : esc(v); }
+  var html = "";
+  html += '<div class="reportcard"><h3>Hardware</h3><div class="rgrid">';
+  html += row("GPU", m(sut.gpu));
+  html += row("Architecture", m(sut.gpu_arch));
+  html += row("Host", m(sut.host));
+  html += row("Driver", m(sw.nvidia_driver));
+  html += row("CUDA (torch build)", m(sw.torch_cuda));
+  html += row("Avg package power", rs.avg_power_watts != null ? esc(rs.avg_power_watts) + " W" : '<span class="missing">n/a</span>');
+  html += row("Thermal", th.mode ? esc(th.mode) + " \u00b7 start " + m(th.temperature_start_c) + "\u00b0C \u00b7 peak " + m(th.temperature_peak_c) + "\u00b0C" : '<span class="missing">no thermal block</span>');
+  html += "</div></div>";
+  html += '<div class="reportcard"><h3>Software stack</h3><div class="rgrid">';
+  html += row("Python", m(sw.python));
+  html += row("torch", m(pk.torch));
+  html += row("transformers", m(pk.transformers));
+  html += row("bitsandbytes", m(pk.bitsandbytes));
+  html += row("Matches reference pins", sw.matches_reference_pins == null ? '<span class="missing">not reported</span>' : (sw.matches_reference_pins ? "yes" : '<span class="missing">no - ' + esc((sw.differs_from_reference_pins || []).join(", ")) + "</span>"));
+  html += row("Image digest", m(pv.image_digest || pv.container_digest, "not emitted by the container"));
+  html += row("Commit", m(pv.commit || pv.code_version || pv.git_commit, "not emitted by the container"));
+  html += "</div></div>";
+  html += '<div class="reportcard"><h3>Workload &amp; result</h3><div class="rgrid">';
+  html += row("Model", m(wl.model_name));
+  html += row("Parameters", wl.params_b != null ? esc(wl.params_b) + " B" : '<span class="missing">n/a</span>');
+  html += row("Precision", m(wl.precision));
+  html += row("Batch / context", esc(wl.batch_size) + " / " + m(wl.context_length));
+  html += row("Sample rate", m(j.measurement && j.measurement.sample_rate_hz));
+  html += row("Energy per token", rs.energy_per_token_mj != null ? esc(rs.energy_per_token_mj) + " mJ" : '<span class="missing">n/a</span>');
+  html += row("FP16 baseline", rs.fp16_energy_per_token_mj != null ? esc(rs.fp16_energy_per_token_mj) + " mJ" : '<span class="missing">n/a</span>');
+  html += row("\u0394 energy vs FP16", rs.vs_fp16_energy_pct != null ? '<b class="' + (rs.vs_fp16_energy_pct < 0 ? "neg" : "pos") + '">' + (rs.vs_fp16_energy_pct > 0 ? "+" : "") + esc(rs.vs_fp16_energy_pct) + "%</b>" : '<span class="missing">n/a</span>');
+  html += row("Throughput", rs.throughput_tokens_per_s != null ? esc(rs.throughput_tokens_per_s) + " tok/s" : '<span class="missing">n/a</span>');
+  html += "</div></div>";
+  var box = document.getElementById("reportOut");
+  if(box) box.innerHTML = html;
+}
+
+function runDeepCheck(txt){
+  var wrap = document.getElementById("deepCheck");
+  var j;
+  try { j = JSON.parse(txt); } catch(e){ if(wrap) wrap.style.display = "none"; return; }
+  if(!j || typeof j !== "object"){ if(wrap) wrap.style.display = "none"; return; }
+  var checks = deepValidate(j);
+  var host = document.getElementById("checkOut");
+  if(host){
+    host.innerHTML = '<div class="checklist">' + checks.map(function(c){
+      return '<div class="row"><span class="st ' + c[0] + '">' + c[0].toUpperCase() + "</span>" +
+             '<div class="txt"><b>' + c[1] + "</b><span>" + c[2] + "</span></div></div>";
+    }).join("") + "</div>";
+    var fails = checks.filter(function(c){ return c[0] === "fail"; }).length;
+    var warns = checks.filter(function(c){ return c[0] === "warn"; }).length;
+    var sum = document.getElementById("checkSummary");
+    if(sum){
+      sum.innerHTML = fails
+        ? '<b style="color:var(--bad)">' + fails + " blocking issue" + (fails > 1 ? "s" : "") + "</b> - this report cannot be compared yet."
+        : (warns ? "<b>" + warns + " warning" + (warns > 1 ? "s" : "") + "</b> - publishable, with the caveats listed." : '<b style="color:var(--good)">All checks passed.</b>');
+    }
+  }
+  renderReportCard(j);
+  if(wrap) wrap.style.display = "";
+}
+
+/* paste alternative */
+(function(){
+  var pb = document.getElementById("pasteBtn"), pa = document.getElementById("pasteArea");
+  if(pb && pa){
+    pb.addEventListener("click", function(){
+      var t = pa.value.trim();
+      if(!t){ alert("Paste the energy.json text first."); return; }
+      ingest(t, "pasted-energy.json");
+      document.getElementById("submit").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+})();
+
+/* ---------- coverage matrix: independent replications per arch x precision ---------- */
+function renderCoverage(){
+  var cov = document.getElementById("covBody");
+  if(!cov) return;
+  var ARCHES = ["turing", "ampere", "ada", "blackwell", "hopper"], PRECS = ["NF4", "INT8"];
+  cov.innerHTML = ARCHES.map(function(a){
+    return "<tr><th style=\"text-align:left\">" + a + "</th>" + PRECS.map(function(p){
+      var hits = GALLERY.filter(function(e){ return (e.arch || "").toLowerCase() === a && e.precision === p; }).length;
+      return hits ? '<td class="has">' + hits + "</td>" : '<td class="gap">empty</td>';
+    }).join("") + "</tr>";
+  }).join("");
 }
 
 /* ---------- gallery ---------- */
@@ -724,11 +957,11 @@ function renderStats(){
   fetch("/curves.json").then(function(r){ return r.json(); }).then(function(j){ CURVES = j; })
     .catch(function(){ CURVES = null; })
     .then(function(){
-      return fetch("replications.json").then(function(r){ return r.json(); })
+      return fetch((window.EcoData ? window.EcoData.url("replications") : "replications.json")).then(function(r){ return r.json(); })
         .then(function(j){ GALLERY = (j && j.entries) || []; })
         .catch(function(){ GALLERY = []; });
     })
-    .then(function(){ renderStats(); renderGallery(); });
+    .then(function(){ renderStats(); renderGallery(); renderCoverage(); });
 })();
 </script>
 </body>
