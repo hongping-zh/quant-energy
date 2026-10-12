@@ -164,6 +164,30 @@ Example response:
 }
 ```
 
+### Funnel beacon: `POST /v1/track`
+
+The site's `track()` helper (index.html, container, replications) `sendBeacon()`s first-party
+funnel events here — no cookies, no PII, just `{ event, props, path }` with scalar props only
+(`sanitizeProps` strips everything else). Funnel stages recorded:
+`cta_hero_click` (first screen), `estimate` (estimator use), `container_page_view` (arrival),
+`upload_energy_json` / `overlay_link_open` (JSON overlay), `deep_validate` and `replication_submit`.
+
+Storage is optional: create a KV namespace and bind it as `FUNNEL`, and each event is stored
+as a dated key (400-day TTL) that you can list with `wrangler kv key list`:
+
+```sh
+npx wrangler kv namespace create FUNNEL
+# then add to wrangler.toml:
+# [[kv_namespaces]]
+# binding = "FUNNEL"
+# id = "<the id printed above>"
+npx wrangler deploy
+```
+
+Without the binding the endpoint still returns `202` (best-effort, never blocks the beacon).
+`api/test_worker.mjs` covers both paths. See also `api/headers-worker.js` — the deployment
+recipe for the four missing security headers (GitHub Pages cannot set response headers).
+
 ### Caching and throttling
 
 The estimator is deterministic — the same query returns the same answer until the curves

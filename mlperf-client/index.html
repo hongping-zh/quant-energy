@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>MLPerf Client v2.0 measures speed. Here is how to measure the energy — EcoCompute</title>
 <meta name="description" content="MLPerf Client v2.0 benchmarks quantized LLMs on your own Windows or macOS machine, in tokens per second; its power path needs a Yokogawa analyzer, SPEC PTDaemon and a second PC. This page maps the two — tokens/Joule vs mJ/token, wall power vs GPU package — and now carries the FP16 baseline the suite cannot produce: on one RTX 4090, over 45 runs with cooldowns and randomized order, llama.cpp Q4_0 cost 62–63% less decode energy per token than llama.cpp F16, while drawing more power, for +5.6% perplexity." />
 <link rel="canonical" href="https://quantenergy.tech/mlperf-client/" />

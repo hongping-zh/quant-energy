@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
+<title>实测 LLM 量化的真实推理能耗 | EcoCompute 中文页</title>
+<meta name="description" content="开放微基准：在你的 NVIDIA GPU 上直接采样 NVML 功率，实测 NF4/INT8 量化推理是否真的节能。测量协议、可运行容器、可引用数据集。独立开放研究项目。" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
+<link rel="canonical" href="https://quantenergy.tech/zh/" />
+<link rel="alternate" hreflang="en" href="https://quantenergy.tech/" />
+<link rel="alternate" hreflang="zh-Hans" href="https://quantenergy.tech/zh/" />
+<link rel="alternate" hreflang="x-default" href="https://quantenergy.tech/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="EcoCompute" />
+<meta property="og:title" content="实测 LLM 量化的真实推理能耗 | EcoCompute" />
+<meta property="og:description" content="不用 TDP 估算——NVML 直接采样 GPU 功率。输入 GPU 和模型大小先看方向；跑容器得到你自己的实测数字。" />
+<meta property="og:url" content="https://quantenergy.tech/zh/" />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:locale:alternate" content="en_US" />
+<style>
+  :root{
+    --bg:#0b1020; --card:#121a30; --card2:#0f1730; --line:#243352;
+    --txt:#e8edf7; --muted:#94a3b8; --accent:#38bdf8;
+    --good:#10b981; --bad:#f43f5e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.65 ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+  a{color:var(--accent)}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  .skiplink{position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;padding:8px 14px;z-index:99}
+  .skiplink:focus{left:0;top:0}
+  .topnav{display:flex;gap:14px;flex-wrap:wrap;padding:14px 0;font-size:13.5px}
+  .topnav a{color:var(--muted);text-decoration:none}
+  .topnav a:hover{color:var(--txt)}
+  .topnav .en{margin-left:auto;color:var(--accent)}
+  h1{font-size:30px;line-height:1.25;margin:26px 0 8px}
+  h1 .dot{color:var(--accent)}
+  .eyebrow{color:var(--muted);font-size:14px;margin:0 0 14px}
+  .hero-title{font-size:24px;line-height:1.35;margin:0 0 10px}
+  .hero-sub{color:var(--muted);margin:0 0 18px}
+  .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .hero-btn{display:inline-block;padding:10px 18px;border-radius:10px;text-decoration:none;font-size:14.5px;border:1px solid var(--line);color:var(--txt)}
+  .hero-btn.primary{background:var(--accent);color:#06263a;font-weight:600;border-color:var(--accent)}
+  .hero-btn.ghost{color:var(--muted)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 26px}
+  .chip{font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 11px}
+  .card{background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px;margin-bottom:18px}
+  .card h2{font-size:19px;margin:0 0 10px}
+  .card h3{font-size:16px;margin:0 0 8px}
+  .sec-title{font-size:22px;margin:34px 0 14px}
+  .pathlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+  .path{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--card2)}
+  .path .num{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:rgba(56,189,248,.15);color:var(--accent);font-weight:700;margin-bottom:8px}
+  .path ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px}
+  .codeblock{position:relative;background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font:12.5px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0ff;overflow:auto;margin:12px 0}
+  .copybtn{position:absolute;top:8px;right:8px;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer}
+  .note{color:var(--muted);font-size:13.5px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .scopebox{border:1px solid rgba(244,63,94,.35);background:rgba(244,63,94,.06);border-radius:12px;padding:14px 16px;margin:14px 0}
+  .scopebox b{color:#fda4af}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+  details{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:10px;background:var(--card2)}
+  summary{cursor:pointer;font-weight:600;font-size:14.5px}
+  details p{color:var(--muted);font-size:14px}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 34px;color:var(--muted);font-size:13px}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<a class="skiplink" href="#maincontent">跳到主要内容</a>
+<div class="wrap">
+  <nav class="topnav" aria-label="站点导航">
+    <a href="/zh/">中文首页</a>
+    <a href="/blog/zh-guide.html">中文使用说明</a>
+    <a href="/blog/zh-container-guide.html">容器中文手册</a>
+    <a href="/container/">Container</a>
+    <a href="/replications/">复现</a>
+    <a class="en" href="/" hreflang="en" lang="en">English →</a>
+  </nav>
+
+  <header>
+    <h1>EcoCompute<span class="dot">.</span></h1>
+    <p class="eyebrow">LLM 量化能耗的开放微基准：一份测量协议、一个可运行的容器、一个已归档的数据集。独立开放研究项目——朝可复现的推理能耗标准推进。</p>
+    <h2 class="hero-title">在你的 GPU 上实测：LLM 量化到底省不省电？</h2>
+    <p class="hero-sub">不用 TDP 估算——功率直接从 GPU（NVML）采样。输入 GPU 和模型大小先看方向；运行容器得到你自己的实测数字。</p>
+    <div class="hero-actions">
+      <a class="hero-btn primary" href="/" hreflang="en">打开在线估算器（英文页）</a>
+      <a class="hero-btn" href="#run">运行一次真实测量</a>
+      <a class="hero-btn ghost" href="#evidence">查看完整证据</a>
+    </div>
+    <div class="chips">
+      <span class="chip">仅 GPU 封装功率 · 非整机</span>
+      <span class="chip">单流 batch 1 · 256 tokens</span>
+      <span class="chip">26 / 56 格已实测</span>
+      <a href="/method/#limits" style="font-size:12.5px;align-self:center">完整范围与限制 →</a>
+    </div>
+  </header>
+
+  <main id="maincontent">
+
+    <h2 class="sec-title">你想做什么？选一条路径</h2>
+    <div class="pathlist">
+      <div class="path">
+        <span class="num">1</span>
+        <h3>我只想知道结论</h3>
+        <p>输入 GPU 和模型大小，得到方向性判断：你的配置下量化是省电还是更费电。</p>
+        <ul>
+          <li>在线估算器（<a href="/" hreflang="en">英文页</a>，纯前端）</li>
+          <li>结论边界与证据范围一并给出</li>
+        </ul>
+      </div>
+      <div class="path">
+        <span class="num">2</span>
+        <h3>我想验证结果</h3>
+        <p>用 Colab 或容器在你自己的卡上跑出 energy.json，再叠到公开曲线上。</p>
+        <ul>
+          <li>免费 Colab T4 即可（20–35 分钟）</li>
+          <li><a href="#run">三行命令：下载 → 校验 → 运行</a></li>
+          <li><a href="/blog/zh-container-guide.html">容器中文手册</a></li>
+        </ul>
+      </div>
+      <div class="path">
+        <span class="num">3</span>
+        <h3>我想引用或审查研究</h3>
+        <p>每个数字都带 n、测量窗口和 DOI。协议、数据集、局限、变更记录全部公开。</p>
+        <ul>
+          <li><a href="#evidence">版本矩阵与 DOI</a></li>
+          <li><a href="/method/#limits">局限清单（引用前必读）</a></li>
+          <li><a href="/changelog/">变更记录</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <section id="run">
+      <h2 class="sec-title">运行一次真实测量</h2>
+      <div class="card">
+        <h3>下载 → 校验 → 运行（Linux，需 NVIDIA GPU + Docker）</h3>
+        <div class="codeblock"><button class="copybtn" type="button" id="copyCmd">复制</button>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/quickstart.sh
+curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/SHA256SUMS
+sha256sum -c SHA256SUMS &amp;&amp; bash quickstart.sh</div>
+        <p class="note">从不可变的 <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">release</a> 下载，先对照公布的校验和再运行——执行的是一个具体的、经过校验的版本，而不是 <code>main</code> 分支今天的随便什么内容。先用 <code>bash quickstart.sh --dry-run</code> 预览全部计划。容器以<b>非 root</b>、以你自己的 uid 运行；测量 NF4 与它自己的 FP16 基线（TinyLlama-1.1B），把 schema 校验过的 <code>energy.json</code> 写到 <code>./ecocompute-out/</code>。其他模型/精度与 <code>docker run</code> 原始形式见<a href="/container/">容器页</a>。</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec-title">读结论前先看边界</h2>
+      <div class="scopebox" role="note">
+        <b>这不是对所有 GPU、所有模型或所有推理框架的普遍规律。</b>
+        <p class="note" style="margin:8px 0 0">当前证据范围：仅 NVIDIA GPU · 单流 decode · batch size = 1 · 256 tokens · 主数据集重复 n = 2 · 测的是 GPU 封装能耗而非墙插电能 · 拟合区间之外不是直接测量结果。</p>
+        <div class="legend">
+          <span>● 实心点 = 重复测量（最可信）</span>
+          <span>○ 空心点 = 单次测量（方向性证据）</span>
+          <span>— 曲线 = 拟合/外推（不是新测量）</span>
+        </div>
+      </div>
+      <p class="note">一句话结论：在已测的卡和模型规模上，NF4 相对 FP16 的能耗效应随模型规模和硬件<b>交叉变化</b>——小模型量化更费电、大模型才省电，交叉点随硬件和软件栈移动；INT8 在小尺寸上从不省电。详见<a href="/" hreflang="en">英文站证据页</a>与 <a href="/blog/zh-guide.html">中文使用说明</a>。</p>
+    </section>
+
+    <section id="evidence">
+      <h2 class="sec-title">版本矩阵——你跑的到底是哪一套</h2>
+      <div class="card">
+        <table>
+          <tr><th>层级</th><th>当前版本</th><th>DOI / Release</th><th>作用</th></tr>
+          <tr><td>协议</td><td>v1.1</td><td><a href="https://doi.org/10.5281/zenodo.22958675" target="_blank" rel="noopener">10.5281/zenodo.22958675</a></td><td>规范性要求</td></tr>
+          <tr><td>报告 Schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release schema-1.3-r3</a></td><td>机器校验</td></tr>
+          <tr><td>容器</td><td>schema-1.3-r3</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release · 镜像 digest 见 SHA256SUMS</a></td><td>可执行测量</td></tr>
+          <tr><td>主数据集</td><td>v1.1.0</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></td><td>公开测量数据（360+ 配置）</td></tr>
+          <tr><td>补充包</td><td>RTX 4090 深测 v3</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td><td>深度复测（Ada）：重复性、同测困惑度</td></tr>
+        </table>
+        <p class="note">五个层级各自独立演进。今天"跑本项目"= 容器 release schema-1.3-r3，其报告按 ecocompute-energy/1.3 校验、对照协议 v1.1；站上每个已发布数字都能溯源到上表中的数据集 DOI。完整对应关系见<a href="/spec/#s8-version-correspondence">协议 §8</a>。</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec-title">常见问题</h2>
+      <details open>
+        <summary>这是论文、工具、数据集，还是公司？</summary>
+        <p>不是公司。独立维护的开放研究项目：一份<b>开放测量协议</b>（协议 v1.1，规范可比性）、一个<b>MLCube 兼容容器</b>（任何人都能在自己的 GPU 上复现同一测量）、一个<b>归档于 Zenodo 的数据集</b>（360+ 实测配置，带 DOI）。Apache-2.0 / CC BY 4.0。</p>
+      </details>
+      <details>
+        <summary>我没有 GPU，能用吗？</summary>
+        <p>能。在线估算器纯前端、零硬件；要拿到自己的实测数字，一个免费的 Colab T4 就够（20–35 分钟，产出与容器相同的 energy.json）。</p>
+      </details>
+      <details>
+        <summary>结果能指导生产环境吗？</summary>
+        <p>方向性参考可以，直接照搬不行。全部测量是 batch 1、单流 decode、256 tokens、GPU 封装功率；生产负载的批大小、并发与整机功耗都不在其中。先在你的栈上实测，再下结论。</p>
+      </details>
+      <details>
+        <summary>NF4 在我的模型上是否成立？</summary>
+        <p>输入模型规模和架构，估算器给出该架构拟合曲线上的方向；交叉点附近不确定性大，且软件栈版本会移动交叉位置。距离交叉点近的配置，请以自己实测为准。</p>
+      </details>
+      <details>
+        <summary>质量（困惑度）怎么办？</summary>
+        <p>能耗只是其中一根轴。同测数据显示：NF4 省（大模型）能耗但困惑度 +9.5%–27.6%；INT8 困惑度几乎无损（+0.5%–1.2%）但小模型上更费电。两根轴并排报告，刻意不合成单一指标。详见<a href="/blog/energy-and-quality-same-run/" hreflang="en" lang="en">Energy and quality in the same run</a>。</p>
+      </details>
+      <details>
+        <summary>中文资料有哪些？</summary>
+        <p><a href="/blog/zh-guide.html">中文使用说明</a>（站点导览）、<a href="/blog/zh-container-guide.html">容器中文手册</a>（含国内镜像与常见问题）。估算器、证据页与协议正文目前为英文。</p>
+      </details>
+    </section>
+
+  </main>
+
+  <footer>
+    EcoCompute · 独立研究者 张鸿平（<a href="https://orcid.org/0009-0000-2529-4613" target="_blank" rel="noopener">ORCID</a>）维护 · 代码 Apache-2.0 · 内容 CC BY 4.0 ·
+    <a href="/" hreflang="en" lang="en">English site</a> ·
+    <a href="/changelog/">Changelog</a> ·
+    <a href="/cite/">引用信息</a>
+    <br>本页为中文导览；规范与技术内容以<a href="/" hreflang="en">英文站</a>为准。
+  </footer>
+</div>
+<script>
+/* copy button for the command block */
+(function(){
+  var b = document.getElementById("copyCmd");
+  var blk = document.querySelector(".codeblock");
+  if(!b || !blk) return;
+  b.addEventListener("click", function(){
+    var txt = blk.textContent.replace(/^复制\s*/,"").trim();
+    if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ b.textContent="已复制"; setTimeout(function(){ b.textContent="复制"; },1500); }); }
+  });
+})();
+</script>
+</body>
+</html>

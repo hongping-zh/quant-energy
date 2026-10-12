@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>Changelog — what changed on this site and in its data</title>
 <meta name="description" content="Every change to the EcoCompute protocol, datasets and site: measurement-window unification, the RTX 5090 stack re-test, the RTX 4090 NF4 two-card re-test, and the four-layer site restructure — each with its date, type and deep link." />
 <link rel="canonical" href="https://quantenergy.tech/changelog/" />
@@ -70,6 +71,25 @@
     newest first, each entry linking to the evidence it rests on. Entries older than this page live in the
     <a href="/blog/">notes</a> and the dataset release notes on Zenodo; nothing before 2026-09-03 was retroactively
     reconstructed.</p>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-12</span><span class="etag site">site</span></div>
+      <h2>Sticky section nav, a Chinese landing page with hreflang, a first-party funnel, CSP everywhere, and the quality axis inside the estimator</h2>
+      <p>Six refinements from the final review round: <b>(1)</b> the homepage is long, so a sticky <b>Estimate / Replicate / Audit</b> jump bar now rides
+      along the top of every scroll position — Estimate switches the tool tab in place, the other two anchor to the verify and cite-audit paths.
+      <b>(2)</b> The site spoke two languages under one <code>&lt;html lang="en"&gt;</code>; now <a href="/zh/">/zh/</a> is a proper Chinese landing page
+      (<code>lang="zh-Hans"</code>: positioning, three paths, the verified three-line command, conclusion boundaries, the version matrix, six-question FAQ,
+      links to both Chinese guides), and the EN ↔ ZH pair carries <code>hreflang</code> en / zh-Hans / x-default on both sides, plus a 中文 link in the
+      top nav and a sitemap entry. <b>(3)</b> The funnel is now recorded end-to-end, first-party, cookie-free: hero CTA clicks, estimator use, container
+      page arrival, JSON overlay (file, paste and link), deep validation and replication submission all beacon to a new <code>POST /v1/track</code> endpoint
+      on our own Cloudflare Worker (KV-optional, best-effort, PII-free, covered by tests). <b>(4)</b> GitHub Pages cannot set response headers, so every
+      page now ships a <b>Content-Security-Policy</b> meta tag, and <code>api/headers-worker.js</code> is the versioned deployment recipe for the full set
+      (CSP with frame-ancestors, HSTS, X-Content-Type-Options, Permissions-Policy) once the domain is proxied through Cloudflare.
+      <b>(5)</b> The estimator verdict now states <b>the quality axis next to the energy verdict</b>: NF4 estimates carry the measured +9.5–27.6%
+      perplexity cost and INT8 the near-zero (+0.5–1.2%) one, both from the RTX 4090 deep dive's same-run pairing — energy was never the whole story.
+      <b>(6)</b> The first screen now reads "Independent open research project — building toward a reproducible inference-energy standard" instead of
+      "not a company"; the plain-language explanation stays in the FAQ. No measurement, number or protocol change.</p>
+    </div>
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>

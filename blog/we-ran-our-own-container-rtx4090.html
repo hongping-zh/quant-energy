@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>We ran our own container on a rented RTX 4090: NF4 breaks even just above 3B, INT8 lost at every size we tested — EcoCompute</title>
 <meta name="description" content="15 of 15 configurations measured with direct NVML on a rented RTX 4090 using our own open MLCube container. NF4 flips from a +36% penalty at 0.5B to break-even at 3B and a −28% saving at 7B; INT8 cost more energy at all five sizes we tested (n=1 each, bitsandbytes LLM.int8()) because throughput collapses." />
 <link rel="canonical" href="https://quantenergy.tech/blog/we-ran-our-own-container-rtx4090.html" />

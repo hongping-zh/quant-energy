@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>EcoCompute energy MLCube — the container behind every number on this site</title>
 <meta name="description" content="An open, MLCube-compatible container that measures LLM inference energy with direct NVML GPU power sampling and writes a schema-validated energy.json — the same measurement that produced the EcoCompute datasets. Run it on your own GPU in about a minute." />
 <link rel="canonical" href="https://quantenergy.tech/container/" />
@@ -416,5 +417,16 @@ cat workspace/outputs/energy.json</pre>
       <br><a href="/">← Back to the tool</a> · <a href="/method/">Protocol</a> · <a href="/cite/">Artifacts &amp; citation</a> · <a href="/about/">About</a>
     </footer>
   </div>
+<script>
+/* First-party funnel beacon (no cookies, no PII; fire-and-forget). */
+(function(){
+  function track(event, props){ try{
+    if(navigator.sendBeacon){ navigator.sendBeacon("https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/track",
+      JSON.stringify({event: event, props: props || {}, path: location.pathname})); }
+  }catch(e){} }
+  window.__ecoTrack = track;
+  track("container_page_view");
+})();
+</script>
 </body>
 </html>

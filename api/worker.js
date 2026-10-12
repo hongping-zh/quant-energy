@@ -48,6 +48,18 @@ const json = (obj, status = 200, cache = CACHE_NO) =>
 // Largest POST body we will read. Every documented field is a number or a short
 // string; anything larger is a mistake or an attempt to make us allocate.
 const MAX_BODY = 8 * 1024;
+/* Keep only small scalar props: funnel events carry counters and labels, never payloads. */
+function sanitizeProps(props) {
+  const out = {};
+  if (!props || typeof props !== "object") return out;
+  for (const [k, v] of Object.entries(props).slice(0, 16)) {
+    if (typeof v === "number" && isFinite(v)) out[k] = Math.round(v * 1000) / 1000;
+    else if (typeof v === "boolean") out[k] = v;
+    else if (typeof v === "string") out[k] = v.slice(0, 64);
+  }
+  return out;
+}
+
 async function readBody(req) {
   const len = parseInt(req.headers.get("content-length") || "0", 10);
   if (len > MAX_BODY) return { error: json({ error: `body too large (max ${MAX_BODY} bytes)` }, 413) };
@@ -190,9 +202,35 @@ export default {
     const limited = await throttled(req, env);
     if (limited) return limited;
 
-    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/openapi.json"] }, 200, CACHE_OK);
+    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/v1/track", "/openapi.json"] }, 200, CACHE_OK);
     if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] }, 200, CACHE_OK);
     if (path === "/v1/architectures") return json(architectures(), 200, CACHE_OK);
+
+    /* First-party funnel beacon: the site track() helper sendBeacon()s here.
+     * No cookies, no PII — just { event, props, path }. Stored in the FUNNEL KV
+     * namespace when the binding exists (see api/README.md); always accepted (202)
+     * so the beacon never blocks or retries. sendBeacon may send text/plain or
+     * no content-type at all, so we do not require application/json here. */
+    if (path === "/v1/track") {
+      if (req.method !== "POST") return json({ error: "use POST" }, 405);
+      const { body, error } = await readBody(req);
+      if (error) return error;
+      const event = String(body.event || "unknown").slice(0, 64);
+      if (!/^[a-z0-9_:.-]+$/i.test(event)) return json({ error: "bad event name" }, 400);
+      const row = {
+        event,
+        path: String(body.path || "").slice(0, 128),
+        props: sanitizeProps(body.props),
+        ts: new Date().toISOString(),
+      };
+      if (env && env.FUNNEL) {
+        try {
+          const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
+          await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 400 });
+        } catch (_) { /* KV hiccup: swallow, the beacon is best-effort */ }
+      }
+      return json({ ok: true }, 202);
+    }
 
     if (path === "/v1/optimize") {
       if (req.method === "GET") return handleOptimize(Object.fromEntries(u.searchParams), CACHE_OK);

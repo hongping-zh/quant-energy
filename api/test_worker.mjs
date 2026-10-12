@@ -56,6 +56,18 @@ console.log("oversized body:", big.status, big.j.error);
 const arr = await hit("POST", "/v1/estimate", "[1,2,3]");
 console.log("array body:", arr.status, arr.j.error);
 
+
+// Funnel beacon: accepted without a KV binding (202), stored with one, bad names rejected.
+const kv = { put: async (k, v) => { console.log("kv put:", k.slice(0, 10), JSON.parse(v).event); } };
+const ok = await hit("POST", "/v1/track", JSON.stringify({ event: "cta_hero_click", props: { view: "estimate" }, path: "/" }), { FUNNEL: kv });
+console.log("track ok:", ok.status, ok.j.ok);
+const nokv = await hit("POST", "/v1/track", JSON.stringify({ event: "estimate", props: { params_b: 7 } }));
+console.log("track no-kv:", nokv.status, nokv.j.ok);
+const bad = await hit("POST", "/v1/track", JSON.stringify({ event: "bad name!" }));
+console.log("track bad name:", bad.status, bad.j.error);
+const get = await hit("GET", "/v1/track");
+console.log("track GET:", get.status, get.j.error);
+
 // Rate limiting is optional: absent binding behaves as before, a refusing one 429s.
 const noEnv = await hit("GET", "/v1/architectures", undefined, {});
 console.log("no limiter bound:", noEnv.status);

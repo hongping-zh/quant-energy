@@ -4,10 +4,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>Measure LLM Inference Energy: Does Quantization Actually Save Power? | EcoCompute</title>
 <meta name="description" content="Open benchmark for measuring NF4 and INT8 inference energy on NVIDIA GPUs. Not TDP estimates — NVML power sampled on your own card. Enter a GPU and model size for a direction, or run the container for your own measured number." />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <link rel="canonical" href="https://quantenergy.tech/" />
+<link rel="alternate" hreflang="en" href="https://quantenergy.tech/" />
+<link rel="alternate" hreflang="zh-Hans" href="https://quantenergy.tech/zh/" />
+<link rel="alternate" hreflang="x-default" href="https://quantenergy.tech/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="EcoCompute" />
 <meta property="og:url" content="https://quantenergy.tech/" />
@@ -149,6 +153,11 @@
     color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px 38px 12px 14px;font-size:15px;cursor:pointer}
   select:focus{outline:none;border-color:var(--accent)}
   .card{background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px;margin-bottom:18px}
+  .anchornav{position:sticky;top:0;z-index:60;background:rgba(11,16,32,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .anchornav .wrap{display:flex;gap:4px;padding:7px 20px;align-items:center;flex-wrap:wrap}
+  .anchornav a{color:var(--muted);text-decoration:none;font-size:13px;padding:4px 12px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+  .anchornav a:hover,.anchornav a:focus-visible{color:var(--txt);border-color:var(--line)}
+  .anchornav .anclabel{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
   .vmx{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 12px}
   .vmx th,.vmx td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
   .vmx th{color:var(--muted);font-weight:600}
@@ -429,9 +438,10 @@
       <a class="aboutlink" href="/blog/">Findings</a>
       <a class="aboutlink" href="/container/">Container</a>
       <a class="aboutlink" href="/about/">About</a>
+      <a class="aboutlink" href="/zh/" hreflang="zh-Hans" lang="zh-Hans">中文</a>
     </nav>
         <h1>EcoCompute<span class="dot">.</span></h1>
-    <p class="eyebrow">An open micro-benchmark for LLM quantization energy: a measurement protocol, a runnable container and an archived dataset. An independent, single-maintainer research project — not a company.</p>
+    <p class="eyebrow">An open micro-benchmark for LLM quantization energy: a measurement protocol, a runnable container and an archived dataset. Independent open research project — building toward a reproducible inference-energy standard.</p>
     <h2 class="hero-title">Measure whether LLM quantization actually saves energy — on your GPU.</h2>
     <p class="hero-sub">Not TDP estimates: power is sampled directly from the GPU (NVML).<br>Enter your GPU and model size to get a direction; run the container to get your own measured number.</p>
     <div class="hero-actions">
@@ -458,6 +468,15 @@
     
 <p class="replstats" id="heroRepl"><a href="/replications/">Public replications →</a></p>
 </header>
+
+  <nav class="anchornav" aria-label="Jump to a section">
+    <div class="wrap">
+      <span class="anclabel">Jump:</span>
+      <a href="#modetabs" data-view="estimate">Estimate</a>
+      <a href="#path-b">Replicate</a>
+      <a href="#path-c">Audit</a>
+    </div>
+  </nav>
 
   <main id="maincontent">
     <section class="paths" aria-label="Three entry points">
@@ -1419,7 +1438,12 @@ function renderEstimate(){
   else if(r.recommendation==="do_not_quantize"){ vEl.className="verdict up"; vEl.removeAttribute("style"); vEl.style.marginTop="14px"; }
   else { vEl.className="verdict"; vEl.style.cssText="margin-top:14px;background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)"; }
   vEl.innerHTML="<span class=\"big\">"+ico+"</span> "+r.verdict+"<br>"+quantizeNote;
-  nEl.innerHTML=r.notes.map(n=>"<li>"+n+"</li>").join("");
+  const qNote = pPrec.value==="NF4"
+    ? '<li><b>Quality is the other axis:</b> in the same measured runs (<a href="/blog/energy-and-quality-same-run/">RTX 4090 deep dive, paired perplexity</a>), NF4 cost <b>+9.5–27.6% perplexity</b> — the energy saving is not free on model quality; check your quality bar before adopting.</li>'
+    : (pPrec.value.indexOf("INT8")===0
+      ? '<li><b>Quality is the other axis:</b> INT8 cost almost no perplexity (<b>+0.5–1.2%</b>, one outlier at +3.8%) in the same measured runs — but at small sizes it <b>costs</b> energy instead of saving it.</li>'
+      : '');
+  nEl.innerHTML=r.notes.map(n=>"<li>"+n+"</li>").join("")+qNote;
   mEl.textContent="Architecture used: "+(CURVES.arch_label[r.arch_used]||r.arch_used)+(r.arch_used!==pArch.value?" (borrowed)":"")+" · estimates are calibrated to measured anchors, not new measurements. The fitted crossover reflects the dataset's software stack too — a newer stack can move it (see the 5090 re-test on /measured/).";
   document.getElementById("estHint").innerHTML = r.recommendation==="quantize"
     ? "This model is <b>above</b> the crossover this architecture–stack fit shows — NF4/INT8 already pays off on it."
@@ -1605,9 +1629,13 @@ tabBtns.forEach((b,i)=>b.addEventListener("keydown",e=>{
   else if(e.key==="End")j=tabBtns.length-1;
   if(j!==null){ e.preventDefault(); tabBtns[j].focus(); tabBtns[j].click(); }
 }));
+document.querySelectorAll('.anchornav a:not([data-view])').forEach(a=>a.addEventListener("click",()=>{
+  track("cta_anchor_nav",{target:a.getAttribute("href")});
+}));
 /* Hero "quick tool" anchors: switch the tab in place instead of navigating away. */
-document.querySelectorAll(".hero-btn[data-view],#testedCta,#estimateCta").forEach(a=>a.addEventListener("click",e=>{
+document.querySelectorAll(".hero-btn[data-view],.anchornav a[data-view],#testedCta,#estimateCta").forEach(a=>a.addEventListener("click",e=>{
   e.preventDefault();
+  track("cta_hero_click",{view:a.dataset.view||"measured"});
   showView(a.dataset.view||"measured");
   document.getElementById("modetabs").scrollIntoView({behavior:"smooth",block:"start"});
 }));
@@ -1747,6 +1775,10 @@ function track(event, props){ try{
   const p=Object.assign({}, UTM, props||{});
   if(window.plausible) window.plausible(event,{props:p});
   if(window.gtag) window.gtag("event",event,p);
+  /* first-party funnel beacon: our own Cloudflare Worker, no cookies, no PII.
+     Fire-and-forget; silently ignored when offline or blocked. */
+  if(navigator.sendBeacon){ navigator.sendBeacon("https://ecocompute-estimator.zhanghongping1982.workers.dev/v1/track",
+    JSON.stringify({event, props: p, path: location.pathname})); }
 }catch(e){} }
 
 function ctx(){ const g=gpuSel.value, i=+modelSel.value, m=DATA[g].models[i];
