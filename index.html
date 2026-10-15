@@ -240,7 +240,7 @@
   .related td:first-child{white-space:nowrap;font-weight:700;color:var(--txt)}
   svg text{font-family:inherit}
   /* estimator mode */
-  .modetabs{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .modetabs{scroll-margin-top:calc(var(--navh,40px) + 16px);display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:24px 0 2px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .modetabs > *{min-width:0;flex-shrink:0}
   .modetabs button{appearance:none;background:transparent;color:var(--muted);border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
   .modetabs button.active{background:var(--accent);color:#06223a}
@@ -344,10 +344,13 @@
     .tagline{font-size:13px !important;letter-spacing:0 !important;margin-top:8px !important}
     .cta{flex-direction:column;align-items:stretch;gap:10px}
     .cta a.btn,.cta a.ghost,.cta button.ghost{justify-content:center;text-align:center}
+    /* tab bar wraps on small screens so no button is clipped off-screen; 44px touch targets */
+    .modetabs{flex-wrap:wrap;overflow-x:visible}
+    .modetabs button{flex:1 1 auto;min-height:44px;padding:12px 14px;font-size:13px}
   }
 
     /* ---- three-pathway first screen / faq (grafted 2026-10-11) ---- */
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:smooth;scroll-padding-top:calc(var(--navh,40px) + 16px)}
     .eyebrow{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.6}
     .hero-title{font-size:29px;line-height:1.34;font-weight:800;margin:20px 0 10px;letter-spacing:-.2px;color:var(--txt)}
     .hero-sub{font-size:15px;line-height:1.75;color:var(--txt);margin:0 0 20px}
@@ -371,7 +374,7 @@
     .path-links{margin-top:7px}
     .path-links a,.linklist a{color:var(--accent);text-decoration:none}
     .path-links a:hover,.linklist a:hover{text-decoration:underline}
-    .pathsec{scroll-margin-top:16px}
+    .pathsec{scroll-margin-top:calc(var(--navh,40px) + 16px)}
     .linklist{margin:0;padding-left:18px;font-size:13px;line-height:1.95;color:var(--muted)}
     .linklist b{color:var(--txt)}
     .faq{border-top:1px solid var(--line);margin-top:36px;padding-top:4px}
@@ -1594,6 +1597,14 @@ function fitCaption(c){
     `<a href="/method/#band">How the band is built \u2192</a>`;
 }
 
+/* Keep --navh in sync with the real sticky anchor-nav height (40px desktop, up to ~69px on narrow phones where labels wrap). */
+(function(){
+  const nav=document.querySelector('.anchornav'); if(!nav) return;
+  const setNavVar=()=>document.documentElement.style.setProperty('--navh', nav.offsetHeight+'px');
+  setNavVar(); addEventListener('resize',setNavVar); addEventListener('orientationchange',setNavVar);
+  if(window.ResizeObserver) new ResizeObserver(setNavVar).observe(nav);
+})();
+
 /* ----- mode toggle (3-way) ----- */
 const tabM=document.getElementById("tabMeasured"), tabE=document.getElementById("tabEstimate"), tabO=document.getElementById("tabOptimize"), tabR=document.getElementById("tabRun");
 const viewM=document.getElementById("measuredView"), viewE=document.getElementById("estimateView"), viewO=document.getElementById("optimizeView"), viewR=document.getElementById("runView");
@@ -1615,10 +1626,30 @@ function showView(which){ // "measured" | "estimate" | "optimize" | "run"
   if(which==="run"){ renderRunExample(); track("mode_run",{}); }
 }
 function setMode(est){ showView(est?"estimate":"measured"); } // back-compat
-tabM.addEventListener("click",()=>showView("measured"));
-tabE.addEventListener("click",()=>showView("estimate"));
-tabO.addEventListener("click",()=>showView("optimize"));
-tabR.addEventListener("click",()=>showView("run"));
+/* Touch fallback: taps that the browser resolves as scroll/cancel still switch the view.
+   pointerup fires showView directly for touch; the synthesized click that follows is
+   suppressed by the same 250ms guard, so touch never double-fires or double-tracks. */
+let lastTouchFire=0;
+const tabClick=fn=>()=>{ if(Date.now()-lastTouchFire<250) return; fn(); };
+tabM.addEventListener("click",tabClick(()=>showView("measured")));
+tabE.addEventListener("click",tabClick(()=>showView("estimate")));
+tabO.addEventListener("click",tabClick(()=>showView("optimize")));
+tabR.addEventListener("click",tabClick(()=>showView("run")));
+(function(){
+  const map={tabMeasured:"measured",tabEstimate:"estimate",tabOptimize:"optimize",tabRun:"run"};
+  let lastFire=0;
+  [tabM,tabE,tabO,tabR].forEach(b=>{
+    let sx=0,sy=0,moved=false;
+    b.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY;moved=false;},{passive:true});
+    b.addEventListener("pointermove",e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true;},{passive:true});
+    b.addEventListener("pointercancel",()=>{moved=true;},{passive:true});
+    b.addEventListener("pointerup",e=>{
+      if(moved||e.pointerType==="mouse") return;
+      const n=Date.now(); if(n-lastFire<250) return; lastFire=n;
+      lastTouchFire=n; showView(map[b.id]);
+    });
+  });
+})();
 /* Keyboard tabs pattern: ArrowLeft/Right/Home/End move focus+selection (WAI-ARIA). */
 const tabBtns=[tabM,tabR,tabE,tabO]; // DOM order of the tablist
 tabBtns.forEach((b,i)=>b.addEventListener("keydown",e=>{
