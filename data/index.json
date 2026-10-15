@@ -1,6 +1,6 @@
 {
   "schema": "quantenergy/data-index/1.0",
-  "generated_utc": "2026-10-10T12:27:35Z",
+  "generated_utc": "2026-10-13T08:53:13Z",
   "site": "https://quantenergy.tech",
   "license": "CC BY 4.0",
   "files": [
@@ -375,7 +375,7 @@
   "archives": [
     {
       "name": "EcoCompute measured dataset (main)",
-      "concept_doi": "10.5281/zenodo.19647290",
+      "concept_doi": "10.5281/zenodo.19647289",
       "version_doi": "10.5281/zenodo.19647290",
       "covers": "build/measured.csv and the fitted curves"
     },

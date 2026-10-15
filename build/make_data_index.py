@@ -531,7 +531,7 @@ RELATED = [
 ARCHIVES = [
     {
         "name": "EcoCompute measured dataset (main)",
-        "concept_doi": "10.5281/zenodo.19647290",
+        "concept_doi": "10.5281/zenodo.19647289",
         "version_doi": "10.5281/zenodo.19647290",
         "covers": "build/measured.csv and the fitted curves",
     },

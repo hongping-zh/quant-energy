@@ -15,6 +15,11 @@ namespace_id = "1001"
 limit = 120
 period = 60
 
+# KV namespace for funnel analytics events (POST /v1/track).
+[[kv_namespaces]]
+binding = "FUNNEL"
+id = "39df24ac9f2b4ffeb1a2c051db2bccea"
+
 # Free-plan friendly. After deploy the URL is:
 #   https://ecocompute-estimator.<your-subdomain>.workers.dev
 # To attach a custom domain/route, add a [[routes]] block, e.g.:
