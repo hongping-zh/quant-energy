@@ -73,9 +73,15 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-17</span><span class="etag container">container</span></div>
+      <h2>Release schema-1.3-r4: context_length now effective in measurement path</h2>
+      <p>PR #22 makes <code>context_length</code> real: the prompt is tiled/truncated to exactly the recorded value instead of always being ~20 tokens regardless of the parameter. This means runs at <code>context_length ≠ 2048</code> are <b>not directly comparable</b> with dataset v1.1.0 (whose context_length was nominal). The spec's §8 pin table and all website version matrices have been updated to r4. AMD GPU detection (PR #20) and the backend contributor guide (PR #21) are also included in this release.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-16</span><span class="etag container">container</span></div>
-      <h2>AMD GPU (ROCm) detection merged; website notes the release gap</h2>
-      <p>PR #20 (<a href="https://github.com/amarjithkumar2007-wq" target="_blank" rel="noopener">@amarjithkumar2007-wq</a>) adds <code>probe_amd_gpu_name()</code> to <code>entrypoint.py</code>: on a ROCm host the run skips the doomed NVML attempt and reports <code>measurement_source: "ecocompute-dataset (AMD GPU detected, NVML is NVIDIA-only)"</code> with the card name, instead of an opaque NVML error. PR #21 (<a href="https://github.com/yesheng-oss" target="_blank" rel="noopener">@yesheng-oss</a>) adds <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/docs/backends.md" target="_blank" rel="noopener">docs/backends.md</a>, a contributor guide for adding llama.cpp / vLLM / TensorRT-LLM as inference backends. Both are in <code>main</code> and the <code>:latest</code> image but not yet in the pinned release <code>schema-1.3-r3</code>; the <a href="/container/">container page</a> and homepage quickstart now carry a note explaining the gap and how AMD users can opt into <code>:latest</code>. A new release (<code>schema-1.3-r4</code>) will follow with the next substantive feature.</p>
+      <h2>AMD GPU (ROCm) detection merged; release schema-1.3-r4 includes AMD support</h2>
+      <p>PR #20 (<a href="https://github.com/amarjithkumar2007-wq" target="_blank" rel="noopener">@amarjithkumar2007-wq</a>) adds <code>probe_amd_gpu_name()</code> to <code>entrypoint.py</code>: on a ROCm host the run skips the doomed NVML attempt and reports <code>measurement_source: "ecocompute-dataset (AMD GPU detected, NVML is NVIDIA-only)"</code> with the card name, instead of an opaque NVML error. PR #21 (<a href="https://github.com/yesheng-oss" target="_blank" rel="noopener">@yesheng-oss</a>) adds <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/docs/backends.md" target="_blank" rel="noopener">docs/backends.md</a>, a contributor guide for adding llama.cpp / vLLM / TensorRT-LLM as inference backends. Both were merged to <code>main</code> and are included in release <code>schema-1.3-r4</code> (2026-10-16), which also makes <code>context_length</code> effective in the measurement path (PR #22).</p>
     </div>
 
     <div class="entry">
@@ -107,12 +113,12 @@
       <div class="ehead"><span class="edate">2026-10-11</span><span class="etag site">site</span></div>
       <h2>Version matrix: one table, three pages — exactly what you are running and citing</h2>
       <p>The site necessarily speaks in several versions at once — Protocol v1.1, schema <code>ecocompute-energy/1.3</code>,
-      container release <code>schema-1.3-r3</code>, dataset v1.1.0, the RTX 4090 supplement v3 — and a first-time reader
+      container release <code>schema-1.3-r4</code>, dataset v1.1.0, the RTX 4090 supplement v3 — and a first-time reader
       had to assemble that map alone. Now the same five-row matrix (layer · current version · DOI/release · role, all
       links live) sits on the homepage's cite-and-audit path, in the protocol spec's §8 as a "current snapshot" above the
       detailed correspondence table, and on the container page as "Where this release sits". The markdown source of the
       spec carries the same table. One sentence anchors the whole thing: running the project today means container
-      release schema-1.3-r3, whose reports validate as ecocompute-energy/1.3 against Protocol v1.1, with every published
+      release schema-1.3-r4, whose reports validate as ecocompute-energy/1.3 against Protocol v1.1, with every published
       number traceable to a dataset DOI. No version, number or measurement changed — this is navigational clarity only.</p>
     </div>
 
@@ -165,10 +171,10 @@
       <h2>curl | bash retired: the quickstart is now a verified release asset, the image runs non-root</h2>
       <p>An external security review flagged the documented entry point — piping a moving <code>main</code> branch
       into a shell — as the site's most urgent fix. Agreed, and fixed at the source
-      (<a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">ecocompute-mlcube schema-1.3-r3</a>),
+      (<a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">ecocompute-mlcube schema-1.3-r4</a>),
       then on every page that taught the old pattern: the homepage run command, the container page, and both Chinese
       guides. The documented way in is now download → verify → run against an immutable release:
-      <code>curl -fsSLO …/releases/download/schema-1.3-r3/quickstart.sh</code>, <code>curl -fsSLO …/SHA256SUMS</code>,
+      <code>curl -fsSLO …/releases/download/schema-1.3-r4/quickstart.sh</code>, <code>curl -fsSLO …/SHA256SUMS</code>,
       <code>sha256sum -c SHA256SUMS</code>, <code>bash quickstart.sh</code>. What executes is a specific, checksummed
       version — not whatever <code>main</code> holds at the moment you type the command.</p>
       <p>The release also carries the rest of the review's list: a <b>CycloneDX SBOM</b> generated from the pinned

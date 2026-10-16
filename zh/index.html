@@ -139,10 +139,10 @@
       <h2 class="sec-title">运行一次真实测量</h2>
       <div class="card">
         <h3>下载 → 校验 → 运行（Linux，需 NVIDIA GPU + Docker）</h3>
-        <div class="codeblock"><button class="copybtn" type="button" id="copyCmd">复制</button>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/quickstart.sh
-curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/SHA256SUMS
+        <div class="codeblock"><button class="copybtn" type="button" id="copyCmd">复制</button>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/quickstart.sh
+curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/SHA256SUMS
 sha256sum -c SHA256SUMS &amp;&amp; bash quickstart.sh</div>
-        <p class="note">从不可变的 <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">release</a> 下载，先对照公布的校验和再运行——执行的是一个具体的、经过校验的版本，而不是 <code>main</code> 分支今天的随便什么内容。先用 <code>bash quickstart.sh --dry-run</code> 预览全部计划。容器以<b>非 root</b>、以你自己的 uid 运行；测量 NF4 与它自己的 FP16 基线（TinyLlama-1.1B），把 schema 校验过的 <code>energy.json</code> 写到 <code>./ecocompute-out/</code>。其他模型/精度与 <code>docker run</code> 原始形式见<a href="/container/">容器页</a>。</p>
+        <p class="note">从不可变的 <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">release</a> 下载，先对照公布的校验和再运行——执行的是一个具体的、经过校验的版本，而不是 <code>main</code> 分支今天的随便什么内容。先用 <code>bash quickstart.sh --dry-run</code> 预览全部计划。容器以<b>非 root</b>、以你自己的 uid 运行；测量 NF4 与它自己的 FP16 基线（TinyLlama-1.1B），把 schema 校验过的 <code>energy.json</code> 写到 <code>./ecocompute-out/</code>。其他模型/精度与 <code>docker run</code> 原始形式见<a href="/container/">容器页</a>。</p>
       </div>
     </section>
 
@@ -166,12 +166,12 @@ sha256sum -c SHA256SUMS &amp;&amp; bash quickstart.sh</div>
         <table>
           <tr><th>层级</th><th>当前版本</th><th>DOI / Release</th><th>作用</th></tr>
           <tr><td>协议</td><td>v1.1</td><td><a href="https://doi.org/10.5281/zenodo.22958675" target="_blank" rel="noopener">10.5281/zenodo.22958675</a></td><td>规范性要求</td></tr>
-          <tr><td>报告 Schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release schema-1.3-r3</a></td><td>机器校验</td></tr>
-          <tr><td>容器</td><td>schema-1.3-r3</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release · 镜像 digest 见 SHA256SUMS</a></td><td>可执行测量</td></tr>
+          <tr><td>报告 Schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">GitHub release schema-1.3-r4</a></td><td>机器校验</td></tr>
+          <tr><td>容器</td><td>schema-1.3-r4</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">GitHub release · 镜像 digest 见 SHA256SUMS</a></td><td>可执行测量</td></tr>
           <tr><td>主数据集</td><td>v1.1.0</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></td><td>公开测量数据（360+ 配置）</td></tr>
           <tr><td>补充包</td><td>RTX 4090 深测 v3</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td><td>深度复测（Ada）：重复性、同测困惑度</td></tr>
         </table>
-        <p class="note">五个层级各自独立演进。今天"跑本项目"= 容器 release schema-1.3-r3，其报告按 ecocompute-energy/1.3 校验、对照协议 v1.1；站上每个已发布数字都能溯源到上表中的数据集 DOI。完整对应关系见<a href="/spec/#s8-version-correspondence">协议 §8</a>。</p>
+        <p class="note">五个层级各自独立演进。今天"跑本项目"= 容器 release schema-1.3-r4，其报告按 ecocompute-energy/1.3 校验、对照协议 v1.1；站上每个已发布数字都能溯源到上表中的数据集 DOI。完整对应关系见<a href="/spec/#s8-version-correspondence">协议 §8</a>。</p>
       </div>
     </section>
 

@@ -145,19 +145,15 @@
     </div>
 
     <h3 id="version-matrix">Where this release sits — the version matrix</h3>
-    <p>“Running the project” means the container row: release <code>schema-1.3-r3</code>, whose reports validate as <code>ecocompute-energy/1.3</code> against Protocol v1.1. The full version-by-version correspondence lives in <a href="/spec/#s8-version-correspondence">the protocol’s §8</a>.</p>
+    <p>“Running the project” means the container row: release <code>schema-1.3-r4</code>, whose reports validate as <code>ecocompute-energy/1.3</code> against Protocol v1.1. The full version-by-version correspondence lives in <a href="/spec/#s8-version-correspondence">the protocol’s §8</a>.</p>
     <table>
     <tr><th>Layer</th><th>Current version</th><th>DOI / release</th><th>Role</th></tr>
     <tr><td>Protocol</td><td>v1.1</td><td><a href="https://doi.org/10.5281/zenodo.22958675" target="_blank" rel="noopener">10.5281/zenodo.22958675</a></td><td>Normative requirements</td></tr>
-    <tr><td>Report schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release schema-1.3-r3</a></td><td>Machine validation</td></tr>
-    <tr><td>Container</td><td>schema-1.3-r3</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">GitHub release · image digest in SHA256SUMS</a></td><td>Executable measurement</td></tr>
+    <tr><td>Report schema</td><td><code>ecocompute-energy/1.3</code></td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">GitHub release schema-1.3-r4</a></td><td>Machine validation</td></tr>
+    <tr><td>Container</td><td>schema-1.3-r4</td><td><a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">GitHub release · image digest in SHA256SUMS</a></td><td>Executable measurement</td></tr>
     <tr><td>Main dataset</td><td>v1.1.0</td><td><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a></td><td>Published measurements (360+ configurations)</td></tr>
     <tr><td>Supplement</td><td>RTX 4090 deep dive v3</td><td><a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a></td><td>Deep re-test (Ada): repeatability, paired perplexity</td></tr>
   </table>
-
-    <div class="callout" style="border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,var(--panel),rgba(245,158,11,.04))">
-      <p style="margin:0"><b>AMD GPU (ROCm) support</b> is merged into <code>main</code> and available in the <code>:latest</code> image, but not yet in the pinned release <code>schema-1.3-r3</code>. On a ROCm host the current release will still produce an opaque NVML error; use <code>ECOCOMPUTE_IMAGE=ghcr.io/hongping-zh/ecocompute-mlcube:latest</code> to get the clear AMD fallback. A new release (<code>schema-1.3-r4</code>) will follow with the next substantive feature.</p>
-    </div>
 
     <h2>1 · Run it — one command, zero configuration</h2>
     <p><b>Prerequisite for a real measurement:</b> an NVIDIA GPU with NVML power telemetry. Docker is optional — see
@@ -169,8 +165,8 @@
     re-implementation of <code>entrypoint.py</code>'s sampler rather than the container itself, so it is not pinned to
     the image's dependency set, and it measures both arms in randomized order with a cooldown to idle before each — a
     protocol the container does not enforce. On a 16&nbsp;GB T4 both arms fit up to about 3B parameters.</p>
-<pre>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/quickstart.sh
-curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r3/SHA256SUMS
+<pre>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/quickstart.sh
+curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/SHA256SUMS
 sha256sum -c SHA256SUMS
 bash quickstart.sh</pre>
     <p>It measures <b>NF4 against its own FP16 baseline</b> on TinyLlama-1.1B, writes a schema-validated
@@ -179,7 +175,7 @@ bash quickstart.sh</pre>
     would touch, the exact commands) and exits without doing anything.</p>
     <p><b>Why four lines instead of <code>curl&nbsp;|&nbsp;bash</code>:</b> piping a moving branch into a shell means
     executing whatever <code>main</code> holds at that moment, with no version, no checksum and no signature. Here you
-    download from an immutable <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">release</a>,
+    download from an immutable <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">release</a>,
     verify the SHA-256 against the published <code>SHA256SUMS</code>, and only then execute. The same release also
     carries a CycloneDX <b>SBOM</b> (from the pinned <code>requirements.lock.txt</code>) and the image
     <b>digest</b> below. Two more properties travel with the script: the container <b>never runs as root</b> — the
@@ -189,8 +185,8 @@ bash quickstart.sh</pre>
     the output dir, the model cache, and (native mode only) a checkout + venv on the data disk — nothing else.</p>
     <p><b>Pin the image by digest</b> (instead of the mutable <code>:latest</code>) for a fully reproducible run:</p>
 <pre>ECOCOMPUTE_IMAGE=ghcr.io/hongping-zh/ecocompute-mlcube@sha256:5c812e66c34fcdab436bdcf4c1135dc91a6a86b1f94d3efb6118947a7492e275 \
-ECOCOMPUTE_REF=schema-1.3-r3 bash quickstart.sh</pre>
-    <p>The <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3" target="_blank" rel="noopener">release
+ECOCOMPUTE_REF=schema-1.3-r4 bash quickstart.sh</pre>
+    <p>The <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">release
     page</a> lists the full SHA-256 values of the schema, the validator, the quickstart and the SBOM, plus the release
     commit and the CI build that produced the image.</p>
     <p><b>Time:</b> the measurement is a few minutes; the first run is dominated by downloads and everything is cached

@@ -238,13 +238,13 @@ hides.
 GitHub links in this document resolve to `main` for readability; `main` moves. The
 immutable references for this version of the protocol are:
 
-| Artifact | Pin (2026-10-11, schema-1.3-r3) |
+| Artifact | Pin (2026-10-16, schema-1.3-r4) |
 |---|---|
-| Report schema | release [`schema-1.3-r3`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) · commit `8afc0bf` · SHA-256 `255ba06777d1da911eeb594fe8a0c2b8f959636e69033d733d10c65b048335a0` (content unchanged since `e52f878`; the r1 pin `501dc1f3…` was computed over CRLF working-tree bytes and never matched the LF blob — see the correction in the r1 release notes) |
-| Semantic validator | `tools/validate.py` at release [`schema-1.3-r3`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) · commit `8afc0bf` · SHA-256 `3dc166d2c2c0d7fbd6bbcb5a37a4cb2520feb04a432727a06e993f6d2310bee3` (hardened in r2: a report that does not record a protocol-required fact — window, decoding, arm order, iterations, … — is schema-valid, never protocol-conformant) |
-| Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube@sha256:5c812e66c34fcdab436bdcf4c1135dc91a6a86b1f94d3efb6118947a7492e275` (8afc0bf build; non-root default user) |
-| Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `491e8c381dfdb826b5093a0dc6b77c8544d0f3463d6bc9b14d0ec5df0382ba24` · run with `ECOCOMPUTE_REF=schema-1.3-r3` (the r1 asset carried CRLF line endings and failed on Linux — superseded) |
-| SBOM | `sbom.cdx.json` (CycloneDX 1.6, from the pinned `requirements.lock.txt`) · SHA-256 `4bdcb3a5d35daf2b5f726c5ccdc158f302f96dce6e5779e1715d6019cf9bd740` |
+| Report schema | release [`schema-1.3-r4`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4) · commit `46ae7f2` · SHA-256 `501dc1f328270f0bd3221e1ec5c81d740308bdd87090b93f54758ea79b6efb04` (content unchanged since `e52f878`; the r1 pin `501dc1f3…` was computed over CRLF working-tree bytes and never matched the LF blob — see the correction in the r1 release notes) |
+| Semantic validator | `tools/validate.py` at release [`schema-1.3-r4`](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4) · commit `46ae7f2` · SHA-256 `3dc166d2c2c0d7fbd6bbcb5a37a4cb2520feb04a432727a06e993f6d2310bee3` (hardened in r2: a report that does not record a protocol-required fact — window, decoding, arm order, iterations, … — is schema-valid, never protocol-conformant) |
+| Reference container image | `ghcr.io/hongping-zh/ecocompute-mlcube:latest` (CI-built from `46ae7f2`; non-root default user; image digest to be pinned in release SHA256SUMS) |
+| Quickstart (pinned run) | release asset `quickstart.sh` · SHA-256 `f50d03d93469efbf6fdcd2ef9fb0df4c506f1106261fbd6652c3c97e0ff3f0f3` · run with `ECOCOMPUTE_REF=schema-1.3-r4` |
+| SBOM | `sbom.cdx.json` (CycloneDX 1.6, from the pinned `requirements.lock.txt`) — SHA-256 to be published in release assets |
 
 A claim of "protocol-conformant" against this document is a claim against these pins (or a
 later release that supersedes them, with its own pins).
@@ -297,10 +297,12 @@ For a reader who just needs to know what to run and cite *today*, the current sn
 | Layer | Current version | DOI / release | Role |
 |---|---|---|---|
 | Protocol | v1.1 | [10.5281/zenodo.22958675](https://doi.org/10.5281/zenodo.22958675) | Normative requirements |
-| Report schema | `ecocompute-energy/1.3` | [GitHub release schema-1.3-r3](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) | Machine validation |
-| Container | schema-1.3-r3 | [GitHub release - image digest in SHA256SUMS](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r3) | Executable measurement |
+| Report schema | `ecocompute-energy/1.3` | [GitHub release schema-1.3-r4](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4) | Machine validation |
+| Container | schema-1.3-r4 | [GitHub release - image digest in SHA256SUMS](https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4) | Executable measurement |
 | Main dataset | v1.1.0 | [10.5281/zenodo.19647290](https://doi.org/10.5281/zenodo.19647290) | Published measurements (360+ configurations) |
 | Supplement | RTX 4090 deep dive v3 | [10.5281/zenodo.22037483](https://doi.org/10.5281/zenodo.22037483) | Deep re-test (Ada): repeatability, paired perplexity |
+
+> **Comparability note (r4):** `context_length` is now applied in the measured path. Runs at `context_length ≠ 2048` are **not directly comparable** with dataset v1.1.0, whose `context_length` was nominal (~20 token input regardless of the recorded value). The v1.1.0 anchors remain valid at their original context_length; new runs at different `context_length` form a separate comparability class.
 
 The layers above version independently; the detailed correspondence across protocol revisions follows. Each dataset release states, in its metadata, the protocol version its sessions were measured under.
 
