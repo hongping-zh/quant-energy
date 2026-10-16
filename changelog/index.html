@@ -73,6 +73,12 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-16</span><span class="etag container">container</span></div>
+      <h2>AMD GPU (ROCm) detection merged; website notes the release gap</h2>
+      <p>PR #20 (<a href="https://github.com/amarjithkumar2007-wq" target="_blank" rel="noopener">@amarjithkumar2007-wq</a>) adds <code>probe_amd_gpu_name()</code> to <code>entrypoint.py</code>: on a ROCm host the run skips the doomed NVML attempt and reports <code>measurement_source: "ecocompute-dataset (AMD GPU detected, NVML is NVIDIA-only)"</code> with the card name, instead of an opaque NVML error. PR #21 (<a href="https://github.com/yesheng-oss" target="_blank" rel="noopener">@yesheng-oss</a>) adds <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/docs/backends.md" target="_blank" rel="noopener">docs/backends.md</a>, a contributor guide for adding llama.cpp / vLLM / TensorRT-LLM as inference backends. Both are in <code>main</code> and the <code>:latest</code> image but not yet in the pinned release <code>schema-1.3-r3</code>; the <a href="/container/">container page</a> and homepage quickstart now carry a note explaining the gap and how AMD users can opt into <code>:latest</code>. A new release (<code>schema-1.3-r4</code>) will follow with the next substantive feature.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-16</span><span class="etag site">site</span></div>
       <h2>Contribution page, contributor recognition, and 404 routing fix</h2>
       <p>New <a href="/contribute/">/contribute/</a> page with five concrete contribution paths (run a measurement, contribute code, report bugs, improve the protocol, spread the word), linked to four <code>good first issue</code> tickets on the container repo. The <a href="/about/">About page</a> now carries an <b>Acknowledgments</b> section crediting <a href="https://github.com/gkgo" target="_blank" rel="noopener">@gkgoing</a> as the first independent contributor; the Contribute page shows a contributors card near the top. The <code>CONTRIBUTING.md</code> on the container repo was also added. Finally, the 404 alias map was updated: <code>/contribute</code> previously redirected to <code>/replications/#submit</code> — it now points to the real page. Sitemap updated.</p>
