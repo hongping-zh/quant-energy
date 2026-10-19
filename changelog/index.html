@@ -73,6 +73,12 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-19</span><span class="etag container">container</span><span class="etag site">site</span></div>
+      <h2>Thermal block populated in energy.json; comparability note for context_length</h2>
+      <p><b>Container:</b> PR #25 populates the thermal block in <code>energy.json</code> — schema fields for thermal state existed since v1.2 but the entrypoint never emitted them. The measurement path now reads GPU temperature via NVML at start/end of measurement and populates <code>temperature_start_c</code>, <code>temperature_end_c</code>, <code>temperature_peak_c</code> (or <code>basis: "unavailable"</code> for AMD/dry-run). New <code>--thermal_mode</code> CLI flag accepts <code>cold</code> (default) or <code>steady</code>. <b>Site:</b> The <a href="/contribute/">/contribute/</a> page now carries a comparability note distinguishing <b>qualified submissions</b> (<code>context_length = 2048</code>, directly comparable to v1.1.0 baseline) from <b>exploratory submissions</b> (<code>context_length ≠ 2048</code>, separate comparability class). Good-first-issue list updated: #18 closed, #24 (thermal block) added.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-17</span><span class="etag container">container</span></div>
       <h2>Release schema-1.3-r4: context_length now effective in measurement path</h2>
       <p>PR #22 makes <code>context_length</code> real: the prompt is tiled/truncated to exactly the recorded value instead of always being ~20 tokens regardless of the parameter. This means runs at <code>context_length ≠ 2048</code> are <b>not directly comparable</b> with dataset v1.1.0 (whose context_length was nominal). The spec's §8 pin table and all website version matrices have been updated to r4. AMD GPU detection (PR #20) and the backend contributor guide (PR #21) are also included in this release.</p>
