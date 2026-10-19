@@ -121,6 +121,22 @@
       <li><b>Batch sizes &gt; 1 or context lengths ≠ 2048</b> — the entire variable matrix is empty for these. This is the biggest data gap.</li>
     </ul>
 
+    <div class="callout" style="border-color:rgba(251,191,36,.4);background:linear-gradient(135deg,var(--panel),rgba(251,191,36,.04))">
+      <h3 style="color:#fbbf24;margin:0 0 10px;font-size:15px">Comparability note: context_length</h3>
+      <p style="margin:0 0 8px"><b>Qualified submission</b> (directly comparable to v1.1.0 baseline):</p>
+      <ul style="margin:0 0 12px;padding-left:20px">
+        <li><code>context_length = 2048</code></li>
+        <li>Your ΔE% can be plotted against the published crossover curves and compared with the main dataset.</li>
+      </ul>
+      <p style="margin:0 0 8px"><b>Exploratory submission</b> (separate comparability class):</p>
+      <ul style="margin:0;padding-left:20px">
+        <li><code>context_length ≠ 2048</code></li>
+        <li>Your run forms a separate comparability class and is <b>not directly comparable</b> with v1.1.0 anchors (whose context_length was nominal ~20 tokens regardless of the recorded value, prior to PR #22).</li>
+        <li>Still valuable — fills the variable matrix — but plotted and analyzed separately.</li>
+      </ul>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--muted)">See <a href="/spec/ecocompute-protocol-v1.1.html#comparability" target="_blank" rel="noopener">Protocol v1.1 §Comparability</a> for details.</p>
+    </div>
+
     <h2><span class="tag tag-code" style="vertical-align:middle;margin-right:8px">Code</span> Contribute code</h2>
     <p>Code contributions are welcome. See <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a> for the full development guide.</p>
 
