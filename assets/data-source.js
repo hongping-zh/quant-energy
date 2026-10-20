@@ -42,6 +42,9 @@
     return fetch(u, { cache: "no-store" }).then(function (r) {
       if (!r.ok) throw new Error("EcoData " + key + ": HTTP " + r.status);
       return r.json();
+    }).catch(function (err) {
+      console.warn("[EcoData] fetch failed for", key + ":", err.message || err);
+      throw err;
     });
   }
 
