@@ -140,7 +140,7 @@
     <p><b>The gaps that could change what this site says</b> (not just add rows): runtimes — almost everything here is
     bitsandbytes, llama.cpp has exactly one cell, vLLM/TensorRT-LLM/SGLang have zero; quant formats —
     <code>Q4_K_M</code>, GPTQ, AWQ, FP8 on Ada: none measured under this protocol; batch size — every point here is
-    batch 1; cards — no 3090, A100, H100, L4, no AMD; quality — only 13 of 42 seed rows carry a paired perplexity.</p>
+    batch 1; cards — no 3090, A100, H100, L4, no AMD (<a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/27">native ROCm telemetry is tracked here</a> — leave your card model and ROCm version to help prioritise it); quality — only 13 of 42 seed rows carry a paired perplexity.</p>
     <p><b>What you get:</b> every accepted submission is published in <a href="/replications/">/replications/</a>
     <b>credited by your handle</b>, and drawn on every chart it belongs on — including when it contradicts us; a run
     that breaks the curve is published as prominently as one that confirms it. Accepted points go into the next
