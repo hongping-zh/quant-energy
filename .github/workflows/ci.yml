@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # The PR #5 bug class: a refit that reached curves.json but never the
+      # embedded copy in estimate.js, so the site's claims and every estimator
+      # answer contradicted each other for weeks.
+      - name: curves.json <-> estimate.js sync
+        run: python3 build/sync_estimate_js.py --check
+
+      - name: headline claims vs estimator (Python + JS)
+        run: python3 build/test_headlines.py
+
+      - name: optimizer parity (Python vs JS)
+        run: python3 build/test_optimize.py
+
+      - name: Worker unit tests (bundled estimator)
+        run: node api/test_worker.mjs
+
+      # The deployed Worker bundles estimate.js at deploy time, so it can
+      # silently drift after a refit even when the repo is consistent.
+      # Non-blocking until a redeploy is confirmed current; then promote.
+      - name: deployed Worker agrees with the repo (non-blocking)
+        continue-on-error: true
+        run: |
+          python3 - <<'EOF'
+          import json, sys, urllib.request
+          sys.path.insert(0, "build")
+          import estimate
+          repo = estimate.estimate(7.0, "ada", "NF4")["delta_pct"]
+          url = ("https://ecocompute-estimator.zhanghongping1982.workers.dev"
+                 "/v1/estimate?params_b=7&arch=ada&precision=NF4")
+          try:
+              live = json.load(urllib.request.urlopen(url, timeout=20))["delta_pct"]
+          except Exception as e:
+              print("WARN: deployed Worker unreachable: %s" % e)
+              raise SystemExit(1)
+          print("deployed Worker: %s%%   repo estimator: %s%%" % (live, repo))
+          if (live < 0) != (repo < 0):
+              print("FAIL: the deployed Worker contradicts the repo estimator "
+                    "(the PR-5 bug class). Redeploy: cd api && npx wrangler deploy")
+              raise SystemExit(1)
+          print("OK: deployed Worker and repo estimator agree in direction")
+          EOF

@@ -5,8 +5,13 @@ Regenerate the inline CURVES literal in ../estimate.js from curves.json.
 estimate.js must stay dependency-free (no fetch, no bundler), so it carries a copy of
 the calibration. Run this after every fit_curves.py run; build/test_optimize.py fails on
 any Python/JS drift.
+
+With --check, fail instead of writing: the CI guard against a refit that never
+reached estimate.js (the quant-energy PR #5 bug class — the site claimed the
+July RTX 4090 measurements while every estimator path still answered from the
+pre-refit anchors).
 """
-import json, os, re
+import json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -27,7 +32,8 @@ def anchors_line(anchors):
     return "[" + ", ".join(items) + "]"
 
 
-def main():
+def main(argv):
+    check = "--check" in argv
     c = json.load(open(CURVES))
     L = []
     L.append(BEGIN)
@@ -72,9 +78,17 @@ def main():
     src = open(TARGET).read()
     start = src.index(BEGIN)
     end = src.index(END, start) + len(END)
+    if check:
+        if src[start:end] != block:
+            print("estimate.js CURVES is out of sync with curves.json — "
+                  "run: python3 build/sync_estimate_js.py", file=sys.stderr)
+            return 1
+        print("estimate.js CURVES in sync with curves.json")
+        return 0
     open(TARGET, "w").write(src[:start] + block + src[end:])
     print("synced CURVES in %s from %s" % (TARGET, CURVES))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
