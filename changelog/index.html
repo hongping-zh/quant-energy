@@ -73,6 +73,12 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-23</span><span class="etag site">site</span></div>
+      <h2>Estimator-consistency CI: every path the site answers from is now checked on every push</h2>
+      <p>The July contradiction documented in <a href="https://github.com/hongping-zh/quant-energy/pull/5" target="_blank" rel="noopener">PR #5</a> (bot-opened 07-26, closed today with thanks) — the homepage headlining a measured −29% while the estimator still answered +20% — was fixed on 07-30 by the July refit, but nothing back then would have failed if it hadn't been. The repo's first CI workflow closes that hole: <code>build/sync_estimate_js.py --check</code> fails when the <code>CURVES</code> literal in <code>estimate.js</code> drifts from <code>curves.json</code>; <code>build/test_headlines.py</code> asserts the homepage's headline claims (7B Ada NF4 saves energy, 7B INT8 costs energy, 3B depends) on both the Python and the JS estimator; optimizer-parity and Worker unit tests run on every push; and a non-blocking live probe compares the deployed Worker's answer against the repo's — first run: both −28.5%, in agreement. The probe needed a browser User-Agent: workers.dev sits behind Cloudflare bot rules that 403 the default Python client.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-19</span><span class="etag container">container</span><span class="etag site">site</span></div>
       <h2>Thermal block populated in energy.json; comparability note for context_length</h2>
       <p><b>Container:</b> PR #25 populates the thermal block in <code>energy.json</code> — schema fields for thermal state existed since v1.2 but the entrypoint never emitted them. The measurement path now reads GPU temperature via NVML at start/end of measurement and populates <code>temperature_start_c</code>, <code>temperature_end_c</code>, <code>temperature_peak_c</code> (or <code>basis: "unavailable"</code> for AMD/dry-run). New <code>--thermal_mode</code> CLI flag accepts <code>cold</code> (default) or <code>steady</code>. <b>Site:</b> The <a href="/contribute/">/contribute/</a> page now carries a comparability note distinguishing <b>qualified submissions</b> (<code>context_length = 2048</code>, directly comparable to v1.1.0 baseline) from <b>exploratory submissions</b> (<code>context_length ≠ 2048</code>, separate comparability class). Good-first-issue list updated: #18 closed, #24 (thermal block) added.</p>
