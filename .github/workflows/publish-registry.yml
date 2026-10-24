@@ -1,0 +1,38 @@
+name: Publish MCP server to the official registry
+
+# Manual trigger only: each publish is immutable in the registry, so this
+# stays a deliberate action, never an automatic one.
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC: proves repo ownership (hongping-zh) to the registry
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download mcp-publisher
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          chmod +x mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Validate server.json against the live registry
+        run: ./mcp-publisher validate api/server.json
+
+      - name: Authenticate via GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish
+        run: ./mcp-publisher publish api/server.json
+
+      - name: Verify the listing is live
+        run: |
+          sleep 10
+          curl -s "https://registry.modelcontextprotocol.io/v0.1/servers?search=ecocompute-estimator" \
+            | grep -o "io.github.hongping-zh/ecocompute-estimator" | head -1
+          echo "---"
+          curl -s "https://registry.modelcontextprotocol.io/v0.1/servers?search=ecocompute-estimator" | head -c 400
