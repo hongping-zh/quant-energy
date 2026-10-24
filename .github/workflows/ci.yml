@@ -104,3 +104,39 @@ jobs:
               raise SystemExit(1)
           print("OK: deployed /mcp answers with all four tools")
           EOF
+
+      # Probe which client UAs Cloudflare's workers.dev bot rules let
+      # through. Real MCP clients send their own UAs (node/undici, python,
+      # custom), and a 403 there would make the registry URL unreachable
+      # for them. Observational: prints the matrix, never fails the build.
+      - name: workers.dev UA probe (informational)
+        continue-on-error: true
+        run: |
+          python3 - <<'EOF'
+          import json, urllib.request, urllib.error
+          url = "https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp"
+          payload = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                                "params": {"protocolVersion": "2025-03-26",
+                                           "capabilities": {},
+                                           "clientInfo": {"name": "ua-probe", "version": "0"}}}).encode()
+          uas = [
+              "python-urllib/3.12",          # what the REST drift check saw 403'd
+              "node",                         # node fetch default
+              "undici",                       # node's fetch engine
+              "axios/1.7",                    # common REST client
+              "mcp-client/1.0",               # plausible MCP client UA
+              "",                             # no UA at all
+          ]
+          for ua in uas:
+              req = urllib.request.Request(url, data=payload, method="POST",
+                      headers={"Content-Type": "application/json",
+                               "Accept": "application/json, text/event-stream",
+                               **({"User-Agent": ua} if ua else {})})
+              try:
+                  r = urllib.request.urlopen(req, timeout=20)
+                  print("%-22s -> %s %s" % (repr(ua), r.status, "initialize ok" if b"serverInfo" in r.read()[:800] else "unexpected body"))
+              except urllib.error.HTTPError as e:
+                  print("%-22s -> HTTP %s (blocked)" % (repr(ua), e.code))
+              except Exception as e:
+                  print("%-22s -> error: %s" % (repr(ua), str(e)[:60]))
+          EOF
