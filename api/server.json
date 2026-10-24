@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.hongping-zh/ecocompute-estimator",
+  "title": "EcoCompute Should-I-Quantize Estimator",
+  "description": "Energy impact of LLM quantization, calibrated to measured GPU data. Every answer states its basis.",
+  "version": "1.0.0",
+  "websiteUrl": "https://quantenergy.tech",
+  "repository": {
+    "url": "https://github.com/hongping-zh/quant-energy",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp"
+    }
+  ]
+}
