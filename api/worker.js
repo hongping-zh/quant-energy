@@ -399,7 +399,9 @@ async function trackMcp(env, event, props) {
   try {
     const row = { event, path: "/mcp", props: sanitizeProps(props), ts: new Date().toISOString() };
     const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
-    await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 400 });
+    // 364 days: comfortably under any 1-year TTL ceiling a KV implementation
+    // might enforce; events were silently missing with 400 days (2026-10-24).
+    await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 364 });
   } catch (_) { /* best-effort, same as the beacon */ }
 }
 
@@ -477,7 +479,7 @@ export default {
       if (env && env.FUNNEL) {
         try {
           const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
-          await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 400 });
+          await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 364 });
         } catch (_) { /* KV hiccup: swallow, the beacon is best-effort */ }
       }
       return json({ ok: true }, 202);
