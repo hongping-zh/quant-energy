@@ -22,7 +22,8 @@ id = "39df24ac9f2b4ffeb1a2c051db2bccea"
 
 # Free-plan friendly. After deploy the URL is:
 #   https://ecocompute-estimator.<your-subdomain>.workers.dev
-# To attach a custom domain/route, add a [[routes]] block, e.g.:
-# [[routes]]
-# pattern = "api.yourdomain.com/*"
-# zone_name = "yourdomain.com"
+# Custom-domain note (2026-10-24): attaching mcp.quantenergy.tech requires
+# the quantenergy.tech zone in this Cloudflare account (it currently lives
+# on DNSPod). Attempting it with a zone on another account corrupts the
+# workers.dev route (verified the hard way: partial trigger update left the
+# whole endpoint 404). Do not re-add [[routes]] until the zone is migrated.
