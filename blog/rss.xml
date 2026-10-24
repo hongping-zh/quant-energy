@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Fri, 02 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 24 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Make your AI assistant ask about energy first</title>
+      <link>https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html</guid>
+      <pubDate>Sat, 24 Oct 2026 00:00:00 GMT</pubDate>
+      <description>The EcoCompute estimator is now an MCP tool: one URL, four tools (estimate / crossover / coverage / search), no key, stateless streamable HTTP. Every answer embeds its basis label (measured / interpolated / estimated), confidence, measurement scope (GPU package power via NVML, not wall power), run counts and the two dataset DOIs in the same text as the number, so a model relaying the answer cannot strip the caveats. The coverage tool lists what is measured, what is borrowed, and where the gaps are — "no data for your GPU" is a first-class answer, and the invitation to measure it is built in. Includes config snippets for Claude Desktop and Cursor, and a worked example where the 24-point disagreement between RTX 4090 and 4090D anchors surfaces instead of being averaged away silently.</description>
+    </item>
     <item>
       <title>Jevons is now a product name</title>
       <link>https://quantenergy.tech/blog/jevons-is-now-a-product-name.html</link>

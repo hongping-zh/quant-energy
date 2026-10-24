@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
+<title>Make your AI assistant ask about energy first — EcoCompute</title>
+<meta name="description" content="The EcoCompute estimator is now an MCP tool: any AI assistant can call four tools (estimate, crossover, coverage, search) whose answers carry basis, confidence and measurement boundaries inline — so the caveats can't be stripped when the model relays the numbers." />
+<link rel="canonical" href="https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="Make your AI assistant ask about energy first" />
+<meta property="og:description" content="The estimator is now an MCP tool. Every answer carries its evidence boundaries inline — the machine-readable version of this project's whole methodology." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"Make your AI assistant ask about energy first",
+  "datePublished":"2026-10-24",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "publisher":{"@type":"Person","name":"Hongping Zhang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0d1428;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.55}
+  pre code{background:none;padding:0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .callout p{margin:6px 0}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Findings</div>
+      <nav><a href="/">← Tool</a> &nbsp; <a href="/measured/">Evidence</a> &nbsp; <a href="/blog/">Notes</a> &nbsp; <a href="/changelog/">Changelog</a></nav>
+    </div>
+
+    <h1>Make your AI assistant ask about energy first</h1>
+    <div class="date">2026-10-24</div>
+
+    <p>AI assistants recommend quantization configs all day long: <em>"use NF4, it cuts VRAM by 60%."</em> Almost none of them mention energy — not because the numbers don't exist, but because the assistant was never given a way to look them up. As of today, any MCP client can: the EcoCompute estimator is a mountable tool, and every answer it returns carries its own evidence boundaries.</p>
+
+    <h2>One URL, four tools</h2>
+    <p>The estimator API <a href="https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp" target="_blank" rel="noopener">now speaks MCP</a> (Model Context Protocol — the tool standard that Claude Desktop, Cursor, and most agent runtimes already speak). Four tools, stateless, no key required:</p>
+
+    <table>
+      <tr><th>tool</th><th>answers</th><th>example</th></tr>
+      <tr><td><code>estimate_quantization_energy</code></td><td>"should I quantize <em>this</em> model on <em>this</em> GPU?"</td><td>7B → NF4 on Ada: <span class="neg">−28.5%</span> (measured · medium confidence)</td></tr>
+      <tr><td><code>get_quantization_crossover</code></td><td>"from what size does quantizing start saving energy?"</td><td>Ada NF4: ≈3.7B — below it, quantization costs energy</td></tr>
+      <tr><td><code>list_data_coverage</code></td><td>"is my GPU actually measured, or a gap?"</td><td>measured / borrowed / gaps, in three honest columns</td></tr>
+      <tr><td><code>search_measurements</code></td><td>"was TinyLlama ever run on a 4090?"</td><td>six anchors, ΔE each, run counts included</td></tr>
+    </table>
+
+    <h2>The design point: boundaries the model can't strip</h2>
+    <p>The reason this is more than an API wrapper: every tool answer embeds its caveats <em>in the same text as the number</em> — the basis label (<code>measured</code> / <code>interpolated</code> / <code>estimated</code>), the confidence, the measurement scope (<strong>GPU package power via NVML, not wall power</strong>), the fact that most RTX 4090 anchors are single-run (n=1), and the two dataset DOIs the claim rests on. A model relaying the answer cannot quote the −28.5% without also carrying "measured · medium · package power · n=1 · doi:…" along with it, because they arrive as one string.</p>
+
+    <div class="callout">
+      <p><b>Why that matters here specifically:</b> this whole project is built on one methodological claim — every energy number must travel with its measurement provenance. The MCP tools are that claim in machine-readable form. And the coverage tool goes one step further: <em>not having data</em> is a first-class answer. An assistant wired to these tools learns to say "your card isn't measured yet — want to measure it?" instead of inventing a number.</p>
+    </div>
+
+    <h2>Wire it up</h2>
+    <p>Claude Desktop (<code>claude_desktop_config.json</code>):</p>
+    <pre><code>{
+  "mcpServers": {
+    "ecocompute": {
+      "type": "streamableHttp",
+      "url": "https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp"
+    }
+  }
+}</code></pre>
+    <p>Cursor: <em>Settings → MCP → Add server → URL</em>, paste the same address. Generic clients: it's a stateless streamable-HTTP JSON-RPC 2.0 server — <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code> are all it takes. The REST API and <code>/openapi.json</code> remain as they were.</p>
+
+    <h2>What a grounded recommendation looks like</h2>
+    <pre><code>user:      3B on my RTX 4090 — should I run NF4?
+assistant: (calls estimate_quantization_energy)
+           ΔE vs FP16: +13.0% — pooled from 4090 (+0.8%) and 4090D (+25.2%)
+           anchors: basis measured, confidence medium
+           (calls get_quantization_crossover)
+           Ada NF4 crossover ≈3.7B — 3B is below it, where quantization
+           tends to cost energy.
+           Not recommended for energy: keep FP16, or if you need the VRAM,
+           accept the energy cost knowingly. Check your exact card: the
+           4090 and 4090D anchors disagree by 24 points inside the class.</code></pre>
+    <p>No hedging theater, no invented percentages — and the disagreement <em>inside</em> the Ada class surfaces instead of being averaged away silently. That last part is the point: a tool that hides its spread teaches the model to hide it too.</p>
+
+    <h2>Honest limits, stated by the tools themselves</h2>
+    <ul>
+      <li><b>Package power, not wall power:</b> multiply by ~1.2–1.6 for the whole node — the tools say so in every answer.</li>
+      <li><b>Crossovers are card + software-stack facts, not architecture constants:</b> a September 2026 re-run on a newer stack moved the RTX 5090 NF4 crossover from ≈4.8B to ≈1.8B. The crossover tool carries that warning.</li>
+      <li><b>Gaps stay gaps:</b> Hopper borrows Ampere curves (marked <code>estimated</code>), INT8 on Turing/Blackwell has no measurement, sizes beyond the measured ranges are refused rather than extrapolated.</li>
+    </ul>
+
+    <h2>If your card is a gap, that's an invitation</h2>
+    <p><code>list_data_coverage</code> doubles as the project's to-do map. If your GPU isn't on it, you can change that in one evening: run the <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> container, paste the validator output into the new data-submission issue form, and your measurement joins the next curve refit — credited, CC BY 4.0. Your assistant's next answer about your card will then be <code>basis: measured</code>.</p>
+
+    <footer>
+      The estimator's anchors: main cross-architecture dataset <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> · RTX 4090 deep dive <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (both CC BY 4.0). MCP server source: <a href="https://github.com/hongping-zh/quant-energy/blob/main/api/worker.js" target="_blank" rel="noopener">api/worker.js</a> — a stateless streamable-HTTP JSON-RPC dispatcher, tests included.
+    </footer>
+  </div>
+</body>
+</html>
