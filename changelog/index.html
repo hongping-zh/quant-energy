@@ -51,6 +51,7 @@
   .etag.data{color:#34d399;border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.08)}
   .etag.finding{color:#fbbf24;border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.08)}
   .etag.protocol{color:#38bdf8;border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.08)}
+  .etag.api{color:#f472b6;border-color:rgba(236,72,153,.5);background:rgba(236,72,153,.08)}
   .etag.site{color:#a78bfa;border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.08)}
   .entry h2{font-size:16.5px;margin:2px 0 6px;line-height:1.4}
   .entry p{margin:6px 0 0;font-size:14px}
@@ -71,6 +72,12 @@
     newest first, each entry linking to the evidence it rests on. Entries older than this page live in the
     <a href="/blog/">notes</a> and the dataset release notes on Zenodo; nothing before 2026-09-03 was retroactively
     reconstructed.</p>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-24</span><span class="etag api">api</span></div>
+      <h2>server.json in the repo: the MCP registry listing is now reproducible</h2>
+      <p><code>api/server.json</code> describes the listing for the <a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noopener">official MCP Registry</a>: <code>io.github.hongping-zh/ecocompute-estimator</code>, one streamable-http remote pointing at the live <code>/mcp</code> endpoint. One semantic worth pinning down before it matters: the registry <code>version</code> (1.0.0) is the <b>tool-surface version</b> of the endpoint — deliberately decoupled from the container / dataset versioning. It bumps only when the tool surface changes (a tool added, an output schema changed); the registry uses it to detect updates, and each published version is immutable. The dataset and container keep their own version lines, untouched by registry publishes. Verified against the current registry schema (2025-12-11): <code>remotes[].type = "streamable-http"</code> is the accepted enum value.</p>
+    </div>
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-10-24</span><span class="etag site">site</span></div>
