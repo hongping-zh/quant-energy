@@ -38,7 +38,7 @@ const SAFE = {
 // therefore cacheable at the edge; anything else is not.
 const CACHE_OK = "public, max-age=300, s-maxage=3600";
 const CACHE_NO = "no-store";
-const json = (obj, status = 200, cache = CACHE_NO) =>
+const json = (obj, status = 200, cache = CACHE_NO, extra = null) =>
   new Response(JSON.stringify(obj, null, 2), {
     status,
     headers: {
@@ -46,6 +46,7 @@ const json = (obj, status = 200, cache = CACHE_NO) =>
       "cache-control": cache,
       ...SAFE,
       ...CORS,
+      ...(extra || {}),
     },
   });
 
@@ -394,15 +395,21 @@ function mcpRpc(m) {
  * Only whitelisted scalar arguments are stored — free-text fields (q, query)
  * are deliberately left out. */
 const MCP_ARG_PROPS = ["params_b", "arch", "precision", "batch", "ctx"];
+/* Returns a status string surfaced as the x-funnel response header:
+ * unbound / ok / put-no-readback / error:<message>. Diagnostic telemetry
+ * (2026-10-24: funnel events were silently not landing in KV). */
 async function trackMcp(env, event, props) {
-  if (!env || !env.FUNNEL) return;
+  if (!env || !env.FUNNEL) return "unbound";
   try {
     const row = { event, path: "/mcp", props: sanitizeProps(props), ts: new Date().toISOString() };
     const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
     // 364 days: comfortably under any 1-year TTL ceiling a KV implementation
     // might enforce; events were silently missing with 400 days (2026-10-24).
     await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 364 });
-  } catch (_) { /* best-effort, same as the beacon */ }
+    return (await env.FUNNEL.get(key)) != null ? "ok" : "put-no-readback";
+  } catch (e) {
+    return "error:" + String((e && e.message) || e).slice(0, 100);
+  }
 }
 
 async function handleMcp(req, env) {
@@ -439,10 +446,10 @@ async function handleMcp(req, env) {
       }
     }
   }
-  if (tracks.length) await Promise.all(tracks);
+  const statuses = tracks.length ? await Promise.all(tracks) : [];
   if (!out.length)
-    return new Response(null, { status: 202, headers: { ...CORS, ...SAFE, "cache-control": CACHE_NO } }); // notifications only
-  return json(single ? out[0] : out);
+    return new Response(null, { status: 202, headers: { ...CORS, ...SAFE, "cache-control": CACHE_NO, ...(statuses.length ? { "x-funnel": statuses.join(",") } : {}) } }); // notifications only
+  return json(single ? out[0] : out, 200, CACHE_NO, statuses.length ? { "x-funnel": statuses.join(",") } : null);
 }
 
 export default {
@@ -476,13 +483,17 @@ export default {
         props: sanitizeProps(body.props),
         ts: new Date().toISOString(),
       };
+      let funnelStatus = "unbound";
       if (env && env.FUNNEL) {
         try {
           const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
           await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 364 });
-        } catch (_) { /* KV hiccup: swallow, the beacon is best-effort */ }
+          funnelStatus = (await env.FUNNEL.get(key)) != null ? "ok" : "put-no-readback";
+        } catch (e) {
+          funnelStatus = "error:" + String((e && e.message) || e).slice(0, 100);
+        }
       }
-      return json({ ok: true }, 202);
+      return json({ ok: true }, 202, CACHE_NO, { "x-funnel": funnelStatus });
     }
 
     if (path === "/v1/optimize") {

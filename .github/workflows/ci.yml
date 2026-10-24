@@ -152,28 +152,32 @@ jobs:
         continue-on-error: true
         run: |
           python3 - <<'EOF'
-          import json, time, urllib.request, urllib.error
+          import http.client, json, time
           from collections import Counter
-          from concurrent.futures import ThreadPoolExecutor
-          url = "https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp"
-          payload = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"}).encode()
+          host = "ecocompute-estimator.zhanghongping1982.workers.dev"
+          payload = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
           headers = {"Content-Type": "application/json",
                      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                    "AppleWebKit/537.36 (KHTML, like Gecko) "
                                    "Chrome/126.0 Safari/537.36"}
-          def hit(_):
-              req = urllib.request.Request(url, data=payload, method="POST", headers=headers)
-              try:
-                  return urllib.request.urlopen(req, timeout=20).status
-              except urllib.error.HTTPError as e:
-                  return e.code
-          codes = []
-          with ThreadPoolExecutor(max_workers=4) as ex:
-              for batch in range(0, 160, 4):
-                  codes += [f.result() for f in [ex.submit(hit, i) for i in range(4)]]
-                  time.sleep(0.95)
+          # Single keep-alive connection: pins one Cloudflare PoP, so the
+          # per-location counter cannot be split across locations by
+          # connection-level load balancing (separate connections may land
+          # on different PoPs and each sees only a fraction of the load).
+          conn = http.client.HTTPSConnection(host, timeout=20)
+          codes, retry_after = [], None
+          for i in range(140):
+              conn.request("POST", "/mcp", body=payload, headers=headers)
+              r = conn.getresponse()
+              codes.append(r.status)
+              if r.status == 429 and retry_after is None:
+                  retry_after = r.getheader("retry-after")
+              r.read()
+              time.sleep(0.15)
+          conn.close()
           c = Counter(codes)
-          print("160 /mcp pings at ~4/s over ~40s:", dict(c))
+          print("140 keep-alive /mcp pings over ~40s (pinned PoP):", dict(c),
+                "retry-after:", retry_after)
           if c.get(429):
               print("OK: per-IP rate limiter covers /mcp (429 observed)")
           else:
@@ -201,12 +205,14 @@ jobs:
                                    "props": {"src": "github-actions"},
                                    "path": "/ci"}).encode(),
                   method="POST", headers=ua)
-          print("track canary:", urllib.request.urlopen(req, timeout=20).status)
+          r = urllib.request.urlopen(req, timeout=20)
+          print("track canary:", r.status, "x-funnel:", r.headers.get("x-funnel"))
           req2 = urllib.request.Request(base + "/mcp",
                   data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize",
                                    "params": {"protocolVersion": "2025-06-18",
                                               "clientInfo": {"name": "ci-canary",
                                                              "version": "0"}}}).encode(),
                   method="POST", headers=ua)
-          print("mcp canary:", urllib.request.urlopen(req2, timeout=20).status)
+          r2 = urllib.request.urlopen(req2, timeout=20)
+          print("mcp canary:", r2.status, "x-funnel:", r2.headers.get("x-funnel"))
           EOF
