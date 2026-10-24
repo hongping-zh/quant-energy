@@ -78,4 +78,54 @@ const brokenEnv = { API_RATE_LIMIT: { limit: async () => { throw new Error("down
 const rb = await hit("GET", "/v1/estimate?params_b=7&arch=ada", undefined, brokenEnv);
 console.log("limiter throws -> fail open:", rb.status);
 
+// ---- MCP endpoint: JSON-RPC 2.0, stateless streamable HTTP ----
+const m1 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "0" } } });
+console.log("mcp initialize:", m1.status, m1.j.result.serverInfo.name, m1.j.result.protocolVersion, m1.j.result.instructions ? "instructions-ok" : "NO-instructions");
+
+const m2 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 2, method: "tools/list" });
+const toolNames = m2.j.result.tools.map((t) => t.name).join(",");
+console.log("mcp tools/list:", m2.status, toolNames, "| schemas:", m2.j.result.tools.every((t) => t.inputSchema && t.description) ? "ok" : "BROKEN");
+
+const m3 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "estimate_quantization_energy", arguments: { params_b: 7, arch: "ada", precision: "NF4" } } });
+const t3 = m3.j.result.content[0].text;
+console.log("mcp estimate 7B ada:", m3.status, m3.j.result.content[0].type, "| -28.5 in text:", t3.includes("-28"), "| basis:", t3.includes("basis: measured"), "| scope:", t3.includes("package power"), "| structured:", m3.j.result.structuredContent && m3.j.result.structuredContent.delta_pct);
+
+const m3b = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 33, method: "tools/call", params: { name: "estimate_quantization_energy", arguments: { q: "13B on A100 int8 batch 32" } } });
+console.log("mcp estimate via q:", m3b.status, m3b.j.result.structuredContent && m3b.j.result.structuredContent.delta_pct, m3b.j.result.structuredContent && m3b.j.result.structuredContent.basis);
+
+const m3c = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 34, method: "tools/call", params: { name: "estimate_quantization_energy", arguments: { arch: "ada" } } });
+console.log("mcp estimate missing params_b:", m3c.status, m3c.j.result.isError === true ? "isError-ok" : "NO-error");
+
+const m4 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "get_quantization_crossover", arguments: {} } });
+const t4 = m4.j.result.content[0].text;
+console.log("mcp crossover:", m4.status, "| ada 3.7:", t4.includes("3.7"), "| INT8 none:", t4.toLowerCase().includes("none"), "| stack note:", t4.includes("software-stack") || t4.includes("card + software"));
+
+const m5 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "list_data_coverage", arguments: {} } });
+const t5 = m5.j.result.content[0].text;
+console.log("mcp coverage:", m5.status, "| measured:", t5.includes("measured (direct NVML)"), "| estimated:", t5.includes("borrowed"), "| gaps:", t5.includes("gaps"), "| hopper:", t5.includes("Hopper"));
+
+const m6 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "search_measurements", arguments: { query: "TinyLlama" } } });
+console.log("mcp search TinyLlama:", m6.status, m6.j.result.structuredContent.matches.length, "matches | first:", m6.j.result.structuredContent.matches[0] && m6.j.result.structuredContent.matches[0].dE_pct_vs_fp16);
+
+const m6b = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 61, method: "tools/call", params: { name: "search_measurements", arguments: { query: "A800" } } });
+console.log("mcp search A800:", m6b.status, m6b.j.result.structuredContent.matches.length, "matches");
+
+const m7 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 7, method: "ping" });
+console.log("mcp ping:", m7.status, JSON.stringify(m7.j.result));
+
+const m8 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 8, method: "no/such/method" });
+console.log("mcp bad method:", m8.status, m8.j.error.code);
+
+const m9 = await hit("POST", "/mcp", { jsonrpc: "2.0", method: "notifications/initialized" });
+console.log("mcp notification -> 202 no body:", m9.status, m9.j === "" || m9.j === null ? "empty-ok" : m9.j);
+
+const m10 = await hit("GET", "/mcp");
+console.log("mcp GET -> 405:", m10.status);
+
+const m11 = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 11, method: "tools/call", params: { name: "no_such_tool", arguments: {} } });
+console.log("mcp unknown tool:", m11.status, m11.j.error.code, m11.j.error.message.includes("tools/list") ? "hint-ok" : "no-hint");
+
+const m12 = await hit("POST", "/mcp", [{ jsonrpc: "2.0", id: 12, method: "ping" }, { jsonrpc: "2.0", method: "notifications/initialized" }]);
+console.log("mcp batch (ping + notification):", m12.status, Array.isArray(m12.j) && m12.j.length === 1 ? "one-response-ok" : m12.j);
+
 console.log("\nOK");

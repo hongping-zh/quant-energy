@@ -11,6 +11,9 @@
  *   GET  /v1/optimize?params_b=7&arch=ada&objective=min_energy&max_latency_ms=50&max_vram_gb=16
  *   POST /v1/optimize     { "params_b":7, "arch":"ada", "objective":"min_energy", "max_vram_gb":16 }
  *   GET  /openapi.json    (so other agents can auto-discover the tool)
+ *   POST /mcp             (Model Context Protocol: JSON-RPC 2.0, stateless —
+ *                          tools: estimate / crossover / coverage / search,
+ *                          every answer carries its evidence boundaries)
  *
  * Deploy:  cd api && npx wrangler deploy   (see api/README.md)
  */
@@ -158,6 +161,7 @@ const OPENAPI = {
   info: { title: "EcoCompute should-I-quantize API", version: "1.0.0",
     description: "Deterministic estimate of weight-only quantization energy change (ΔE% vs FP16), calibrated to measured GPU data." },
   paths: {
+    "/mcp": { post: { summary: "MCP endpoint (JSON-RPC 2.0, stateless streamable HTTP)", description: "tools: estimate_quantization_energy, get_quantization_crossover, list_data_coverage, search_measurements — every answer carries basis, confidence and evidence boundaries.", responses: { "200": { description: "JSON-RPC response" } } } },
     "/v1/estimate": {
       get: {
         summary: "Estimate ΔE% for quantizing a model on a GPU architecture",
@@ -193,6 +197,221 @@ const OPENAPI = {
   },
 };
 
+/* ---- MCP (Model Context Protocol) endpoint -----------------------------------
+ * POST /mcp speaks JSON-RPC 2.0 (streamable HTTP, stateless server): any MCP
+ * client — Claude Desktop, Cursor, an agent runtime — can mount the estimator
+ * as a tool. Four tools; every answer carries its own evidence boundaries, so
+ * an AI assistant relaying the numbers cannot strip the caveats from them. */
+
+const MCP_VERSION = "1.1.0";
+const SCOPE_NOTE =
+  "Scope: GPU package power measured via NVML — not wall/host power (multiply by ~1.2–1.6 for the whole node). " +
+  "RTX 4090 anchors are mostly single-run (n=1). Data: doi.org/10.5281/zenodo.19647290 (main, cross-arch) · " +
+  "doi.org/10.5281/zenodo.22037483 (RTX 4090 deep dive). " +
+  "Your card not covered? Measure it and submit: github.com/hongping-zh/ecocompute-mlcube (CC BY 4.0).";
+const CROSSOVER_NOTE =
+  "A crossover belongs to a card + software-stack combination, not to an architecture: a September 2026 re-run on a newer " +
+  "stack moved the RTX 5090 NF4 crossover from ≈4.8B to ≈1.8B. Treat these as today's reading, not a constant.";
+
+const mcpText = (text) => ({ type: "text", text });
+
+function toolEstimate(args) {
+  const a = resolveParams(args);
+  if (!(a.N > 0))
+    return { isError: true, content: [mcpText('params_b (model size in billions) is required and > 0. Example: {"params_b": 7, "arch": "ada", "precision": "NF4"}')] };
+  if (!a.arch)
+    return { isError: true, content: [mcpText("arch is required: turing, ada, blackwell, ampere, hopper.")] };
+  const r = estimate(a.N, a.arch, a.precision || "NF4", { batch: a.batch || 1, ctx: a.ctx || 2048 });
+  const input = { params_b: a.N, arch: a.arch, precision: a.precision || "NF4", batch: a.batch || 1, ctx: a.ctx || 2048 };
+  if (r.error)
+    return { isError: true, content: [mcpText("No answer: " + r.error + "\n\n" + SCOPE_NOTE)] };
+  const band = Array.isArray(r.ci) ? ` (95% band ${r.ci[0]}% … ${r.ci[1]}%)` : "";
+  const text =
+    `Quantize ${a.N}B → ${a.precision || "NF4"} on ${CURVES.arch_label[a.arch] || a.arch}:\n` +
+    `  task-level ΔE vs FP16: ${r.delta_pct}%${band}\n` +
+    `  recommendation: ${r.recommendation}\n` +
+    `  basis: ${r.basis} · confidence: ${r.confidence}\n\n` +
+    SCOPE_NOTE;
+  return { content: [mcpText(text)], structuredContent: { input, ...r } };
+}
+
+function toolCrossover(args) {
+  const archs = args.arch ? [String(args.arch).toLowerCase()] : Object.keys(CURVES.arch_label);
+  const lines = [];
+  for (const arch of archs) {
+    const label = CURVES.arch_label[arch] || arch;
+    const byPrec = CURVES.curves[arch];
+    if (!byPrec) {
+      lines.push(`${label}: borrows the ${CURVES.borrow[arch]} curves — estimated, not measured on this architecture`);
+      continue;
+    }
+    for (const [p, c] of Object.entries(byPrec)) {
+      const x = c.crossover_b == null
+        ? "none — quantization costs energy at every measured size"
+        : `≈${c.crossover_b}B (below it costs energy, above it saves)`;
+      lines.push(`${label} · ${p}: crossover ${x} · measured range ${c.n_min}–${c.n_max}B`);
+    }
+  }
+  const text = "Weight-only quantization crossover by architecture (ΔE vs FP16):\n  " + lines.join("\n  ") + "\n\n" +
+    CROSSOVER_NOTE + "\n\n" + SCOPE_NOTE;
+  return { content: [mcpText(text)], structuredContent: { crossovers: lines, note: CROSSOVER_NOTE } };
+}
+
+function toolCoverage() {
+  const measured = [], estimated = [], gaps = [];
+  const precs = ["NF4", "INT8"];
+  for (const arch of Object.keys(CURVES.arch_label)) {
+    const label = CURVES.arch_label[arch];
+    for (const p of precs) {
+      const c = CURVES.curves[arch] && CURVES.curves[arch][p];
+      if (c) measured.push(`${label} · ${p}: ${c.n_min}–${c.n_max}B, ${c.anchors.length} measured anchor${c.anchors.length === 1 ? "" : "s"}`);
+      else if (CURVES.borrow[arch]) estimated.push(`${label} · ${p}: no measurement — borrowed from ${CURVES.borrow[arch]} (estimated)`);
+      else gaps.push(`${label} · ${p}: no measured data`);
+    }
+  }
+  gaps.push("sizes outside the measured ranges above (e.g. >7B on Ada): the estimator refuses to extrapolate — mark as a gap, invite a measurement");
+  const text =
+    "What the estimator's numbers rest on:\n" +
+    "  measured (direct NVML):\n    " + measured.join("\n    ") + "\n" +
+    "  estimated (borrowed curves, lower confidence):\n    " + estimated.join("\n    ") + "\n" +
+    "  gaps (no data — say so, do not extrapolate):\n    " + gaps.join("\n    ") + "\n\n" +
+    SCOPE_NOTE;
+  return { content: [mcpText(text)], structuredContent: { measured, estimated, gaps } };
+}
+
+function toolSearch(args) {
+  const q = String(args.query || "").toLowerCase().trim();
+  if (!q)
+    return { isError: true, content: [mcpText('query is required: a model name ("TinyLlama"), a GPU ("4090"), an architecture ("ampere"), or a size ("7").')] };
+  const rows = [];
+  for (const [arch, byPrec] of Object.entries(CURVES.curves)) {
+    for (const [p, c] of Object.entries(byPrec)) {
+      for (const a of c.anchors) {
+        const hay = `${a.model || ""} ${a.gpu || ""} ${arch} ${p} ${a.N}`.toLowerCase();
+        if (hay.includes(q)) rows.push({ arch, arch_label: CURVES.arch_label[arch], precision: p, params_b: a.N, dE_pct_vs_fp16: a.dE, model: a.model, gpu: a.gpu, runs: a.n });
+      }
+    }
+  }
+  if (!rows.length)
+    return { content: [mcpText(`No measured anchor matches "${args.query}". That is a data gap, not a zero — call list_data_coverage to see the map, and consider contributing a measurement (github.com/hongping-zh/ecocompute-mlcube).`)] , structuredContent: { matches: [] } };
+  const text = "Measured anchors matching \"" + args.query + "\" (ΔE = task-level energy change vs FP16):\n" +
+    rows.map((r) => `  ${r.params_b}B ${r.precision} on ${r.arch_label}: ${r.dE_pct_vs_fp16}% · ${r.model} @ ${r.gpu} (n=${r.runs})`).join("\n") +
+    "\n\n" + SCOPE_NOTE;
+  return { content: [mcpText(text)], structuredContent: { matches: rows } };
+}
+
+function mcpTools() {
+  return [
+    {
+      name: "estimate_quantization_energy",
+      description: "Estimate the task-level energy change (ΔE% vs FP16) of weight-only quantization (NF4 or INT8) for a model of a given size on a GPU architecture class, from measured-anchored curves. The answer carries basis (measured/interpolated/estimated), confidence and evidence boundaries.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          params_b: { type: "number", description: "model size in billions of parameters, e.g. 7" },
+          arch: { type: "string", enum: ["turing", "ada", "blackwell", "ampere", "hopper"], description: "GPU architecture class" },
+          precision: { type: "string", enum: ["NF4", "INT8"], description: "quantization format (default NF4)" },
+          batch: { type: "integer", description: "batch size (default 1; >1 shrinks savings — modelled, not measured)" },
+          ctx: { type: "integer", description: "context length (default 2048)" },
+          q: { type: "string", description: "alternative: plain-English query, e.g. '13B on A100 int8 batch 32'" },
+        },
+      },
+    },
+    {
+      name: "get_quantization_crossover",
+      description: "Get the model-size crossover for NF4/INT8 per architecture: below it quantization costs energy, above it saves. Crossovers belong to a card + software stack, not an architecture — the answer says so.",
+      inputSchema: {
+        type: "object",
+        properties: { arch: { type: "string", enum: ["turing", "ada", "blackwell", "ampere", "hopper"], description: "optional: limit to one architecture" } },
+      },
+    },
+    {
+      name: "list_data_coverage",
+      description: "List what is actually measured (GPU architecture × precision × size range, NVML direct), what is borrowed/estimated, and where the gaps are. Use this before trusting an estimate at the edges of coverage, and to answer 'is there data for my GPU?' honestly.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "search_measurements",
+      description: "Search the measured anchors by model name, GPU name, architecture or size. Returns ΔE% vs FP16 per anchor with run counts — the raw evidence behind the curves.",
+      inputSchema: {
+        type: "object",
+        properties: { query: { type: "string", description: "model ('TinyLlama'), GPU ('4090'), architecture ('ampere') or size ('7')" } },
+        required: ["query"],
+      },
+    },
+  ];
+}
+
+function mcpCallTool(name, args) {
+  switch (name) {
+    case "estimate_quantization_energy": return toolEstimate(args);
+    case "get_quantization_crossover": return toolCrossover(args);
+    case "list_data_coverage": return toolCoverage();
+    case "search_measurements": return toolSearch(args);
+    default: return null;
+  }
+}
+
+const MCP_INSTRUCTIONS =
+  "EcoCompute estimates the task-level energy change of LLM weight-only quantization (NF4/INT8) vs FP16, from NVML-measured anchors. " +
+  "Every answer labels its basis (measured/interpolated/estimated) and confidence; numbers are GPU package power, not wall power. " +
+  "When a GPU/precision/size combination has no measurement, the tools say so instead of extrapolating — call list_data_coverage for the map. " +
+  "Users with an uncovered GPU are invited to contribute a measurement: github.com/hongping-zh/ecocompute-mlcube (CC BY 4.0).";
+
+function mcpRpc(m) {
+  const id = m && m.id !== undefined ? m.id : null;
+  if (!m || typeof m.method !== "string") return { jsonrpc: "2.0", id, error: { code: -32600, message: "invalid JSON-RPC request" } };
+  const respond = (result) => ({ jsonrpc: "2.0", id, result });
+  const fail = (code, message) => ({ jsonrpc: "2.0", id, error: { code, message } });
+  switch (m.method) {
+    case "initialize":
+      return respond({
+        protocolVersion: (m.params && m.params.protocolVersion) || "2025-06-18",
+        capabilities: { tools: { listChanged: false } },
+        serverInfo: { name: "ecocompute-estimator", title: "EcoCompute should-I-quantize", version: MCP_VERSION },
+        instructions: MCP_INSTRUCTIONS,
+      });
+    case "ping":
+      return respond({});
+    case "tools/list":
+      return respond({ tools: mcpTools() });
+    case "tools/call": {
+      const t = mcpCallTool(m.params && m.params.name, (m.params && m.params.arguments) || {});
+      if (!t) return fail(-32602, `unknown tool "${m.params && m.params.name}" — call tools/list for the four available tools`);
+      return respond(t);
+    }
+    default:
+      if (m.method.startsWith("notifications/")) return null; // notification: no response body
+      if (id === null) return null;
+      return fail(-32601, `method not found: ${m.method}`);
+  }
+}
+
+async function handleMcp(req) {
+  if (req.method === "GET")
+    return json({ error: "MCP over streamable HTTP: POST JSON-RPC only. This server is stateless (no GET stream)." }, 405);
+  if (req.method === "DELETE")
+    return json({ error: "stateless server — nothing to terminate" }, 405);
+  if (req.method !== "POST") return json({ error: "use POST" }, 405);
+  // JSON-RPC 2.0 allows a batch (array) of messages; readBody only accepts
+  // objects for the REST endpoints, so MCP reads its own body here.
+  const txt = await req.text();
+  if (txt.length > MAX_BODY) return json({ error: `body too large (max ${MAX_BODY} bytes)` }, 413);
+  let body;
+  try { body = JSON.parse(txt || "{}"); } catch { return json({ error: "invalid JSON body" }, 400); }
+  if (body === null || typeof body !== "object") return json({ error: "body must be a JSON-RPC object or batch" }, 400);
+  const single = !Array.isArray(body);
+  if (!single && (body.length === 0 || body.length > 32)) return json({ error: "batch must contain 1–32 messages" }, 400);
+  const out = [];
+  for (const m of single ? [body] : body) {
+    const r = mcpRpc(m);
+    if (r) out.push(r);
+  }
+  if (!out.length)
+    return new Response(null, { status: 202, headers: { ...CORS, ...SAFE, "cache-control": CACHE_NO } }); // notifications only
+  return json(single ? out[0] : out);
+}
+
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, ...SAFE } });
@@ -202,8 +421,9 @@ export default {
     const limited = await throttled(req, env);
     if (limited) return limited;
 
-    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/v1/track", "/openapi.json"] }, 200, CACHE_OK);
+    if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/v1/track", "/mcp", "/openapi.json"] }, 200, CACHE_OK);
     if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] }, 200, CACHE_OK);
+    if (path === "/mcp") return handleMcp(req);
     if (path === "/v1/architectures") return json(architectures(), 200, CACHE_OK);
 
     /* First-party funnel beacon: the site track() helper sendBeacon()s here.
@@ -251,6 +471,6 @@ export default {
       }
       return json({ error: "use GET or POST" }, 405);
     }
-    return json({ error: "not found", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/openapi.json"] }, 404);
+    return json({ error: "not found", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/mcp", "/openapi.json"] }, 404);
   },
 };
