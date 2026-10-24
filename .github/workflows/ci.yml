@@ -64,3 +64,43 @@ jobs:
               raise SystemExit(1)
           print("OK: deployed Worker and repo estimator agree in direction")
           EOF
+
+      # The deployed Worker's MCP surface: initialize handshake + one real
+      # tool call. Non-blocking while the transport is new; promote once the
+      # registry submission depends on it.
+      - name: deployed /mcp smoke test (non-blocking)
+        continue-on-error: true
+        run: |
+          python3 - <<'EOF'
+          import json, urllib.request
+          url = "https://ecocompute-estimator.zhanghongping1982.workers.dev/mcp"
+          hdrs = {
+              "Content-Type": "application/json",
+              "Accept": "application/json, text/event-stream",
+              # Cloudflare bot rules 403 the default urllib UA (see above)
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                            "Chrome/126.0 Safari/537.36"}
+
+          def rpc(payload):
+              req = urllib.request.Request(
+                  url, data=json.dumps(payload).encode(), headers=hdrs, method="POST")
+              return json.load(urllib.request.urlopen(req, timeout=20))
+
+          init = rpc({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                      "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                                 "clientInfo": {"name": "ci-smoke", "version": "0.1"}}})
+          server = init["result"]["serverInfo"]["name"]
+          tools = rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+          names = sorted(t["name"] for t in tools["result"]["tools"])
+          call = rpc({"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+                      "params": {"name": "estimate_quantization_energy",
+                                 "arguments": {"params_b": 7, "arch": "ada", "precision": "NF4"}}})
+          text = call["result"]["content"][0]["text"]
+          print("server: %s   tools: %s" % (server, ", ".join(names)))
+          print("estimate(7B ada NF4) says: %s" % text.splitlines()[0])
+          if len(names) != 4 or "-28." not in text:
+              print("FAIL: MCP surface incomplete or wrong answer")
+              raise SystemExit(1)
+          print("OK: deployed /mcp answers with all four tools")
+          EOF
