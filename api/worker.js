@@ -13,7 +13,8 @@
  *   GET  /openapi.json    (so other agents can auto-discover the tool)
  *   POST /mcp             (Model Context Protocol: JSON-RPC 2.0, stateless —
  *                          tools: estimate / crossover / coverage / search,
- *                          every answer carries its evidence boundaries)
+ *                          every answer carries its evidence boundaries;
+ *                          initialize + tools/call feed the funnel KV)
  *
  * Deploy:  cd api && npx wrangler deploy   (see api/README.md)
  */
@@ -387,7 +388,22 @@ function mcpRpc(m) {
   }
 }
 
-async function handleMcp(req) {
+/* MCP is a first-party funnel channel too: initialize and tools/call are
+ * recorded server-side into the same FUNNEL KV, same row shape as /v1/track,
+ * so distribution through the registry is measured alongside the site.
+ * Only whitelisted scalar arguments are stored — free-text fields (q, query)
+ * are deliberately left out. */
+const MCP_ARG_PROPS = ["params_b", "arch", "precision", "batch", "ctx"];
+async function trackMcp(env, event, props) {
+  if (!env || !env.FUNNEL) return;
+  try {
+    const row = { event, path: "/mcp", props: sanitizeProps(props), ts: new Date().toISOString() };
+    const key = row.ts.slice(0, 10) + ":" + crypto.randomUUID();
+    await env.FUNNEL.put(key, JSON.stringify(row), { expirationTtl: 86400 * 400 });
+  } catch (_) { /* best-effort, same as the beacon */ }
+}
+
+async function handleMcp(req, env) {
   if (req.method === "GET")
     return json({ error: "MCP over streamable HTTP: POST JSON-RPC only. This server is stateless (no GET stream)." }, 405);
   if (req.method === "DELETE")
@@ -403,10 +419,25 @@ async function handleMcp(req) {
   const single = !Array.isArray(body);
   if (!single && (body.length === 0 || body.length > 32)) return json({ error: "batch must contain 1–32 messages" }, 400);
   const out = [];
+  const tracks = [];
   for (const m of single ? [body] : body) {
     const r = mcpRpc(m);
     if (r) out.push(r);
+    if (m && typeof m.method === "string") {
+      if (m.method === "initialize") {
+        const client = m.params && m.params.clientInfo && m.params.clientInfo.name;
+        tracks.push(trackMcp(env, "mcp_initialize", client ? { client: String(client) } : {}));
+      } else if (m.method === "tools/call" && m.params) {
+        const p = { tool: String(m.params.name || "").slice(0, 64) };
+        const args = m.params.arguments || {};
+        for (const k of MCP_ARG_PROPS) if (args[k] !== undefined && args[k] !== null) p[k] = args[k];
+        const res = r && r.result;
+        p.ok = res && !res.isError ? 1 : 0;
+        tracks.push(trackMcp(env, "mcp_tool_call", p));
+      }
+    }
   }
+  if (tracks.length) await Promise.all(tracks);
   if (!out.length)
     return new Response(null, { status: 202, headers: { ...CORS, ...SAFE, "cache-control": CACHE_NO } }); // notifications only
   return json(single ? out[0] : out);
@@ -423,7 +454,7 @@ export default {
 
     if (path === "/" ) return json({ service: "ecocompute-estimator", endpoints: ["/v1/estimate", "/v1/optimize", "/v1/architectures", "/v1/track", "/mcp", "/openapi.json"] }, 200, CACHE_OK);
     if (path === "/openapi.json") return json({ ...OPENAPI, servers: [{ url: u.origin }] }, 200, CACHE_OK);
-    if (path === "/mcp") return handleMcp(req);
+    if (path === "/mcp") return handleMcp(req, env);
     if (path === "/v1/architectures") return json(architectures(), 200, CACHE_OK);
 
     /* First-party funnel beacon: the site track() helper sendBeacon()s here.

@@ -172,6 +172,12 @@ funnel events here — no cookies, no PII, just `{ event, props, path }` with sc
 `cta_hero_click` (first screen), `estimate` (estimator use), `container_page_view` (arrival),
 `upload_energy_json` / `overlay_link_open` (JSON overlay), `deep_validate` and `replication_submit`.
 
+The `/mcp` endpoint feeds the same KV from the server side (no client cooperation
+needed): `mcp_initialize` (props: `client`) and `mcp_tool_call` (props: `tool`, `ok`,
+plus whitelisted scalars `params_b`/`arch`/`precision`/`batch`/`ctx` when present —
+free-text arguments like `q`/`query` are deliberately never stored). Registry-driven
+distribution is thereby measured in the same funnel as the site.
+
 Storage is optional: create a KV namespace and bind it as `FUNNEL`, and each event is stored
 as a dated key (400-day TTL) that you can list with `wrangler kv key list`:
 

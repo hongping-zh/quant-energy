@@ -128,4 +128,19 @@ console.log("mcp unknown tool:", m11.status, m11.j.error.code, m11.j.error.messa
 const m12 = await hit("POST", "/mcp", [{ jsonrpc: "2.0", id: 12, method: "ping" }, { jsonrpc: "2.0", method: "notifications/initialized" }]);
 console.log("mcp batch (ping + notification):", m12.status, Array.isArray(m12.j) && m12.j.length === 1 ? "one-response-ok" : m12.j);
 
+// MCP funnel: initialize + tools/call are recorded server-side (same row shape
+// as /v1/track); ping/notifications are not; free-text args never land in props.
+const mkv = [];
+const menv = { FUNNEL: { put: async (k, v) => { mkv.push(JSON.parse(v)); } } };
+await hit("POST", "/mcp", { jsonrpc: "2.0", id: 41, method: "initialize", params: { protocolVersion: "2025-06-18", clientInfo: { name: "test-client", version: "0" } } }, menv);
+await hit("POST", "/mcp", { jsonrpc: "2.0", id: 42, method: "tools/call", params: { name: "estimate_quantization_energy", arguments: { params_b: 7, arch: "ada", precision: "NF4" } } }, menv);
+await hit("POST", "/mcp", { jsonrpc: "2.0", id: 43, method: "ping" }, menv);
+await hit("POST", "/mcp", { jsonrpc: "2.0", id: 44, method: "tools/call", params: { name: "estimate_quantization_energy", arguments: { q: "13B on A100 int8 batch 32" } } }, menv);
+console.log("mcp funnel rows:", mkv.length === 3 ? "3-ok" : "WRONG-" + mkv.length,
+  "| init:", mkv[0] && mkv[0].event, mkv[0] && mkv[0].props.client,
+  "| tool:", mkv[1] && mkv[1].props.tool, "ok=" + (mkv[1] && mkv[1].props.ok), "params_b=" + (mkv[1] && mkv[1].props.params_b), "path=" + (mkv[1] && mkv[1].path),
+  "| free-text leak:", JSON.stringify(mkv[2]).includes('"q"') || mkv[2].props.params_b ? "LEAK" : "clean-ok");
+const mnoenv = await hit("POST", "/mcp", { jsonrpc: "2.0", id: 45, method: "tools/call", params: { name: "get_quantization_crossover", arguments: {} } });
+console.log("mcp funnel no-kv binding:", mnoenv.status, mnoenv.j.result.content ? "noop-ok" : "BROKEN");
+
 console.log("\nOK");
