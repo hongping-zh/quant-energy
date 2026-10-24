@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Daily heartbeat: the site itself is frozen (2026-10-24), so pushes stop -
+  # but the deployed Worker keeps serving the registry URL. This schedule keeps
+  # the deploy-drift probes (REST parity + /mcp smoke + UA matrix) running
+  # daily with zero repo activity. 01:23 UTC deliberately off the hour to
+  # dodge GitHub's scheduler congestion.
+  schedule:
+    - cron: "23 1 * * *"
 
 jobs:
   consistency:

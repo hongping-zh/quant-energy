@@ -75,6 +75,12 @@
 
     <div class="entry">
       <div class="ehead"><span class="edate">2026-10-24</span><span class="etag api">api</span></div>
+      <h2>CI gains a daily heartbeat: the deploy-vs-repo checks keep running while the site itself is frozen</h2>
+      <p>The live probes in CI (deployed-Worker drift, <code>/mcp</code> smoke, UA matrix, rate-limit and funnel canaries) were all push-triggered — which means they only ran when the repo changed. The repo is now in a deliberate freeze (no feature work; only responses to new PRs and external replies), so the probes would have gone dark exactly when nobody is watching the code. The workflow now also runs on a daily schedule (01:23 UTC, off the hour to dodge GitHub's scheduler congestion). One line of YAML, no Worker changes, no redeploy — but the "deployed state still matches the repo" defense line no longer depends on the repo being active.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-24</span><span class="etag api">api</span></div>
       <h2>MCP calls now feed the first-party funnel — registry-driven distribution is finally measurable</h2>
       <p>Since the <a href="/blog/make-your-ai-assistant-ask-about-energy-first/">registry listing</a>, assistants can call the estimator over <code>/mcp</code> — but those calls were invisible to the <code>/v1/track</code> funnel, systematically understating distribution. The Worker now records <code>mcp_initialize</code> (client name) and <code>mcp_tool_call</code> (tool, ok, and whitelisted scalars: params_b/arch/precision/batch/ctx) server-side into the same FUNNEL KV, same row shape as the site beacon. Free-text arguments (<code>q</code>, <code>query</code>) are deliberately never stored — the no-PII rule is unchanged. While verifying this, the FUNNEL namespace turned out to be completely empty — funnel events have been silently not landing (cause under investigation; the event TTL was lowered from 400 to 364 days as the prime suspect). CI now runs a funnel canary on every push so this failure class cannot hide again, plus a sustained-rate <code>/mcp</code> probe (~4 req/s for ~40 s) — the per-IP limiter is permissive and eventually consistent per Cloudflare's docs (a sub-second burst passes clean, observed), so it is checked in the regime it actually guards.</p>
     </div>
