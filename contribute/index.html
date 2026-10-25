@@ -50,6 +50,9 @@
   .issue-list li a{font-weight:600}
   .issue-list .label{display:inline-block;font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px}
   .label-first{background:rgba(112,87,255,.2);color:#a78bfa}
+  .codeblock{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--txt);white-space:pre}
+  .codeblock .copybtn{position:absolute;top:8px;right:8px;background:var(--line);color:var(--txt);border:0;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .codeblock .copybtn:hover{background:var(--accent);color:#06223a}
   footer{margin-top:44px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -103,7 +106,10 @@
     <p>The most valuable contribution: run the container on your GPU and submit your <code>energy.json</code> as a public replication. This is how the dataset grows.</p>
 
     <ol class="steps">
-      <li><b>Run the container.</b> See the <a href="/container/">Container guide</a> for the three-command quick start. The default run measures NF4 + FP16 baseline on TinyLlama-1.1B.</li>
+      <li><b>Run the container.</b> The fastest way — one line, pick your model and precision:
+        <div class="codeblock" style="margin:8px 0 4px;font-size:13px"><button class="copybtn" id="copyContributeCmd" type="button">Copy</button>curl -sSL https://quantenergy.tech/run.sh | bash -s -- --model qwen2.5-3b --precision nf4</div>
+        Known models: <code>tinyllama-1.1b</code>, <code>qwen2.5-3b</code>, <code>qwen2.5-7b</code>, <code>phi-3-mini</code>, <code>yi-1.5-6b</code>, <code>mistral-7b</code>. Use <code>--model-id</code> for any HuggingFace model. The wrapper downloads the pinned release, verifies its checksum, then runs. Add <code>--dry-run</code> to preview. Full source: <a href="/run.sh" target="_blank" rel="noopener">run.sh</a>. The default run (no flags) measures NF4 + FP16 baseline on TinyLlama-1.1B.
+      </li>
       <li><b>Validate your report.</b> Run <code>python3 tools/validate.py ecocompute-out/energy.json</code>. Aim for <code>protocol-conformant</code> or <code>dataset-eligible</code>.</li>
       <li><b>Submit at <a href="/replications/">quantenergy.tech/replications</a>.</b> Your <code>energy.json</code> is encoded in the URL — nothing is uploaded to a server.</li>
     </ol>
@@ -202,5 +208,20 @@ python -m pytest tests/ -q</pre>
       <p>EcoCompute · Apache-2.0 · <a href="/cite/">Cite this work</a> · <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">Container source</a> · <a href="https://github.com/hongping-zh/quant-energy" target="_blank" rel="noopener">Site source</a></p>
     </footer>
   </div>
+<script>
+(function(){
+  var btn=document.getElementById("copyContributeCmd");
+  if(!btn)return;
+  btn.addEventListener("click",function(){
+    var el=document.querySelector(".codeblock");
+    if(!el)return;
+    var txt=el.textContent.replace(/^Copy/,"").trim();
+    navigator.clipboard.writeText(txt).then(function(){
+      btn.textContent="Copied!";
+      setTimeout(function(){btn.textContent="Copy";},2000);
+    });
+  });
+})();
+</script>
 </body>
 </html>

@@ -821,6 +821,10 @@
     <div class="card">
       <h2>2 · Have a GPU? Run the container</h2>
       <p class="meta" style="margin:0 0 10px">One command, nothing to configure. Needs an NVIDIA GPU. With Docker it runs the prebuilt image; on a rented GPU instance that cannot nest containers (AutoDL, vast.ai …) the same command installs into a venv instead and runs the identical code. No GPU? It still runs and returns dataset-derived reference values, clearly flagged (never faked).</p>
+      <p class="meta" style="margin:0 0 6px"><b>Quick start</b> — pick a model and precision, one line:</p>
+      <div class="codeblock" id="runCmdOneLiner"><button class="copybtn" id="copyRunCmdOneLiner" type="button">Copy</button>curl -sSL https://quantenergy.tech/run.sh | bash -s -- --model qwen2.5-3b --precision nf4</div>
+      <p class="chartnote" style="margin:4px 0 12px">The wrapper maps <code>--model</code> shorthand to HuggingFace IDs, downloads the pinned release, verifies its checksum, then runs. Known models: <code>tinyllama-1.1b</code>, <code>qwen2.5-3b</code>, <code>qwen2.5-7b</code>, <code>phi-3-mini</code>, <code>yi-1.5-6b</code>, <code>mistral-7b</code>. Use <code>--model-id</code> for any HuggingFace model. Add <code>--dry-run</code> to see the plan without executing. Full source: <a href="/run.sh" target="_blank" rel="noopener">run.sh</a>.</p>
+      <p class="meta" style="margin:0 0 6px"><b>Or verify first</b> — download, checksum, then run (what the one-liner does internally):</p>
       <div class="codeblock" id="runCmd"><button class="copybtn" id="copyRunCmd" type="button">Copy</button>curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/quickstart.sh
 curl -fsSLO https://github.com/hongping-zh/ecocompute-mlcube/releases/download/schema-1.3-r4/SHA256SUMS
 sha256sum -c SHA256SUMS && bash quickstart.sh</div>
@@ -2148,6 +2152,9 @@ function loadOverlayFromURL(q){
     if(!lastRunPoint) return;
     copyIssueText(runIssueText(lastRunPoint),e.currentTarget);
     track("copy_issue_summary",{arch:lastRunPoint.arch||"",precision:lastRunPoint.precision,basis:lastRunPoint.basis,params_b:lastRunPoint.N,delta_pct:lastRunPoint.dE}); });
+  document.getElementById("copyRunCmdOneLiner").addEventListener("click",e=>{
+    const txt=document.getElementById("runCmdOneLiner").textContent.replace(/^Copy/,"").trim();
+    copyToClip(txt,e.currentTarget,"Copied!"); track("copy_run_cmd_oneliner",{}); });
   document.getElementById("copyRunCmd").addEventListener("click",e=>{
     const txt=document.getElementById("runCmd").textContent.replace(/^Copy/,"").trim();
     copyToClip(txt,e.currentTarget,"Copied!"); track("copy_run_cmd",{}); });
