@@ -183,6 +183,12 @@ bash quickstart.sh</pre>
     <code>ECOCOMPUTE_READONLY=1</code> optionally adds <code>--read-only</code> plus a tmpfs <code>/tmp</code>, leaving
     only the two bind mounts writable. What the script changes on your host is written out in full in its header:
     the output dir, the model cache, and (native mode only) a checkout + venv on the data disk — nothing else.</p>
+    <p><b>One-liner convenience, same security model:</b> the <a href="/#run"><code>quantenergy.tech/run.sh</code> one-liner</a>
+    uses the same pinned-release approach — the site serves a 20-line stub that downloads the real wrapper from
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v1" target="_blank" rel="noopener">release run-v1</a>
+    (immutable, checksummed), verifies its SHA-256, then executes. DNS hijack of the site cannot change what runs.
+    The four-line version above is for users who want to inspect every step; the one-liner is for users who trust
+    the pinned release and want convenience. Both execute the same checksummed code.</p>
     <p><b>Pin the image by digest</b> (instead of the mutable <code>:latest</code>) for a fully reproducible run:</p>
 <pre>ECOCOMPUTE_IMAGE=ghcr.io/hongping-zh/ecocompute-mlcube@sha256:5c812e66c34fcdab436bdcf4c1135dc91a6a86b1f94d3efb6118947a7492e275 \
 ECOCOMPUTE_REF=schema-1.3-r4 bash quickstart.sh</pre>
