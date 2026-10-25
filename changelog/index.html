@@ -74,6 +74,12 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-25</span><span class="etag site">site</span></div>
+      <h2>One-liner run.sh with a hardened security model</h2>
+      <p><code>quantenergy.tech/run.sh</code> is now a 20-line stub that downloads the real wrapper from the immutable <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v1" target="_blank" rel="noopener">release run-v1</a> (ecocompute-mlcube), verifies its embedded SHA-256, then executes — a DNS hijack of the site cannot change what runs. The <a href="/container/">container page</a> documents both paths (four-line audited vs one-liner convenience) under the same pinned-release security model. Homepage, <a href="/contribute/">contribute</a> and <a href="/replications/">replications</a> pages link the one-liner.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-24</span><span class="etag api">api</span></div>
       <h2>CI gains a daily heartbeat: the deploy-vs-repo checks keep running while the site itself is frozen</h2>
       <p>The live probes in CI (deployed-Worker drift, <code>/mcp</code> smoke, UA matrix, rate-limit and funnel canaries) were all push-triggered — which means they only ran when the repo changed. The repo is now in a deliberate freeze (no feature work; only responses to new PRs and external replies), so the probes would have gone dark exactly when nobody is watching the code. The workflow now also runs on a daily schedule (01:23 UTC, off the hour to dodge GitHub's scheduler congestion). One line of YAML, no Worker changes, no redeploy — but the "deployed state still matches the repo" defense line no longer depends on the repo being active.</p>
