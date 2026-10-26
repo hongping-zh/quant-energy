@@ -74,15 +74,15 @@
     reconstructed.</p>
 
     <div class="entry">
-      <div class="ehead"><span class="edate">2026-10-25</span><span class="etag site">site</span></div>
-      <h2>One-liner run.sh with a hardened security model</h2>
-      <p><code>quantenergy.tech/run.sh</code> is now a 20-line stub that downloads the real wrapper from the immutable <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v1" target="_blank" rel="noopener">release run-v1</a> (ecocompute-mlcube), verifies its embedded SHA-256, then executes — a DNS hijack of the site cannot change what runs. The <a href="/container/">container page</a> documents both paths (four-line audited vs one-liner convenience) under the same pinned-release security model. Homepage, <a href="/contribute/">contribute</a> and <a href="/replications/">replications</a> pages link the one-liner.</p>
-    </div>
-
-    <div class="entry">
       <div class="ehead"><span class="edate">2026-10-26</span><span class="etag site">site</span></div>
       <h2>/spec/ now resolves: the protocol directory page was 404 while being cited as the spec's rendered home</h2>
       <p>Google Search Console flagged one 404 on this site: <code>/spec/</code>. The cause was self-inflicted and worth recording — the protocol document itself (and the Zenodo record describing it) says the spec is "rendered at <code>quantenergy.tech/spec/</code>", but that directory had no index page, so every crawler following the citation hit a wall. Fixed by adding a real <a href="/spec/">protocol entry page</a>: current version (v1.1) with its canonical DOIs, a map of which layer lives where (protocol / schema / method / changelog), and a note that the Zenodo archive — not any URL — is the canonical citation. The sitemap now lists it. Nothing in the protocol itself changed; this is purely making an already-cited address answer.</p>
+    </div>
+
+    <div class="entry">
+      <div class="ehead"><span class="edate">2026-10-25</span><span class="etag site">site</span></div>
+      <h2>One-liner run.sh with a hardened security model</h2>
+      <p><code>quantenergy.tech/run.sh</code> is now a 20-line stub that downloads the real wrapper from the immutable <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v1" target="_blank" rel="noopener">release run-v1</a> (ecocompute-mlcube), verifies its embedded SHA-256, then executes — a DNS hijack of the site cannot change what runs. The <a href="/container/">container page</a> documents both paths (four-line audited vs one-liner convenience) under the same pinned-release security model. Homepage, <a href="/contribute/">contribute</a> and <a href="/replications/">replications</a> pages link the one-liner.</p>
     </div>
 
     <div class="entry">
