@@ -6,7 +6,14 @@
     <atom:link href="https://quantenergy.tech/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Evidence-based notes on the energy cost of LLM inference, from direct NVML GPU power measurements.</description>
     <language>en</language>
-    <lastBuildDate>Sat, 24 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 29 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Zero code, two releases: a bug report was the contribution</title>
+      <link>https://quantenergy.tech/blog/zero-code-two-releases.html</link>
+      <guid isPermaLink="true">https://quantenergy.tech/blog/zero-code-two-releases.html</guid>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 GMT</pubDate>
+      <description>An external reproducer submitted no code, no data, and never got the one-liner to run: it died on line 1 with "set: pipefail: invalid option name" - CRLF line endings in every shell script, a bug whose checksums were self-consistently wrong (integrity is not correctness). The morning fix shipped a new pinned release; his afternoon verification report passed all ten checks, and one remark in it - the quickstart header still says r3 - traced to the last live path: the README's quick start still pointed at the r3 release, whose assets are the original CRLF bytes. Two releases in one day, zero lines of code from him: a failed run, a footnote about where sha256sum -c must run, and one sentence of confusion are contributions too - the scarce kind. Ends with a release checklist whose first rule is dry-running the published bytes in a clean Linux container, and an invitation: be the next contributor, especially if it breaks.</description>
+    </item>
     <item>
       <title>Make your AI assistant ask about energy first</title>
       <link>https://quantenergy.tech/blog/make-your-ai-assistant-ask-about-energy-first.html</link>

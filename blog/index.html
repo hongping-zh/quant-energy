@@ -44,6 +44,13 @@
     <p class="lead">Short, evidence-based notes on the energy cost of LLM inference — grounded in direct NVML power measurements across NVIDIA GPUs. Honesty over hype. <b>Positioning:</b> this is the <b>exploratory layer</b> of the site — deeper write-ups, work-in-progress analyses and how-to guides. Results here are <b>not counted</b> in the <a href="/measured/#matrix">coverage matrix</a> or the seed counts; measurements that have been accepted into the grid live in the <a href="/measured/">evidence layer</a>, and the estimator and optimizer tools are <a href="/?tab=estimate">separately labelled</a> as model output.</p>
 
     <article class="post">
+      <div class="date">2026-10-29 · Project note</div>
+      <h2><a href="/blog/zero-code-two-releases.html">Zero code, two releases: a bug report was the contribution</a></h2>
+      <p>He submitted no code, no data, and the one-liner never ran past line 1 on his machine — his report, his footnotes and one sentence of confusion still shipped two releases in a day. The morning fix (CRLF in every <code>*.sh</code>) came from his dead script; the evening fix came from a remark in his verification report — "the quickstart header still says r3" — which traced to the README's quick start still pointing at the r3 release, whose assets are the original CRLF bytes. A note on what counts as a contribution, and a release checklist written in his ink.</p>
+      <p><a href="/blog/zero-code-two-releases.html">Read →</a></p>
+    </article>
+
+    <article class="post">
       <div class="date">2026-10-24 · Announcement</div>
       <h2><a href="/blog/make-your-ai-assistant-ask-about-energy-first.html">Make your AI assistant ask about energy first</a></h2>
       <p>The estimator now speaks MCP: one URL, four tools (estimate / crossover / coverage / search), no key. The design point is that every answer embeds its basis label, confidence, measurement scope and DOIs <b>in the same text as the number</b> — a model relaying it cannot strip the caveats. And "no data for your GPU" is a first-class answer, so an assistant wired to these tools learns to invite a measurement instead of inventing a number. The machine-readable version of this project's whole methodology.</p>

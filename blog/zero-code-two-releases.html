@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
+<title>Zero code, two releases: a bug report was the contribution — EcoCompute</title>
+<meta name="description" content="An external reproducer never got the one-liner to run — and in one day his dead script, a footnote about checksum placement, and one sentence of confusion shipped two releases and closed the last live path to the CRLF bug." />
+<link rel="canonical" href="https://quantenergy.tech/blog/zero-code-two-releases.html" />
+<link rel="alternate" type="application/rss+xml" title="EcoCompute blog RSS" href="https://quantenergy.tech/blog/rss.xml" />
+<meta property="og:title" content="Zero code, two releases: a bug report was the contribution" />
+<meta property="og:description" content="His script never ran, he submitted no data and no code. His report, his footnotes and one sentence of confusion still shipped two releases in a day." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://quantenergy.tech/blog/zero-code-two-releases.html" />
+<meta property="og:image" content="https://quantenergy.tech/preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BlogPosting",
+  "headline":"Zero code, two releases: a bug report was the contribution",
+  "datePublished":"2026-10-29",
+  "author":{"@type":"Person","name":"Hongping Zhang","identifier":"https://orcid.org/0009-0000-2529-4613"},
+  "mainEntityOfPage":"https://quantenergy.tech/blog/zero-code-two-releases.html",
+  "image":"https://quantenergy.tech/preview.png",
+  "citation":"https://doi.org/10.5281/zenodo.19647290"
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--panel:#111834;--txt:#e6ecff;--muted:#93a0c4;--accent:#38bdf8;--line:#22305a;--good:#10b981;--bad:#f43f5e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .brand{font-weight:800;font-size:18px}
+  .brand span{color:var(--accent)}
+  h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+  .date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
+  h2{font-size:20px;margin:30px 0 6px}
+  p{margin:12px 0;color:#d3dcf6}
+  ul{color:#d3dcf6}
+  code{background:rgba(56,189,248,.12);padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#0a0f22;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#cfe0ff}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px;margin:20px 0}
+  .meta{font-size:13px;color:var(--muted)}
+  footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Eco<span>Compute</span> · Notes</div>
+      <nav><a href="/blog/">← All notes</a> &nbsp; <a href="/">Tool</a></nav>
+    </div>
+
+    <h1>Zero code, two releases: a bug report was the contribution</h1>
+    <div class="date">2026-10-29 · Hongping Zhang · report by an external reproducer</div>
+
+    <p>The <a href="/blog/first-independent-replication.html">last time</a> someone outside this
+    project moved it forward, the contribution was a full measurement: a schema-valid
+    <code>energy.json</code> from someone else's GPU. Yesterday a reproducer moved it further than
+    that, in the opposite direction — his script <strong>never ran</strong>. He submitted no data and
+    no code. In one day his dead script, two footnotes and a single sentence of confusion shipped
+    <strong>two releases</strong> and closed the last live path to a bug we thought was already dead.</p>
+
+    <h2>Morning: a script that dies in sixty seconds</h2>
+    <p>He was hired to reproduce the pipeline — the first paid attempt, on a clean Ubuntu 22.04
+    sandbox, no GPU yet. The security model held up end-to-end: the site stub downloaded the wrapper
+    from the pinned release, the SHA-256 check <strong>passed</strong>. Then bash read the first line
+    and died:</p>
+<pre>set: pipefail: invalid option name</pre>
+    <p>Anyone who has debugged Windows-authored shell scripts knows the invisible character at the
+    end of that line. Every <code>*.sh</code> we had ever published — the wrapper, the
+    <code>quickstart.sh</code> asset, the site stub itself — carried CRLF endings, and Linux bash
+    reads <code>pipefail\r</code> as an option name. The checksum had passed because the checksum was
+    computed against the CRLF bytes: <strong>integrity and correctness are different properties</strong>,
+    and a self-consistent pair of wrong files sails through the first one.</p>
+    <p>Fixed at every layer the same day: all repo scripts converted to LF, a CI guard that now fails
+    on any CRLF shell script, a new pinned release (<a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v2" target="_blank" rel="noopener">run-v2</a>;
+    run-v1 stays as the tombstone), the r4 asset re-published, and — found while re-publishing — a
+    latent error where the schema line in <code>SHA256SUMS.all</code> had never matched the tag.
+    All of it is in <a href="/changelog/">the changelog</a>.</p>
+
+    <h2>Afternoon: the verification that passed, and the sentence that mattered more</h2>
+    <p>He came back with a v2 report verifying the fix item by item — ten checks, all green:</p>
+    <table>
+      <tr><th>check</th><th>result</th></tr>
+      <tr><td>stub line endings, and that it pins run-v2's checksum</td><td>pass</td></tr>
+      <tr><td>run-v2 hash matches the stub's hardcoded value, <code>bash -n</code>, <code>--dry-run</code> plan</td><td>pass</td></tr>
+      <tr><td>r4 <code>quickstart.sh</code>: LF, checksum, <code>bash -n</code></td><td>pass</td></tr>
+      <tr><td><code>SHA256SUMS.all</code> all three entries, recomputed from the tag</td><td>pass</td></tr>
+      <tr><td><code>.gitattributes</code> rule and the CI CRLF guard present</td><td>pass</td></tr>
+    </table>
+    <p>A verification report is exactly what a solo project can never produce for itself — the person
+    who reported the bug independently confirming it is dead. That alone would have made his day
+    worthwhile. But the report also contained this, filed under "two small suggestions":</p>
+    <div class="callout">
+      "<em>quickstart.sh's header comment still says schema-1.3-r3</em>" — a stale example
+      comment, he assumed. A cosmetic remark.
+    </div>
+    <p>I checked the live r4 asset and the repo: both say r4. My first diagnosis was a cached
+    download on his side. <strong>Wrong.</strong> He had a working download path — so somewhere,
+    something was still handing out an r3. Following that instead of dismissing it found the real
+    one: the <strong>README's quick start still pointed at the r3 release</strong> — and r3's assets
+    are the original CRLF versions. Anyone who read the README from the top and copy-pasted the
+    download commands would have re-created his morning bug, exactly, on a machine that had nothing
+    to do with any cache.</p>
+    <p>The checklist that failed here is worth writing down, because "we fixed the bug" usually
+    leaves this exact hole: a bug that lives in <strong>artifacts</strong> gets fixed in the
+    artifacts — and every document that points at those artifacts has to be checked too, one by one.
+    Release asset, script header, README, site pages. We checked three of four.</p>
+
+    <h2>Evening: three small fixes, one permanent one</h2>
+    <p>His two actual suggestions were both accepted, and shipped in
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/4b34e28" target="_blank" rel="noopener">4b34e28</a>
+    together with the README fix:</p>
+    <ul>
+      <li>the quick start now pins r4 — the last live path to the CRLF bug is closed;</li>
+      <li><code>quickstart.sh</code> and the README now state where
+      <code>sha256sum -c SHA256SUMS.all</code> must run — the root of a clone of the tag, not the
+      release download directory, because its entries are repo-relative paths. He hit this one
+      himself in his first verification pass, and documented it as a usage note rather than a bug,
+      which is precisely the right diagnosis;</li>
+      <li><a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>
+      gains a release checklist whose first rule is his suggestion: <em>dry-run the published bytes
+      in a clean Linux container, downloaded the way a user would download them</em> — the exact gap
+      that let CRLF ship in the first place. That rule is now permanent, with his bug as the
+      reason it exists.</li>
+    </ul>
+
+    <h2>What counts as a contribution</h2>
+    <p>This is the part worth saying out loud, because it decides what a solo project can attract.</p>
+    <p>He has, so far, contributed: a failed run, a footnote about where a checksum command must be
+    executed, and one sentence of confusion that was wrong about the cause and right about the
+    symptom. No code. No measurement. Nothing that would count as a contribution under the default
+    definition — the one that counts commits and datasets.</p>
+    <p>Under that definition, the project's two most valuable external inputs would be invisible:
+    this, and <a href="/blog/first-independent-replication.html">a laptop measurement</a> from
+    August. The first never produced a number; the second produced one number from one run. What
+    they share is that someone outside the project <em>did the thing and reported what actually
+    happened</em> — including the parts that looked like their own mistakes. A dead script is
+    information. A confusing cache-looking download is information. Most users who hit either
+    bounce, and the maintainer never learns the funnel is broken.</p>
+    <p>For a maintainer, the operational lesson is just as short: <strong>treat every "it didn't
+    work" report as a free audit, and treat every odd detail in it as a lead until proven
+    otherwise.</strong> I initially mis-filed his r3 remark as a cache problem on his side. The cost
+    of checking it anyway was five minutes. The cost of not checking it would have been every
+    README-following user for the lifetime of the r3 link.</p>
+
+    <h2>Be the next one — especially if it breaks</h2>
+    <p>His GPU reproduction is queued: <code>energy.json</code> generation, schema validation, the
+    overlay, and a comparison against dataset v1.1.0. When it lands it will be a real contribution
+    under any definition.</p>
+    <p>But it did not have to land to count. If you run the one-liner and it dies — <strong>that is
+    the report</strong>. Open an issue with what you typed and what came back, especially the parts
+    you think are your fault. The repo's
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>
+    lists five ways to help. This note is evidence for a sixth: make the project break in front of
+    you, and tell someone.</p>
+
+    <footer>
+      All changes from this loop:
+      <a href="/changelog/">quantenergy.tech/changelog</a>
+      (2026-10-28 entries) ·
+      container repo: <a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/4b34e28" target="_blank" rel="noopener">4b34e28</a>,
+      releases <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/run-v2" target="_blank" rel="noopener">run-v2</a> and
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/releases/tag/schema-1.3-r4" target="_blank" rel="noopener">schema-1.3-r4</a>.
+      <br>Comparison data: main dataset v1.1.0 —
+      <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> ·
+      RTX 4090 deep dive —
+      <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> ·
+      paper: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN #6854700</a> ·
+      previous note: <a href="/blog/first-independent-replication.html">the first independent replication</a>
+      <br>Not a certified benchmark result. MLCommons, MLPerf and MLCube are trademarks of MLCommons
+      Association, used nominatively.
+    </footer>
+  </div>
+</body>
+</html>
