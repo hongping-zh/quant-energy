@@ -209,7 +209,8 @@ const MCP_VERSION = "1.1.0";
 const SCOPE_NOTE =
   "Scope: GPU package power measured via NVML — not wall/host power (multiply by ~1.2–1.6 for the whole node). " +
   "RTX 4090 anchors are mostly single-run (n=1). Data: doi.org/10.5281/zenodo.19647290 (main, cross-arch) · " +
-  "doi.org/10.5281/zenodo.22037483 (RTX 4090 deep dive). " +
+  "doi.org/10.5281/zenodo.22037483 (RTX 4090 deep dive) · " +
+  "doi.org/10.5281/zenodo.22855133 (RTX 5090 deep dive). " +
   "Your card not covered? Measure it and submit: github.com/hongping-zh/ecocompute-mlcube (CC BY 4.0).";
 const CROSSOVER_NOTE =
   "A crossover belongs to a card + software-stack combination, not to an architecture: a September 2026 re-run on a newer " +
