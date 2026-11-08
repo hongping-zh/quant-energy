@@ -74,6 +74,12 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-11-08</span><span class="etag site">site</span></div>
+      <h2>The homepage's structured data now carries the container's Zenodo DOIs</h2>
+      <p>Every DOI-backed entity in the homepage's JSON-LD graph — the paper, the main dataset, the RTX 4090 dataset — declared its identifiers except one: the <a href="/container/">EcoCompute energy MLCube</a> node pointed at its GitHub repository but not at its Zenodo software record, even though the container page's visible BibTeX cites it. An external review of the site's machine-readable metadata caught the gap. The node now carries both the version DOI (<a href="https://doi.org/10.5281/zenodo.23974826" target="_blank" rel="noopener">10.5281/zenodo.23974826</a>, schema-1.3-r5 — the same version-first convention as the other nodes) and the concept DOI (<a href="https://doi.org/10.5281/zenodo.23974825" target="_blank" rel="noopener">10.5281/zenodo.23974825</a>). Nothing visible on the page changes; this is for crawlers, citation tools and the audit trail.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-11-08</span><span class="etag data">data</span><span class="etag finding">finding</span></div>
       <h2>The cold–steady gap now has a measured size: +4.1% per token, from a six-arm controlled experiment</h2>
       <p>The protocol page has said "compare within a mode, not across one" since v1.1 — until now, as a design
