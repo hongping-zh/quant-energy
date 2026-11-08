@@ -74,6 +74,27 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-11-08</span><span class="etag data">data</span><span class="etag finding">finding</span></div>
+      <h2>The cold–steady gap now has a measured size: +4.1% per token, from a six-arm controlled experiment</h2>
+      <p>The protocol page has said "compare within a mode, not across one" since v1.1 — until now, as a design
+      principle without its own number. It has one. Six runs on a single RTX 4090 (TinyLlama-1.1B, NF4, batch 1,
+      greedy decoding, 10 × 256-token generations, direct NVML at 10&nbsp;Hz, zero dropped samples): three cold arms
+      launched at 37–39&nbsp;°C and three steady arms at a 53–54&nbsp;°C plateau confirmed by an external
+      5-second nvidia-smi log — <b>2033.8 ± 25.2 vs 2116.3 ± 33.0 mJ/token, +4.1%</b>, monotonic across an
+      intermediate 47&nbsp;°C arm that was discarded for insufficient cooldown but documented in the run notes.
+      Both the <a href="/method/">method page's thermal-mode bullet</a> and its Limitations list now carry the
+      number instead of the principle.</p>
+      <p class="rule-note">Disclosures that travel with it: a different physical card than the main dataset's
+      4090D; bitsandbytes 0.50.2 instead of the pinned 0.43.3 (CUDA 13 kernel availability — every report carries
+      <code>differs_from_reference_pins</code>); the r5 tool emits null for three thermal fields, backfilled
+      post hoc from the external log with the pristine originals archived alongside; steady arms validate
+      protocol-conformant, cold arms retain one intentional, disclosed deviation (warm-up = 0 by design — the
+      cold-start case current warmup-mandating protocols have no path for). Published as its own dataset, not
+      pooled into the curves: <a href="https://doi.org/10.5281/zenodo.24046432" target="_blank" rel="noopener">10.5281/zenodo.24046432</a>
+      (CC BY 4.0). No existing number changed.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-11-07</span><span class="etag container">container</span></div>
       <h2>Supply-chain honesty pass: the SBOM claim matched to reality, dependabot barred from the reproducibility lock, and the release checklist gains an SBOM step</h2>
       <p>An external review of the container repo raised two supply-chain findings; both survived fact-checking. First: the README claimed &ldquo;SBOM included&rdquo;, but only the r3 release actually carries <code>sbom.cdx.json</code> &mdash; r4 and r5 shipped without one, and the repo tree (and therefore the Zenodo r5 archive) has no SBOM at all. The README now says exactly that: &ldquo;SBOM release asset (r3; standard again from r6)&rdquo; (<a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/f75b21f431" target="_blank" rel="noopener">f75b21f</a>). Second: dependabot was opening weekly bump PRs against <code>requirements.lock.txt</code> &mdash; the fully-pinned reproducibility asset whose own header says it exists &ldquo;so quantization-backend behaviour &hellip; is frozen to a known-good set&rdquo; &mdash; including a huggingface-hub 0.36.2&rarr;2.4.0 jump across two major versions: the automated version of the torch-mismatch that once invalidated INT8 data. The pip ecosystem is now removed from <code>dependabot.yml</code> (<a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/211ca2b2c6" target="_blank" rel="noopener">211ca2b</a>); the five open bump PRs were closed with that rationale, and dependency refreshes now happen only at release boundaries, after in-container NF4/INT8 re-validation. The CONTRIBUTING release checklist now requires regenerating the SBOM against the published image for every release (<a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/0f55c62978" target="_blank" rel="noopener">0f55c62</a>) &mdash; the same move as the 2026-10-28 CRLF CI guard: a discipline that lived in a comment becomes a rule that lives in the checklist. r6 will be the first release shipped under it.</p>

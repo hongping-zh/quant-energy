@@ -118,8 +118,11 @@
       <li><b>Cold and steady are two different measurements.</b> The container defaults to
       <code>--thermal_mode cold</code>: cool to idle, fixed warmup, measure. <code>--thermal_mode steady</code>
       instead keeps warming, one pass per second, until three consecutive readings fall within 2&nbsp;°C, then
-      measures a hot card — which clocks lower and reports <em>more</em> energy per token. Compare within a mode,
-      not across one. A run that never settles says <code>steady_state_reached: false</code> rather than pretending
+      measures a hot card — which clocks lower and reports <em>more</em> energy per token: <b>measured at
+      +4.1%</b> (n&nbsp;=&nbsp;3 per arm on one RTX 4090, TinyLlama-1.1B NF4, batch 1 — cold arms launched at
+      37–39&nbsp;°C, steady arms at a 53–54&nbsp;°C plateau confirmed by an external temperature log;
+      <a href="https://doi.org/10.5281/zenodo.24046432" target="_blank" rel="noopener">10.5281/zenodo.24046432</a>).
+      Compare within a mode, not across one. A run that never settles says <code>steady_state_reached: false</code> rather than pretending
       it did, and a card with no temperature sensor says <code>basis: "unavailable"</code> rather than inventing a
       number.</li>
     </ul>
@@ -314,6 +317,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
       <li>Curves are fitted per <b>architecture class</b>, not per card: the Ada class pools RTX 4090D and RTX 4090 measurements, which differ by roughly 20 percentage points at the same model size, so Ada bands are the widest of the four classes.</li>
       <li>The RTX 4090 (Ada) July&nbsp;2026 column is n&nbsp;=&nbsp;1 per configuration — a supplementary deep dive, not a replacement for the main dataset. Two single trials of the same configuration have landed <b>8.2 points apart</b> (see above), which is the resolution to read these points at.</li>
       <li>Results are <b>backend-specific</b>: NF4 and INT8 here mean bitsandbytes NF4 and LLM.int8() at the versions recorded in each report. GPTQ, AWQ, TensorRT-LLM, llama.cpp and newer bitsandbytes releases implement different kernels and can behave differently. "INT8 cost energy at every size we tested" is a claim about this backend on these cards — not about INT8 as a format.</li>
+      <li><b>Thermal state is a measured confounder, not a hypothetical one.</b> Holding card, stack, model and workload fixed, a steady-state card (53–54&nbsp;°C plateau) cost <b>+4.1% more energy per token</b> than the same configuration launched cold (37–39&nbsp;°C), with per-arm CVs of 1.2–1.6% and a monotonic gradient across an intermediate 47&nbsp;°C arm (<a href="https://doi.org/10.5281/zenodo.24046432" target="_blank" rel="noopener">10.5281/zenodo.24046432</a>). That experiment ran on a different physical card than the main dataset's 4090D and with bitsandbytes 0.50.2 rather than the pinned 0.43.3, so its absolute values do not join the published curves — the finding is the <em>size of the thermal gap</em>, which is the same order as several effects charted on this site. Energy claims that do not disclose a thermal block are not comparable at the few-percent level.</li>
       <li>What would falsify the central claim: a measured run, from this container or an equivalent NVML-based protocol, showing quantization saving energy <em>below</em> the crossover we publish for that architecture, or costing energy above it. We publish such runs on <a href="/replications/">the replications page</a> whether they agree with us or not.</li>
       <li>This is a research protocol, <b>not a certified benchmark</b>, and not affiliated with any energy-consulting body.</li>
     </ul>
@@ -324,6 +328,7 @@ mlcube run --mlcube=. --task=energy_estimate --platform=docker</pre>
       <li><b>The methodology and argument</b> — preprint “Weight-Only Quantization Does Not Always Save Energy: An Empirical Study of LLM Inference Across NVIDIA GPU Platforms”, <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700" target="_blank" rel="noopener">SSRN&nbsp;#6854700</a> (archived: <a href="https://doi.org/10.5281/zenodo.21066652" target="_blank" rel="noopener">10.5281/zenodo.21066652</a>).</li>
       <li><b>The numbers on this site</b> — main dataset v1.1.0, <a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">10.5281/zenodo.19647290</a> (CC BY 4.0).</li>
       <li><b>The RTX 4090 (Ada) deep dive</b> — <a href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">10.5281/zenodo.22037483</a> (CC BY 4.0).</li>
+      <li><b>The cold vs steady thermal-state experiment</b> — <a href="https://doi.org/10.5281/zenodo.24046432" target="_blank" rel="noopener">10.5281/zenodo.24046432</a> (CC BY 4.0).</li>
     </ul>
 
     <footer>
