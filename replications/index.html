@@ -89,6 +89,8 @@
   .flag.untested{border-color:rgba(148,163,184,.6);color:#cbd5e1}
   .first{border:1px solid rgba(167,139,250,.55);background:rgba(167,139,250,.08);border-radius:14px;padding:16px 18px;margin:18px 0}
   .first h3{margin:0 0 6px;font-size:16px;color:#c4b5fd}
+  .flagship{border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.06);border-radius:14px;padding:16px 18px;margin:18px 0}
+  .flagship h3{margin:0 0 6px;font-size:16px;color:#34d399}
   .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
   .filters button{font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;font-family:inherit}
   .filters button.on{border-color:var(--accent);color:var(--accent)}
@@ -293,6 +295,27 @@
     reproduces our own RTX 4090 measurement of the same model to four decimal places. The quality axis replicated exactly;
     the energy axis did not replicate at all. That contrast is the point of the whole project, and we did not have
     independent evidence for it until this run.</p>
+  </div>
+
+  <div class="flagship" id="flagship">
+    <h3>The top of the verdict ladder — what a dataset-eligible report looks like</h3>
+    <p style="margin:0 0 8px">Every <code>energy.json</code> gets machine-graded on three rungs —
+    <code>schema-valid</code> → <code>protocol-conformant</code> → <code>dataset-eligible</code>, each including the ones
+    below (the ladder is explained <a href="/?tab=run" style="color:var(--accent)">on the homepage</a>). This is the first
+    real measurement to carry the top verdict: the <b>steady-state arm of the cold–steady thermal experiment</b>,
+    <b>TinyLlama-1.1B in NF4 on an RTX 4090</b> (2026-11-07) — <b>2091&nbsp;mJ/token, +8.8%</b> against its own
+    same-session FP16 baseline, zero violations under <code>tools/validate.py</code> in both the <code>v1.1-core</code>
+    and the stricter <code>dataset-eligible</code> profile (it attached a whole-run power-trace sidecar, so the window
+    can be re-cut without re-running). Full six-arm dataset:
+    <a href="https://doi.org/10.5281/zenodo.24046432" target="_blank" rel="noopener">10.5281/zenodo.24046432</a>
+    · thermal findings: <a href="/method/" style="color:var(--accent)">methodology</a>.</p>
+    <p class="meta" style="margin:0">Two disclosures, because this block is an example, not a trophy. First, it is
+    <b>the maintainer's own run</b> — it is not an independent replication, does not count toward the gallery or the
+    coverage matrix below. Second, at the time the container did not yet emit five protocol fields natively
+    (decoding, window, cooldown, steady temperature, arm order); they were <b>backfilled post hoc</b> from the
+    operator's external <code>nvidia-smi</code> temperature log, and the backfill is disclosed inside the report's
+    <code>thermal.note</code> — the validator graded the recorded facts, not how they got recorded. The container began
+    emitting these fields natively the next day (<a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/29" target="_blank" rel="noopener">ecocompute-mlcube #29</a>).</p>
   </div>
   <div class="goal" id="goalTracker" style="display:none"></div>
   <div class="stats" id="stats"></div>

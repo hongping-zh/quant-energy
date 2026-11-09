@@ -845,7 +845,30 @@ sha256sum -c SHA256SUMS && bash quickstart.sh</div>
     </div>
 
     <div class="card">
-      <h2>4 · Overlay your result on the crossover curve</h2>
+      <h2>4 · How your report is graded — the verdict ladder</h2>
+      <p class="meta" style="margin:0 0 14px">A well-formed file is not yet a comparable measurement. The same validator that runs in the container's CI — <code>tools/validate.py</code> in <a href="https://github.com/hongping-zh/ecocompute-mlcube" target="_blank" rel="noopener">ecocompute-mlcube</a> — grades every <code>energy.json</code> on three rungs. Each rung includes everything below it:</p>
+      <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px;border:1px solid rgba(245,158,11,.45);background:rgba(245,158,11,.05);border-radius:12px;padding:14px 14px 12px">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">rung 1</div>
+          <div style="font-weight:700;color:#fbbf24;margin-bottom:6px">schema-valid</div>
+          <p class="chartnote" style="margin:0">Structure correct: the JSON matches <code>schema/energy.schema.json</code>, every required field present. Says nothing yet about measurement discipline — a no-GPU estimate is schema-valid too.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border:1px solid rgba(56,189,248,.5);background:rgba(56,189,248,.05);border-radius:12px;padding:14px 14px 12px">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">rung 2</div>
+          <div style="font-weight:700;color:var(--accent);margin-bottom:6px">protocol-conformant</div>
+          <p class="chartnote" style="margin:0">Every Protocol v1.1 MUST holds: NVML sampling ≥ 10&nbsp;Hz <em>achieved</em>, same-session FP16 baseline, thermal state and decoding/window/arm-order recorded. Checked by <code>validate.py --profile v1.1-core</code>.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.05);border-radius:12px;padding:14px 14px 12px">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">rung 3</div>
+          <div style="font-weight:700;color:#34d399;margin-bottom:6px">dataset-eligible</div>
+          <p class="chartnote" style="margin:0">Conformant <b>plus</b> reportability extras: whole-run power-trace sidecar attached (the window can be re-cut post hoc without re-running), <code>basis: measured</code>, reference engine. Poolable into a dataset release.</p>
+        </div>
+      </div>
+      <p class="chartnote" style="margin-top:12px"><b>Lower is not failure.</b> An honest report can sit at rung 1: the cold arm of our own thermal experiment records <code>warmup: 0</code> as a disclosed deviation, and the validator says so instead of pretending. What the ladder forbids is claiming a rung you did not reach — <code>mock-tested</code> never becomes <code>validated</code>. A real report at the top rung: <a href="/replications/#flagship">the steady-state RTX 4090 arm →</a></p>
+    </div>
+
+    <div class="card">
+      <h2>5 · Overlay your result on the crossover curve</h2>
       <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload energy.json">
         Drop your <b>energy.json</b> here, or <b>click to choose a file</b>
         <input type="file" id="fileInput" accept="application/json,.json" style="display:none" />
