@@ -91,6 +91,8 @@
   .first h3{margin:0 0 6px;font-size:16px;color:#c4b5fd}
   .flagship{border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.06);border-radius:14px;padding:16px 18px;margin:18px 0}
   .flagship h3{margin:0 0 6px;font-size:16px;color:#34d399}
+  .volta{border:1px solid rgba(45,212,191,.5);background:rgba(45,212,191,.06);border-radius:14px;padding:16px 18px;margin:18px 0}
+  .volta h3{margin:0 0 6px;font-size:16px;color:#2dd4bf}
   .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
   .filters button{font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;font-family:inherit}
   .filters button.on{border-color:var(--accent);color:var(--accent)}
@@ -295,6 +297,26 @@
     reproduces our own RTX 4090 measurement of the same model to four decimal places. The quality axis replicated exactly;
     the energy axis did not replicate at all. That contrast is the point of the whole project, and we did not have
     independent evidence for it until this run.</p>
+  </div>
+
+  <div class="volta">
+    <h3>First Volta-architecture data — thank you, <a href="https://github.com/OliverYanghoo" target="_blank" rel="noopener">@OliverYanghoo</a></h3>
+    <p style="margin:0 0 8px">On 10 November 2026 the second independent contributor landed <b>three runs in one
+    morning</b> — TinyLlama-1.1B, Qwen2.5-3B and Qwen2.5-7B, all NF4, on a <b>Tesla V100S-PCIE-32GB</b> — and
+    <b>all three sizes saved energy</b> (−1.7%, −7.9%, −3.6%). Volta is the first architecture class measured entirely
+    outside the maintainer's own hardware. At 1.1B the sign matches the Ampere-laptop result above; at every size it is
+    opposite to our fitted Ada/Blackwell consumer curves — the bandwidth-starvation hypothesis gets its first
+    architecture-class-level support from an external contributor.
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/42" target="_blank" rel="noopener">#42</a> ·
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/43" target="_blank" rel="noopener">#43</a> ·
+    <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/44" target="_blank" rel="noopener">#44</a></p>
+    <p class="meta" style="margin:0">A model submission: it disclosed up front that the runs used <code>torch
+    2.6.0+cu124</code> rather than the pinned 2.13.0 (the CUDA-13 bitsandbytes wheel ships no <code>sm70</code>
+    kernel, so Volta would silently fall back to dataset-derived values — the same silent-degradation trap the
+    container QUICKSTART warns about), confirmed <code>matches_reference_pins</code>, attached the full
+    <code>energy.json</code> for each run, and reported a real bug on top: <code>--gpu_arch auto</code> does not
+    recognise "V100S" (the <code>\bv100\b</code> pattern has no word boundary after the digits). The large paired
+    perplexity damage on the Qwen runs (+27.6%, +22.5%) is part of the record too — savings and damage travel together.</p>
   </div>
 
   <div class="flagship" id="flagship">
@@ -821,7 +843,7 @@ function runDeepCheck(txt){
 function renderCoverage(){
   var cov = document.getElementById("covBody");
   if(!cov) return;
-  var ARCHES = ["turing", "ampere", "ada", "blackwell", "hopper"], PRECS = ["NF4", "INT8"];
+  var ARCHES = ["volta", "turing", "ampere", "ada", "blackwell", "hopper"], PRECS = ["NF4", "INT8"];
   cov.innerHTML = ARCHES.map(function(a){
     return "<tr><th style=\"text-align:left\">" + a + "</th>" + PRECS.map(function(p){
       var hits = GALLERY.filter(function(e){ return (e.arch || "").toLowerCase() === a && e.precision === p; }).length;
@@ -860,7 +882,7 @@ function renderGallery(){
       '<div class="num">ΔE vs FP16: <b>' + (e.dE > 0 ? "+" : "") + e.dE + '%</b> · basis: ' + esc(e.basis) +
         ' · n = ' + n + (e.cv_pct != null ? ' · CV ' + e.cv_pct + '%' : ' (single trial, no measured spread)') + '</div>' +
       '<div class="foot">' +
-        (cls ? flagFor(cls) : '') +
+        (cls ? flagFor(cls) : '<span class="flag untested">no fitted curve for this architecture yet — pure measurement</span>') +
         esc(e.date || "") +
         (e.report ? ' · <a href="' + esc(e.report) + '" target="_blank" rel="noopener">view energy.json</a>' : '') +
         (e.link ? ' · <a href="' + esc(e.link) + '" target="_blank" rel="noopener">context</a>' : '') +

@@ -1,0 +1,105 @@
+{
+  "schema_version": "ecocompute-energy/1.3",
+  "benchmark": "ecocompute-energy-methodology",
+  "follows_mlcommons_energy_reporting_conventions": true,
+  "certified_benchmark_result": false,
+  "scenario": "SingleStream",
+  "scenario_note": "Nominal label derived from batch size (1 -> SingleStream, else Offline). This is NOT enforced by MLPerf LoadGen: the container runs its own warmup/iterations loop and does not apply LoadGen timing constraints, so results are a supplemental energy methodology, not a certified benchmark.",
+  "timestamp_utc": "2026-11-10T05:31:46.051473Z",
+  "system_under_test": {
+    "gpu": "Tesla V100S-PCIE-32GB",
+    "gpu_arch": "volta",
+    "accelerator_count": 1,
+    "host": "Linux-5.15.0-113-generic-x86_64-with-glibc2.35"
+  },
+  "workload": {
+    "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "params_b": 1.1,
+    "precision": "NF4",
+    "batch_size": 1,
+    "decoding": "greedy",
+    "context_length": 2048
+  },
+  "measurement": {
+    "method": "NVML on-device power sampling",
+    "sample_rate_hz": 10,
+    "window": "generation",
+    "window_note": "reported energy integrates the power sampler over the generation loop only - model load, quantization and warm-up excluded (protocol v1.1 4.4); idle power is not subtracted",
+    "tokens_per_run": 256,
+    "iterations": 10,
+    "warmup": 2,
+    "iterations_note": "Decode iterations within one run, not independent trials: a single report is n=1 however high this is."
+  },
+  "thermal": {
+    "mode": "cold",
+    "basis": "measured",
+    "warmup_runs": 2,
+    "cooldown_s": 0,
+    "temperature_start_c": 44,
+    "temperature_steady_c": null,
+    "temperature_end_c": 49,
+    "temperature_peak_c": 49,
+    "steady_state_reached": false,
+    "arm_order": "fixed: target precision first, then the FP16 baseline",
+    "note": "Arm order is fixed, a disclosed deviation from 4.6.2 randomization: the target precision is measured first, then the FP16 baseline, in one session. The container performs no inter-arm cooldown wait (cooldown_s: 0 records that fact; thermal-state management is the operator's responsibility, protocol 4.6) and does not verify steady state (steady_state_reached: false is the honest value, not a claim the container is entitled to make; an operator who verified a steady plateau externally may annotate the report)."
+  },
+  "software": {
+    "python": "3.10.12",
+    "packages": {
+      "torch": "2.6.0",
+      "transformers": "4.57.6",
+      "bitsandbytes": "0.43.3",
+      "accelerate": "1.14.0",
+      "nvidia-ml-py": "13.610.43",
+      "sentencepiece": "0.2.2"
+    },
+    "torch_cuda": "12.4",
+    "nvidia_driver": "580.159.04",
+    "reference_pins": {
+      "transformers": "4.57.6",
+      "bitsandbytes": "0.43.3",
+      "accelerate": "1.14.0",
+      "nvidia-ml-py": "13.610.43",
+      "sentencepiece": "0.2.2"
+    },
+    "matches_reference_pins": true
+  },
+  "provenance": {
+    "tool": "https://quantenergy.tech",
+    "dataset_doi": "10.5281/zenodo.19647290",
+    "rtx4090_deep_dive_doi": "10.5281/zenodo.22037483",
+    "rtx5090_deep_dive_doi": "10.5281/zenodo.22855133",
+    "paper_ssrn": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6854700",
+    "code": "https://github.com/hongping-zh/ecocompute-ai"
+  },
+  "notice": "Not a certified benchmark result. Energy reported in an MLCommons-style format. MLCOMMONS, MLPERF, and MLCUBE are trademarks of MLCommons Association, referenced here nominatively.",
+  "measurement_source": "direct-nvml",
+  "results": {
+    "total_energy_joules": 7280.05,
+    "tokens_generated": 2560,
+    "energy_per_token_mj": 2843.769,
+    "avg_power_watts": 83.0,
+    "throughput_tokens_per_s": 29.2,
+    "basis": "measured",
+    "fp16_energy_per_token_mj": 2891.662,
+    "vs_fp16_energy_pct": -1.7
+  },
+  "quality": {
+    "metric": "perplexity",
+    "basis": "measured",
+    "value": 10.1017,
+    "mean_nll": 2.312701,
+    "tokens_evaluated": 15646,
+    "windows": 16,
+    "seq_len": 1024,
+    "corpus": {
+      "name": "eval_text.txt",
+      "bytes": 60600,
+      "sha256": "22ac091a6383740d30f8e41ae144032c873c772db5e1c901112c1c330fdc5504"
+    },
+    "note": "Perplexity of this run's model on a fixed vendored text, scored by teacher forcing after the power sampler stopped, so it costs the energy figure nothing. Only delta_vs_fp16_pct is meaningful: the absolute value depends on this text and this tokenizer and is not comparable with published WikiText numbers. Perplexity is a proxy for language-model damage, not a downstream-task quality guarantee.",
+    "fp16_value": 9.62,
+    "delta_vs_fp16_pct": 5.007
+  },
+  "share_url": "https://quantenergy.tech/?tab=run&overlay=eyJtIjoiVGlueUxsYW1hL1RpbnlMbGFtYS0xLjFCLUNoYXQtdjEuMCIsIk4iOjEuMSwiYSI6InZvbHRhIiwicCI6Ik5GNCIsImUiOi0xLjcsImIiOiJtZWFzdXJlZCIsImciOiJUZXNsYSBWMTAwUy1QQ0lFLTMyR0IifQ"
+}
