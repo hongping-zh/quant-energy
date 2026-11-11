@@ -260,19 +260,22 @@
       (<a href="/spec/ecocompute-protocol-v1.1.html#s4-6-thermal-state">§4.6.3</a>): a hot card clocks
       lower and reports more energy per token. So every cell in the grid now carries its thermal state —
       <b>c&nbsp;=&nbsp;cold, s&nbsp;=&nbsp;steady, u&nbsp;=&nbsp;unknown</b> — printed next to its n. Today
-      <b>every measured cell reads t&nbsp;=&nbsp;u</b>: all sessions behind this grid were recorded before the
+      <b>every maintainer cell reads t&nbsp;=&nbsp;u</b>: all sessions behind those cells were recorded before the
       spec's thermal block existed, and per
       <a href="/spec/ecocompute-protocol-v1.1.html#s4-6-thermal-state">§4.6.5</a> <b>unknown is not cold</b> —
-      a session without a recorded thermal block does not get to claim one. Practically: do not read these cells
-      against future cold- or steady-mode runs, and do not fold the September re-tests (which <em>do</em> carry
+      a session without a recorded thermal block does not get to claim one. The three <b>Volta cells read
+      t&nbsp;=&nbsp;c</b>: contributed 2026-11 by <a href="https://github.com/OliverYanghoo" target="_blank"
+      rel="noopener">@OliverYanghoo</a> with a native thermal block from the post-schema-1.3 container — the grid's
+      first cold-tagged cells. Practically: compare within a mode, never across one — do not read the u cells
+      against the c cells, and do not fold the September re-tests (which <em>do</em> carry
       thermal blocks, cold mode) into the grid — they are versioned separately and deliberately not pooled here.
-      When a contributor submits a thermal-block run into a cell, that cell's tag changes — a u next to a c is
-      exactly the comparison the spec forbids.
+      When a contributor submits a thermal-block run into a cell, that cell's tag changes — and now one has.
     </p>
     <p class="chartnote">
-      <b>Two replication counts, deliberately distinct.</b> The homepage's “1&nbsp;/&nbsp;5 independent
-      replications” counts <b>distinct people</b> who have reproduced the protocol (one so far:
-      <a href="/replications/">gkgoing's RTX 3050&nbsp;Ti run</a>). The <b>filled/hollow markers</b> across this
+      <b>Two replication counts, deliberately distinct.</b> The homepage's “2&nbsp;/&nbsp;5 independent
+      replications” counts <b>distinct people</b> who have reproduced the protocol (two so far:
+      <a href="/replications/">gkgoing's RTX 3050&nbsp;Ti run</a> and
+      <a href="https://github.com/hongping-zh/ecocompute-mlcube/issues/42" target="_blank" rel="noopener">OliverYanghoo's three V100S runs</a>). The <b>filled/hollow markers</b> across this
       page count <b>measurements per cell</b> — filled = n&nbsp;≥&nbsp;2, hollow or hatched = n&nbsp;=&nbsp;1 —
       and those repeats are mostly our own repeated trials within one dataset, not independent people. So a
       filled (n&nbsp;=&nbsp;2) cell can still have <b>zero</b> independent replications behind it. The two
