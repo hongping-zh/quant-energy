@@ -12,13 +12,18 @@ re-integrating one llama.cpp session over different windows moved the
 64-token delta by ~11–13 points while the 576-token figures agreed within ~2
 (see the window-comparison file below for the reproduced numbers).
 
-## `coverage_matrix_2026-09-09.csv`
+## `coverage_matrix.csv`
 
 Not a session: a derived roll-up of every other file here plus `build/measured.csv` and
-`data/replications/*.json`, aggregated into (quantization method × GPU architecture) × model size.
+`data/replications/*.json` (measured basis only — dataset-derived reference values never enter
+the grid), aggregated into (quantization method × GPU architecture) × model size.
 One row per non-empty cell, with the mean, the full min–max range, the number of measurements
-behind it, the cards involved, and mean Δperplexity where paired quality data exists. Regenerate
-with `python3 build/make_coverage_matrix.py`, which also renders `assets/coverage-matrix.png`.
+behind it, the cards involved, the thermal mode (§4.6: c/s/u), provenance (maintainer, or
+@handle + issue link for community cells), and mean Δperplexity where paired quality data
+exists. The file starts with reproducibility header lines: `generated_at`, `source_commit`,
+`schema_version`. Regenerate with `python3 build/make_coverage_matrix.py`, which also renders
+`assets/coverage-matrix.png`. (Supersedes `coverage_matrix_2026-09-09.csv` — same layout at v1,
+plus the provenance column and header; 2026-11-11.)
 
 Two things to keep in mind when reading it. The mean is **unweighted** across the runs feeding a
 cell — those runs come from different sessions and protocols, so the range column carries more

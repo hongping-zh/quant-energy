@@ -44,15 +44,18 @@ NON_DATA_FILES = {"README.md", "index.json"}
 FILES = [
     # --- derived roll-up -----------------------------------------------------
     {
-        "path": "data/coverage_matrix_2026-09-09.csv",
+        "path": "data/coverage_matrix.csv",
         "title": "Coverage matrix: every measurement on one grid",
         "kind": "roll-up",
         "description": (
             "Not a session: a derived roll-up of every other file here plus "
-            "build/measured.csv and data/replications/*.json, aggregated into "
-            "(quantization method x GPU architecture) x model size. One row per "
-            "non-empty cell with unweighted mean, full min-max range, measurement "
-            "count, cards involved, and paired mean delta-perplexity where it exists."
+            "build/measured.csv and data/replications/*.json (measured basis only), "
+            "aggregated into (quantization method x GPU architecture) x model size. "
+            "One row per non-empty cell with unweighted mean, full min-max range, "
+            "measurement count, cards involved, thermal mode, provenance (maintainer "
+            "or @handle + issue link), and paired mean delta-perplexity where it "
+            "exists. Starts with reproducibility header lines: generated_at, "
+            "source_commit, schema_version."
         ),
         "gpu": None,
         "gpu_arch": None,
@@ -463,6 +466,55 @@ FILES = [
         "gpu": "RTX 3050 Ti (laptop)",
         "gpu_arch": "ampere",
         "session_date": "2026-08-23",
+        "measurement_window": "generation-only (container, per its own report)",
+        "doi": None,
+    },
+    {
+        "path": "data/replications/2026-11-10-oliveryanghoo-v100s-tinyllama-nf4.energy.json",
+        "title": "Community replication: Tesla V100S, TinyLlama-1.1B, NF4",
+        "kind": "replication",
+        "description": (
+            "Second external replication, contributed 2026-11-10: an unmodified "
+            "ecocompute-mlcube energy.json from a Tesla V100S-PCIE-32GB (Volta) - "
+            "the project's first Volta-architecture data. First externally produced "
+            "natively protocol-conformant reports (post-#29 container, thermal "
+            "block t=c). Disclosed deviation: torch 2.6.0+cu124 (the pinned CUDA-13 "
+            "stack ships no sm70 wheel). Published as received."
+        ),
+        "gpu": "Tesla V100S-PCIE-32GB",
+        "gpu_arch": "volta",
+        "session_date": "2026-11-10",
+        "measurement_window": "generation-only (container, per its own report)",
+        "doi": None,
+    },
+    {
+        "path": "data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-3b-nf4.energy.json",
+        "title": "Community replication: Tesla V100S, Qwen2.5-3B, NF4",
+        "kind": "replication",
+        "description": (
+            "Second external replication, contributed 2026-11-10: Qwen2.5-3B NF4 on "
+            "a Tesla V100S-PCIE-32GB (Volta), -7.9% vs FP16 - the strongest saving "
+            "in the Volta set. Same session and disclosed torch deviation as the "
+            "TinyLlama run. Published as received."
+        ),
+        "gpu": "Tesla V100S-PCIE-32GB",
+        "gpu_arch": "volta",
+        "session_date": "2026-11-10",
+        "measurement_window": "generation-only (container, per its own report)",
+        "doi": None,
+    },
+    {
+        "path": "data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-7b-nf4.energy.json",
+        "title": "Community replication: Tesla V100S, Qwen2.5-7B, NF4",
+        "kind": "replication",
+        "description": (
+            "Second external replication, contributed 2026-11-10: Qwen2.5-7B NF4 on "
+            "a Tesla V100S-PCIE-32GB (Volta), -3.6% vs FP16. Same session and "
+            "disclosed torch deviation as the TinyLlama run. Published as received."
+        ),
+        "gpu": "Tesla V100S-PCIE-32GB",
+        "gpu_arch": "volta",
+        "session_date": "2026-11-10",
         "measurement_window": "generation-only (container, per its own report)",
         "doi": None,
     },

@@ -461,7 +461,7 @@
     <p class="hero-scope">
       <span class="chip">GPU-package power · not whole-system</span>
       <span class="chip">single-stream batch 1 · 256 tokens</span>
-      <span class="chip">26 / 56 cells measured</span>
+      <span class="chip">29 / 64 cells measured</span>
       <a href="/method/#limits">Full scope and limitations →</a>
     </p>
 <div class="trustbar" aria-label="What backs these numbers">
@@ -930,7 +930,7 @@ sha256sum -c SHA256SUMS && bash quickstart.sh</div>
         <h2>Protocol &amp; data</h2>
         <ul class="linklist">
           <li><a href="/method/">Protocol v1.1 (normative)</a> — what makes two submissions comparable</li>
-          <li><a href="/method/#glossary">Number glossary</a> — 26/56, 29, 42, 144 and 360+ each has its own denominator</li>
+          <li><a href="/method/#glossary">Number glossary</a> — 29/64, 29, 42, 144 and 360+ each has its own denominator</li>
           <li><a href="https://doi.org/10.5281/zenodo.19647290" target="_blank" rel="noopener">Main dataset v1.1.0 · Zenodo DOI</a> — 360+ measured configurations</li>
           <li><a id="zenodoCta" href="https://doi.org/10.5281/zenodo.22037483" target="_blank" rel="noopener">RTX 4090 deep-dive dataset</a> · <a href="https://doi.org/10.5281/zenodo.22295184" target="_blank" rel="noopener">llama.cpp raw data</a></li>
         </ul>
@@ -940,7 +940,7 @@ sha256sum -c SHA256SUMS && bash quickstart.sh</div>
         <h2>Limitations — read before citing</h2>
         <ul class="linklist">
           <li><a href="/method/#limits">Limitations and how to disprove us</a> — the site's own statement of its methodological weaknesses</li>
-          <li><b>26 of 56</b> coverage-matrix cells have a number; the other 30 are empty. The seed data's thermal state is <b>unknown</b>, which is not cold.</li>
+          <li><b>29 of 64</b> coverage-matrix cells have a number; the other 35 are empty. The seed data's thermal state is <b>unknown</b>, which is not cold.</li>
           <li>Backends are almost entirely <b>bitsandbytes</b> (llama.cpp has exactly one cell), and everything is <b>batch 1</b>.</li>
           <li>Stack versions drift: the fitted curves inherit the software stack their anchors were measured on — the crossover is card-plus-stack, not hardware destiny (<a href="/measured/#rtx5090-2026-09">the RTX 5090 re-test</a>).</li>
         </ul>

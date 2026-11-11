@@ -1,15 +1,15 @@
 {
   "schema": "quantenergy/data-index/1.0",
-  "generated_utc": "2026-10-13T08:53:13Z",
+  "generated_utc": "2026-11-11T02:51:45Z",
   "site": "https://quantenergy.tech",
   "license": "CC BY 4.0",
   "files": [
     {
-      "path": "data/coverage_matrix_2026-09-09.csv",
-      "url": "https://quantenergy.tech/data/coverage_matrix_2026-09-09.csv",
+      "path": "data/coverage_matrix.csv",
+      "url": "https://quantenergy.tech/data/coverage_matrix.csv",
       "title": "Coverage matrix: every measurement on one grid",
       "kind": "roll-up",
-      "description": "Not a session: a derived roll-up of every other file here plus build/measured.csv and data/replications/*.json, aggregated into (quantization method x GPU architecture) x model size. One row per non-empty cell with unweighted mean, full min-max range, measurement count, cards involved, and paired mean delta-perplexity where it exists.",
+      "description": "Not a session: a derived roll-up of every other file here plus build/measured.csv and data/replications/*.json (measured basis only), aggregated into (quantization method x GPU architecture) x model size. One row per non-empty cell with unweighted mean, full min-max range, measurement count, cards involved, thermal mode, provenance (maintainer or @handle + issue link), and paired mean delta-perplexity where it exists. Starts with reproducibility header lines: generated_at, source_commit, schema_version.",
       "gpu": null,
       "gpu_arch": null,
       "session_date": "2026-09-09",
@@ -17,9 +17,9 @@
       "license": "CC BY 4.0",
       "window_note": "Every cell is on the generation window (the file name keeps its original date): the bitsandbytes rows are the container window (sampling starts after load, quantization and warm-up), and since 2026-09-24 the llama.cpp row is re-cut from its archived 100 Hz power traces (see rtx4090_llamacpp_window_comparison_2026-09-24). The llama.cpp row is still listed separately because it is a different runtime and workload shape (1x576 tokens vs 10x256), not a different denominator.",
       "regenerate": "python3 build/make_coverage_matrix.py",
-      "bytes": 2606,
-      "sha256": "74eeb65378f7c1a039a11befe9e4c8e89e1f7b41c5a2753f9962e0e147b9ecf8",
-      "rows": 26
+      "bytes": 3672,
+      "sha256": "59e213a075b9b307fb1e8bb676d2b12a74320b506f5b17bd2dcfc3a1841700f1",
+      "rows": 32
     },
     {
       "path": "data/rtx4090_llamacpp_window_comparison_2026-09-24.csv",
@@ -330,6 +330,51 @@
       "license": "CC BY 4.0",
       "bytes": 3751,
       "sha256": "22b80ab62e87c54a0f0b92677d92968e6ea0b02d711565bb8c3f67015b653d07",
+      "rows": 1
+    },
+    {
+      "path": "data/replications/2026-11-10-oliveryanghoo-v100s-tinyllama-nf4.energy.json",
+      "url": "https://quantenergy.tech/data/replications/2026-11-10-oliveryanghoo-v100s-tinyllama-nf4.energy.json",
+      "title": "Community replication: Tesla V100S, TinyLlama-1.1B, NF4",
+      "kind": "replication",
+      "description": "Second external replication, contributed 2026-11-10: an unmodified ecocompute-mlcube energy.json from a Tesla V100S-PCIE-32GB (Volta) - the project's first Volta-architecture data. First externally produced natively protocol-conformant reports (post-#29 container, thermal block t=c). Disclosed deviation: torch 2.6.0+cu124 (the pinned CUDA-13 stack ships no sm70 wheel). Published as received.",
+      "gpu": "Tesla V100S-PCIE-32GB",
+      "gpu_arch": "volta",
+      "session_date": "2026-11-10",
+      "measurement_window": "generation-only (container, per its own report)",
+      "license": "CC BY 4.0",
+      "bytes": 4811,
+      "sha256": "db4dd6fde931ecdb82b97e591ef73aff496fc9ad691a412d5f91d39804ccd0aa",
+      "rows": 1
+    },
+    {
+      "path": "data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-3b-nf4.energy.json",
+      "url": "https://quantenergy.tech/data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-3b-nf4.energy.json",
+      "title": "Community replication: Tesla V100S, Qwen2.5-3B, NF4",
+      "kind": "replication",
+      "description": "Second external replication, contributed 2026-11-10: Qwen2.5-3B NF4 on a Tesla V100S-PCIE-32GB (Volta), -7.9% vs FP16 - the strongest saving in the Volta set. Same session and disclosed torch deviation as the TinyLlama run. Published as received.",
+      "gpu": "Tesla V100S-PCIE-32GB",
+      "gpu_arch": "volta",
+      "session_date": "2026-11-10",
+      "measurement_window": "generation-only (container, per its own report)",
+      "license": "CC BY 4.0",
+      "bytes": 4767,
+      "sha256": "9169f6bb201530d7d1d63365e32fbd968aadf761340ec5995dcfa67e15a9c1c2",
+      "rows": 1
+    },
+    {
+      "path": "data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-7b-nf4.energy.json",
+      "url": "https://quantenergy.tech/data/replications/2026-11-10-oliveryanghoo-v100s-qwen25-7b-nf4.energy.json",
+      "title": "Community replication: Tesla V100S, Qwen2.5-7B, NF4",
+      "kind": "replication",
+      "description": "Second external replication, contributed 2026-11-10: Qwen2.5-7B NF4 on a Tesla V100S-PCIE-32GB (Volta), -3.6% vs FP16. Same session and disclosed torch deviation as the TinyLlama run. Published as received.",
+      "gpu": "Tesla V100S-PCIE-32GB",
+      "gpu_arch": "volta",
+      "session_date": "2026-11-10",
+      "measurement_window": "generation-only (container, per its own report)",
+      "license": "CC BY 4.0",
+      "bytes": 4770,
+      "sha256": "6c537cf6ecf6e336b1939b0d2c5661fa9368bc0de39e8a6b218d4a05c06c2e46",
       "rows": 1
     },
     {

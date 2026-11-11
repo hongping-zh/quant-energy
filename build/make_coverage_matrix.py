@@ -50,6 +50,7 @@ SIZES = [0.5, 1.1, 1.5, 3.0, 7.0, 8.0, 9.0, 14.0]
 SIZE_LABELS = ["0.5B", "1.1B", "1.5B", "3B", "7B", "8B", "9B", "14B"]
 
 ARCH_LABEL = {
+    "volta": "Volta",
     "turing": "Turing",
     "ampere": "Ampere",
     "ada": "Ada",
@@ -60,6 +61,7 @@ ARCH_LABEL = {
 ROWS = [
     ("bnb INT8", "ada"),
     ("bnb INT8", "ampere"),
+    ("bnb NF4", "volta"),
     ("bnb NF4", "turing"),
     ("bnb NF4", "ampere"),
     ("bnb NF4", "ada"),
@@ -72,17 +74,19 @@ SPLIT_BEFORE = ("llama.cpp Q4_0", "ada")   # runtime / workload shape changes he
 # Thermal mode tags, spec §4.6: c = cold, s = steady, u = unknown.
 # §4.6.5: sessions recorded before the thermal block existed (the v1.1.0 seed
 # dataset, the July/August supplementary sessions, the llama.cpp traces and
-# external replications) have UNKNOWN thermal state - not cold. Comparisons
-# MUST stay within one mode (§4.6.3), so every cell carries its mode tag.
+# pre-#29 external replications) have UNKNOWN thermal state - not cold.
+# Post-#29 external reports carry a native thermal block and enter with their
+# own mode tag. Comparisons MUST stay within one mode (§4.6.3), so every cell
+# carries its mode tag.
 THERMAL_TAG = {"cold": "c", "steady": "s", "unknown": "u"}
 
 
 def cells_init():
-    return {row: {s: {"deltas": [], "n": 0, "gpus": set(), "dppl": [], "thermal": set()}
+    return {row: {s: {"deltas": [], "n": 0, "gpus": set(), "dppl": [], "thermal": set(), "prov": set()}
                   for s in SIZES} for row in ROWS}
 
 
-def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None, thermal="unknown"):
+def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None, thermal="unknown", prov=None):
     key = (method, arch)
     if key not in cells or params_b not in cells[key]:
         raise KeyError(f"no cell for {key} @ {params_b}B")
@@ -91,6 +95,8 @@ def add(cells, method, arch, params_b, delta_pct, n, gpu, dppl=None, thermal="un
     c["n"] += n
     c["gpus"].add(gpu)
     c["thermal"].add(thermal)
+    if prov is not None:
+        c["prov"].add(prov)
     if dppl is not None:
         c["dppl"].append(dppl)
 
@@ -130,14 +136,32 @@ def load(cells):
             float(r["delta_perplexity_pct"]) if r["delta_perplexity_pct"] else None)
 
     # ── 4. external replications ──
+    #    Measured basis only (measurement_source: direct-nvml). Dataset-derived
+    #    reference values are estimates and never enter this grid.
+    #    Thermal: post-#29 reports carry a native thermal block (mode: cold |
+    #    steady); pre-thermal-block submissions have no block and stay t=u.
+    repl_index = {}
+    try:
+        with open(os.path.join(ROOT, "replications", "replications.json"), encoding="utf-8") as fh:
+            for e in json.load(fh).get("entries", []):
+                if e.get("report"):
+                    repl_index[os.path.basename(e["report"])] = (e.get("handle"), e.get("link"))
+    except OSError:
+        pass
     for path in sorted(glob.glob(os.path.join(ROOT, "data", "replications", "*.json"))):
         rep = json.load(open(path))
         res, wl = rep["results"], rep["workload"]
         if res.get("vs_fp16_energy_pct") is None:
             continue
+        if rep.get("measurement_source", "direct-nvml") != "direct-nvml":
+            continue
+        handle, link = repl_index.get(os.path.basename(path), (None, None))
+        prov = " ".join(p for p in (handle, f"({link})" if link else "") if p) or "community submission"
+        thermal = (rep.get("thermal") or {}).get("mode") or "unknown"
         add(cells, "bnb INT8" if wl["precision"] == "INT8" else "bnb NF4",
             rep["system_under_test"]["gpu_arch"], float(wl["params_b"]),
-            float(res["vs_fp16_energy_pct"]), 1, rep["system_under_test"]["gpu"])
+            float(res["vs_fp16_energy_pct"]), 1, rep["system_under_test"]["gpu"],
+            thermal=thermal, prov=prov)
 
     # ── 5. llama.cpp GGUF, generation window re-cut from the raw traces ──
     #    (build/make_window_comparison.py; supersedes the decode-only figure
@@ -151,12 +175,20 @@ def load(cells):
             float(r["vs_fp16_pct_gen_th50"]), int(r["n_replicates"]), "RTX 4090", None)
 
 
-def write_csv(cells, path):
+def write_csv(cells, path, source_commit):
+    import datetime
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
+        # Reproducibility header (RFC 4180-style '#' preamble lines): when this
+        # file was generated, from which commit, and in which layout version.
+        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        w.writerow([f"# generated_at: {now}"])
+        w.writerow([f"# source_commit: {source_commit}"])
+        w.writerow(["# schema_version: coverage-matrix-csv/2 "
+                    "(v2: provenance column, neutral filename; v1: coverage_matrix_2026-09-09.csv)"])
         w.writerow(["method", "gpu_arch", "params_b", "vs_fp16_energy_pct_mean",
                     "vs_fp16_energy_pct_min", "vs_fp16_energy_pct_max",
-                    "n_measurements", "gpus", "delta_perplexity_pct_mean", "thermal_mode", "denominator"])
+                    "n_measurements", "gpus", "delta_perplexity_pct_mean", "thermal_mode", "provenance", "denominator"])
         for (method, arch) in ROWS:
             denom = ("generation-only (re-cut from the raw trace)"
                      if method.startswith("llama.cpp")
@@ -171,6 +203,7 @@ def write_csv(cells, path):
                             "; ".join(sorted(c["gpus"])),
                             round(sum(c["dppl"]) / len(c["dppl"]), 2) if c["dppl"] else "",
                             thermal_label(c["thermal"]),
+                            "; ".join(sorted(c["prov"])) if c["prov"] else "maintainer",
                             denom])
 
 
@@ -184,7 +217,7 @@ def colour(delta):
 
 def render(cells, path):
     n_rows, n_cols = len(ROWS), len(SIZES)
-    fig, ax = plt.subplots(figsize=(11.6, 5.4), dpi=140)
+    fig, ax = plt.subplots(figsize=(11.6, 5.4 + 0.5 * (n_rows - 7)), dpi=140)
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(BG)
 
@@ -262,15 +295,20 @@ def render(cells, path):
             ha="left", va="center", color=TXT, fontsize=9.5, fontweight="bold")
     ax.text(-3.6, -1.94,
             "t = thermal mode (spec \u00a74.6): c = cold \u00b7 s = steady \u00b7 u = unknown.  "
-            "Every session behind this grid was recorded before the thermal block existed, so every measured cell is t=u \u2014 "
-            "unknown is not cold (\u00a74.6.5). Compare within a mode, never across cold and steady (\u00a74.6.3): "
-            "do not read these cells against future c/s runs, and the thermal-block re-tests are deliberately not pooled here.",
+            "Maintainer cells are all t=u \u2014 recorded before the thermal block existed; unknown is not cold (\u00a74.6.5). "
+            "The three Volta cells are t=c, produced natively by the post-schema-1.3 container (issues #42\u201344). "
+            "Compare within a mode, never across (\u00a74.6.3); the thermal-block re-tests are deliberately not pooled here.",
+            ha="left", va="center", color=MUTED, fontsize=8.2)
+    ax.text(-3.6, -2.32,
+            "Volta row: community contribution by @OliverYanghoo, n=1 per cell, disclosed deviation torch 2.6.0+cu124 "
+            "(the pinned CUDA-13 stack ships no sm70 wheel) \u2014 displayed, annotated, never fitted. "
+            "Same rule as the 5090 9-20 session: a deviation from the pins is shown, not hidden.",
             ha="left", va="center", color=MUTED, fontsize=8.2)
     ax.text(n_cols + 0.05, -1.57, "quantenergy.tech · CC BY 4.0", ha="right", va="center",
             color=MUTED, fontsize=8.5)
 
     ax.set_xlim(-3.7, n_cols + 0.1)
-    ax.set_ylim(-2.3, n_rows + 1.7)
+    ax.set_ylim(-2.7, n_rows + 1.7)
     ax.axis("off")
     fig.tight_layout(pad=0.6)
     fig.savefig(path, facecolor=BG, bbox_inches="tight")
@@ -278,10 +316,17 @@ def render(cells, path):
 
 
 def main():
+    import subprocess
+    try:
+        source_commit = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+            capture_output=True, text=True, check=True).stdout.strip()
+    except Exception:
+        source_commit = "unknown"
     cells = cells_init()
     load(cells)
-    csv_path = os.path.join(ROOT, "data", "coverage_matrix_2026-09-09.csv")
-    write_csv(cells, csv_path)
+    csv_path = os.path.join(ROOT, "data", "coverage_matrix.csv")
+    write_csv(cells, csv_path, source_commit)
     print(f"wrote {csv_path}")
     render(cells, os.path.join(ROOT, "assets", "coverage-matrix.png"))
 

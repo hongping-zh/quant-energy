@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://ecocompute-estimator.zhanghongping1982.workers.dev; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'" />
 <title>Evidence — everything EcoCompute has measured</title>
-<meta name="description" content="The measured evidence behind quantenergy.tech: 26 of 56 coverage-matrix cells, 29 crossover anchors across 5 GPU models in 4 architecture classes, the RTX 4090 deep dive, the RTX 5090 stack re-test, the two-card NF4 re-test, public replications, and the datasets they live in." />
+<meta name="description" content="The measured evidence behind quantenergy.tech: 29 of 64 coverage-matrix cells, 29 crossover anchors across 5 GPU models in 4 architecture classes, the RTX 4090 deep dive, the RTX 5090 stack re-test, the two-card NF4 re-test, public replications, and the datasets they live in." />
 <link rel="canonical" href="https://quantenergy.tech/measured/" />
 <meta property="og:title" content="Evidence — everything EcoCompute has measured" />
 <meta property="og:description" content="Coverage matrix, anchors, deep dives and re-tests — every measured claim, its replication level and its DOI, in one place." />
@@ -98,13 +98,14 @@
   <p class="sub">This is the layer where every <b>measured</b> claim on <a href="/">quantenergy.tech</a> lives: the coverage
   matrix, the anchors behind the fitted curves, the deep dives and re-tests, public replications, and the datasets they
   are archived in. Nothing here is an estimate; the <a href="/?tab=estimate">estimator</a> is a separate, labelled tool.
-  What each count means — 26/56, 29, 42, 144, 360+ — is defined once in the
+  What each count means — 29/64, 29, 42, 144, 360+ — is defined once in the
   <a href="/method/#glossary">number glossary</a>.</p>
 
   <div class="statgrid">
-    <div class="stat"><div class="v">26 / 56</div><div class="k"><a href="/method/#glossary" title="Coverage-matrix cells with ≥1 measurement, of 56 total.">coverage-matrix cells</a></div></div>
+    <div class="stat"><div class="v">29 / 64</div><div class="k"><a href="/method/#glossary" title="Coverage-matrix cells with ≥1 direct NVML measurement, of 64 total. Maintainer and community cells alike.">coverage-matrix cells</a></div></div>
     <div class="stat"><div class="v">29</div><div class="k"><a href="/method/#glossary" title="Crossover anchors: distinct GPU × model × precision points behind the fitted curves.">crossover anchors</a></div></div>
-    <div class="stat"><div class="v">5 + 1</div><div class="k">GPU architectures + one contributed card</div></div>
+    <div class="stat"><div class="v">5</div><div class="k"><a href="/method/#glossary" title="Architecture classes with ≥1 direct NVML measurement on the grid — maintainer or community. Borrowed curve families (Hopper) don't count.">arch. classes measured</a></div></div>
+    <div class="stat"><div class="v">2 / 5</div><div class="k"><a href="/replications/" title="Independent replicators, counted as distinct people. Site goal: five.">independent replicators</a></div></div>
     <div class="stat"><div class="v">100%</div><div class="k">direct NVML, never TDP</div></div>
   </div>
 
@@ -219,12 +220,12 @@
     <p class="meta" style="margin:0 0 14px;line-height:1.6">
       Every energy measurement published here, on one grid: quantization method × GPU architecture down the side,
       model size across the top, and in each cell the change in energy per token against an FP16 baseline
-      <b>on the same card</b>. <b>26 of 56 cells have a measurement.</b> The empty ones are not an oversight —
+      <b>on the same card</b>. <b>29 of 64 cells have a measurement.</b> The empty ones are not an oversight —
       they are the reason this site exists.
     </p>
     <a href="/assets/coverage-matrix.png" target="_blank" rel="noopener" title="Open full size">
       <img src="/assets/coverage-matrix.png" loading="lazy"
-           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point is a property of the card and its software stack (Turing 2.1B, Ada 3.7B, Blackwell 4.8B on one stack; the same 5090 crossed at 1.8B on a newer one); llama.cpp Q4_0 has one cell at -63%. 26 of 56 cells are measured. Each cell states its replication count (n) and its thermal mode (t): every measured cell is t=u — thermal state unknown, pre-thermal-block sessions."
+           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point is a property of the card and its software stack (Turing 2.1B, Ada 3.7B, Blackwell 4.8B on one stack; the same 5090 crossed at 1.8B on a newer one); llama.cpp Q4_0 has one cell at -63%. 29 of 64 cells are measured. Each cell states its replication count (n) and its thermal mode (t): maintainer cells are t=u (pre-thermal-block sessions); the three Volta cells are t=c, community-measured by @OliverYanghoo on a Tesla V100S with a disclosed torch deviation."
            style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
     <p class="chartnote" style="margin-top:14px">
       Three things the grid says that no single number does.
@@ -280,7 +281,7 @@
     </p>
     <div class="cta" style="margin-top:14px">
       <a class="btn" href="https://colab.research.google.com/github/hongping-zh/quant-energy/blob/main/notebooks/ecocompute-measure.ipynb" target="_blank" rel="noopener">Fill an empty cell on a free Colab T4 →</a>
-      <a class="ghost" href="https://github.com/hongping-zh/quant-energy/blob/main/data/coverage_matrix_2026-09-09.csv" target="_blank" rel="noopener">Download the matrix as CSV</a>
+      <a class="ghost" href="https://github.com/hongping-zh/quant-energy/blob/main/data/coverage_matrix.csv" target="_blank" rel="noopener">Download the matrix as CSV</a>
       <span class="badge">A ? costs about half an hour of a free GPU. Contradictions are published as prominently as confirmations.</span>
     </div>
   </div>
