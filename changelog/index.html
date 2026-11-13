@@ -74,6 +74,21 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-11-13</span><span class="etag site">site</span></div>
+      <h2>The differential method now has a drawing: an interactive isometric bench at /bench/</h2>
+      <p>The README has explained the <b>differential method</b> — measure the load-free baseline arm and the loaded
+      arm on the same card, subtract, and the difference is the inference cost alone — in prose since the beginning.
+      It now also explains it in one picture: <a href="/bench/">/bench/</a> is a self-contained interactive isometric
+      diagram of a differential power bench — two engines, one per arm, feeding a central manifold; a flywheel that
+      actually spins, cams that actually push, a chart recorder that actually plots; live readouts; keyboard control
+      (arrow keys switch arms, space swaps the measured condition); dark and <a href="/bench/light.html">light</a>
+      themes. The drawing is machine-audited the way the container is: 148 items, 24 tubes, 629 depth-order rules,
+      665 texture-line ends, every tube endpoint landed, every part supported to the ground, zero violations. A
+      550&nbsp;KB single file, no external requests, works offline. Entry point on the <a href="/container/">container
+      page</a>.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-11-11</span><span class="etag site">site</span><span class="etag data">data</span></div>
       <h2>The grid grows: Volta enters the coverage matrix — 26/56 is now 29/64</h2>
       <p>The three V100S runs above are now <b>cells in the coverage matrix</b>, not just gallery entries: the matrix's own rule is "every published direct NVML measurement", and the Volta cells meet it the same way the maintainer cells do — vs a same-card FP16 baseline, no conversion. Denominator 56 → <b>64</b> (one new row), filled 26 → <b>29</b>. The row is annotated, not laundered: each cell reads <b>n=1 · t=c</b> — the first cold-tagged cells on the grid, produced natively by the post-schema-1.3 container — and the caption states the disclosed torch deviation (2.6.0+cu124, no sm70 wheel in the pinned stack). Same treatment as the 5090 9-20 session: a deviation from the pins is shown, not hidden, and nothing here is fitted.</p>
