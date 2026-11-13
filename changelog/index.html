@@ -76,12 +76,14 @@
     <div class="entry">
       <div class="ehead"><span class="edate">2026-11-13</span><span class="etag site">site</span></div>
       <h2>The differential method now has a drawing: an interactive isometric bench at /bench/</h2>
-      <p>The README has explained the <b>differential method</b> — measure the load-free baseline arm and the loaded
-      arm on the same card, subtract, and the difference is the inference cost alone — in prose since the beginning.
+      <p>The README has explained the <b>differential method</b> — measure an FP16 arm and a quantized arm of the same
+      workload on the same card in the same session; the difference is the quantization's net energy effect, never the
+      inference cost itself, and idle is never subtracted — in prose since the beginning.
       It now also explains it in one picture: <a href="/bench/">/bench/</a> is a self-contained interactive isometric
       diagram of a differential power bench — two engines, one per arm, feeding a central manifold; a flywheel that
       actually spins, cams that actually push, a chart recorder that actually plots; live readouts; keyboard control
-      (arrow keys switch arms, space swaps the measured condition); dark and <a href="/bench/light.html">light</a>
+      (arrow keys switch arms, space restarts the strip, escape cuts the power; click or tap cycles the arms); dark
+      and <a href="/bench/light.html">light</a>
       themes. The drawing is machine-audited the way the container is: 148 items, 24 tubes, 629 depth-order rules,
       665 texture-line ends, every tube endpoint landed, every part supported to the ground, zero violations. A
       550&nbsp;KB single file, no external requests, works offline. Entry point on the <a href="/container/">container
