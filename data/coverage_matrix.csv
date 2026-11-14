@@ -1,5 +1,5 @@
-# generated_at: 2026-11-11T02:46:23Z
-# source_commit: 2f0af9a
+# generated_at: 2026-11-14T02:06:27Z
+# source_commit: 64a1d77
 "# schema_version: coverage-matrix-csv/2 (v2: provenance column, neutral filename; v1: coverage_matrix_2026-09-09.csv)"
 method,gpu_arch,params_b,vs_fp16_energy_pct_mean,vs_fp16_energy_pct_min,vs_fp16_energy_pct_max,n_measurements,gpus,delta_perplexity_pct_mean,thermal_mode,provenance,denominator
 bnb INT8,ada,0.5,472.6,241.9,594.6,5,RTX 4090,0.52,unknown,maintainer,generation-only (container window)
@@ -10,14 +10,14 @@ bnb INT8,ada,7.0,87.1,49.5,105.9,5,RTX 4090,1.19,unknown,maintainer,generation-o
 bnb INT8,ampere,7.0,130.8,130.8,130.8,2,A800,,unknown,maintainer,generation-only (container window)
 bnb INT8,ampere,9.0,117.2,117.2,117.2,2,A800,,unknown,maintainer,generation-only (container window)
 bnb INT8,ampere,14.0,107.4,107.4,107.4,2,A800,,unknown,maintainer,generation-only (container window)
-bnb NF4,volta,1.1,-1.7,-1.7,-1.7,1,Tesla V100S-PCIE-32GB,,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/42),generation-only (container window)
-bnb NF4,volta,3.0,-7.9,-7.9,-7.9,1,Tesla V100S-PCIE-32GB,,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/43),generation-only (container window)
-bnb NF4,volta,7.0,-3.6,-3.6,-3.6,1,Tesla V100S-PCIE-32GB,,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/44),generation-only (container window)
+bnb NF4,volta,1.1,-1.7,-1.7,-1.7,1,Tesla V100S-PCIE-32GB,5.01,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/42),generation-only (container window)
+bnb NF4,volta,3.0,-7.9,-7.9,-7.9,1,Tesla V100S-PCIE-32GB,27.56,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/43),generation-only (container window)
+bnb NF4,volta,7.0,-3.6,-3.6,-3.6,1,Tesla V100S-PCIE-32GB,22.48,cold,@OliverYanghoo (https://github.com/hongping-zh/ecocompute-mlcube/issues/44),generation-only (container window)
 bnb NF4,turing,1.1,4.6,4.6,4.6,2,T4,,unknown,maintainer,generation-only (container window)
 bnb NF4,turing,1.5,0.2,0.2,0.2,2,T4,,unknown,maintainer,generation-only (container window)
 bnb NF4,turing,3.0,-1.4,-1.4,-1.4,2,T4,,unknown,maintainer,generation-only (container window)
 bnb NF4,turing,7.0,-13.8,-13.8,-13.8,2,T4,,unknown,maintainer,generation-only (container window)
-bnb NF4,ampere,1.1,-16.2,-16.2,-16.2,1,NVIDIA GeForce RTX 3050 Ti Laptop GPU,,unknown,@gkgoing (https://github.com/hongping-zh/ecocompute-mlcube/issues/15),generation-only (container window)
+bnb NF4,ampere,1.1,-16.2,-16.2,-16.2,1,NVIDIA GeForce RTX 3050 Ti Laptop GPU,5.0,unknown,@gkgoing (https://github.com/hongping-zh/ecocompute-mlcube/issues/15),generation-only (container window)
 bnb NF4,ampere,7.0,-4.1,-4.1,-4.1,2,A800,,unknown,maintainer,generation-only (container window)
 bnb NF4,ampere,9.0,-1.5,-1.5,-1.5,2,A800,,unknown,maintainer,generation-only (container window)
 bnb NF4,ampere,14.0,2.5,2.5,2.5,2,A800,,unknown,maintainer,generation-only (container window)

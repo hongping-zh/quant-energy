@@ -158,9 +158,14 @@ def load(cells):
         handle, link = repl_index.get(os.path.basename(path), (None, None))
         prov = " ".join(p for p in (handle, f"({link})" if link else "") if p) or "community submission"
         thermal = (rep.get("thermal") or {}).get("mode") or "unknown"
+        # post-#29 reports carry a quality block (perplexity, teacher-forced on
+        # a vendored text after the power sampler stopped); pre-quality reports
+        # have no block and the cell keeps an empty column.
+        dppl = (rep.get("quality") or {}).get("delta_vs_fp16_pct")
         add(cells, "bnb INT8" if wl["precision"] == "INT8" else "bnb NF4",
             rep["system_under_test"]["gpu_arch"], float(wl["params_b"]),
             float(res["vs_fp16_energy_pct"]), 1, rep["system_under_test"]["gpu"],
+            dppl=float(dppl) if dppl is not None else None,
             thermal=thermal, prov=prov)
 
     # ── 5. llama.cpp GGUF, generation window re-cut from the raw traces ──
