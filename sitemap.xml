@@ -50,15 +50,9 @@
   </url>
   <url>
     <loc>https://quantenergy.tech/bench/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://quantenergy.tech/bench/light.html</loc>
-    <lastmod>2026-11-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://quantenergy.tech/variables/</loc>

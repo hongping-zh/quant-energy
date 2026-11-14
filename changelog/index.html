@@ -82,10 +82,13 @@
       It now also explains it in one picture: <a href="/bench/">/bench/</a> is a self-contained interactive isometric
       diagram of a differential power bench — two engines, one per arm, feeding a central manifold; a flywheel that
       actually spins, cams that actually push, a chart recorder that actually plots; live readouts; keyboard control
-      (arrow keys switch arms, space restarts the strip, escape cuts the power; click or tap cycles the arms); dark
-      and <a href="/bench/light.html">light</a>
-      themes. The drawing is machine-audited the way the container is: 148 items, 24 tubes, 629 depth-order rules,
-      665 texture-line ends, every tube endpoint landed, every part supported to the ground, zero violations. A
+      (arrow keys switch arms, space restarts the strip, escape cuts the power; click or tap cycles the arms). One
+      file serves both themes: it follows the system setting, the footer switch or <code>?theme=light</code> overrides
+      it, and the old <a href="/bench/light.html">/bench/light.html</a> URL redirects to the override. The drawing is
+      generated from the same model as the container and its geometry is machine-checked on every rebuild — but by a
+      drawing toolchain that is not part of this repo, so unlike the container's validator that check is not
+      independently reproducible, and we no longer quote its counts here. What is verifiable is where the demo
+      numbers come from: the measured ada / NF4 / 7.0B cell (-33.7%, n=2) of <code>data/coverage_matrix.csv</code>. A
       550&nbsp;KB single file, no external requests, works offline. Entry point on the <a href="/container/">container
       page</a>.</p>
     </div>
