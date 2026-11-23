@@ -74,6 +74,22 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-11-23</span><span class="etag site">site</span></div>
+      <h2>Crossover wording unified: one number per stack (≈4.8B → ≈1.8B)</h2>
+      <p>The v1.1.0-stack NF4 crossover on the RTX 5090 had been quoted as <b>≈5B</b> in some prose and
+      <b>4.8B</b> elsewhere (the coverage matrix, the blogs, the MCP tool) — including twice on the same
+      <a href="/cite/">/cite/</a> page. Both are fits of the same four v1.1.0 anchor rows (+26.5 / +29.4 /
+      +11.7 / −11.4 pp), whose sign flip sits only between the 3B and 7B rows: <b>4.8B is the site model's
+      fitted crossing</b> (<code>curves.json crossover_b = 4.751</code>), while ≈5B was the cruder linear
+      interpolation between the 3B and 7B anchors. Two fit values for one number read as a contradiction, so
+      every fitted-crossover mention now uses <b>≈4.8B → ≈1.8B</b> (the machine-served pair; the newer stack's
+      raw rows are separately described as reaching break-even within ±3 pp by 1.1–1.5B). No dataset or curve
+      changed — this is a wording unification across /cite/, the homepage and /method/ chartnotes, /measured/
+      figure captions, the container README, the profile README and the Zenodo 5090 record description
+      (~5.2B there was a stale third fit value). Older entries below are left as time capsules.</p>
+    </div>
+
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-11-13</span><span class="etag site">site</span></div>
       <h2>The differential method now has a drawing: an interactive isometric bench at /bench/</h2>
       <p>The README has explained the <b>differential method</b> — measure an FP16 arm and a quantized arm of the same

@@ -381,18 +381,18 @@
       The break-even size where NF4 stops costing energy and starts saving it is the single number this site is most
       often asked for. We re-measured it on the <b>same RTX 5090</b> that produced our Blackwell anchors, months later
       on a current software stack (<b>bitsandbytes 0.50.2</b>, torch 2.14, CUDA 13.0, driver 580.76.05) — and it moved
-      from <b>≈5B to ≈1.8B</b>.
+      from <b>≈4.8B to ≈1.8B</b>.
       Nothing about the hardware changed. <b>The crossover is a property of the card–stack pair: the
       architecture sets one part of it and the software stack sets another.</b> Turing, Ada and Blackwell cross at
       different sizes on a shared-era stack; this session shows the stack part — on one unchanged RTX 5090, a newer
-      stack moved the crossing from ≈5B to ≈1.8B. Neither factor alone explains a break-even figure, and every one
+      stack moved the crossing from ≈4.8B to ≈1.8B. Neither factor alone explains a break-even figure, and every one
       on this site — ours included — carries an implicit "with the libraries we had that month". The 2026-09-25
       <a href="#nf4-retest-2026-09">two-card 4090 re-test</a> shows the stack's move is not universal: the same
       newer stack left Ada at break-even.
     </p>
     <a href="/assets/rtx5090-crossover-moved.png" target="_blank" rel="noopener" title="Open full size">
       <img src="/assets/rtx5090-crossover-moved.png" loading="lazy"
-           alt="NF4 energy versus FP16 on one RTX 5090 at 0.5B to 7B, measured on two software stacks: the v1.1.0 dataset curve crosses zero near 5B, the 2026-09 bitsandbytes 0.50.2 session crosses near 1.8B."
+           alt="NF4 energy versus FP16 on one RTX 5090 at 0.5B to 7B, measured on two software stacks: the v1.1.0 dataset curve crosses zero near 4.8B, the 2026-09 bitsandbytes 0.50.2 session crosses near 1.8B."
            style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
     <p class="chartnote" style="margin-top:14px">
       Five models, 0.5B–7B, NF4 and INT8 against a per-session FP16 baseline, batch 1, 256 tokens × 10 iterations,
