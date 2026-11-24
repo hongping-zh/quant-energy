@@ -225,7 +225,7 @@
     </p>
     <a href="/assets/coverage-matrix.png" target="_blank" rel="noopener" title="Open full size">
       <img src="/assets/coverage-matrix.png" loading="lazy"
-           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point is a property of the card and its software stack (Turing 2.1B, Ada 3.7B, Blackwell 4.8B on one stack; the same 5090 crossed at 1.8B on a newer one); llama.cpp Q4_0 has one cell at -63%. 29 of 64 cells are measured. Each cell states its replication count (n) and its thermal mode (t): maintainer cells are t=u (pre-thermal-block sessions); the three Volta cells are t=c, community-measured by @OliverYanghoo on a Tesla V100S with a disclosed torch deviation."
+           alt="Coverage matrix: bitsandbytes INT8 is a penalty in every measured cell (+87% to +473%); bitsandbytes NF4 changes sign with model size and the crossing point is a property of the card and its software stack (Turing 2.1B, Ada 3.7B, Blackwell 4.8B on one stack; the same 5090 crossed at ~1.8B (raw) on a newer one); llama.cpp Q4_0 has one cell at -63%. 29 of 64 cells are measured. Each cell states its replication count (n) and its thermal mode (t): maintainer cells are t=u (pre-thermal-block sessions); the three Volta cells are t=c, community-measured by @OliverYanghoo on a Tesla V100S with a disclosed torch deviation."
            style="width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px"></a>
     <p class="chartnote" style="margin-top:14px">
       Three things the grid says that no single number does.
@@ -235,7 +235,7 @@
       <b>2 · NF4 changes sign with model size, and the size at which it flips is a property of the
       <em>card–stack pair</em></b> — on the stack the v1.1.0 dataset was measured with, fitted crossings sit near
       <b>2.1B on Turing</b>, <b>3.7B on Ada</b> and <b>4.8B on Blackwell</b>; the same RTX 5090 re-measured on a
-      newer stack crossed near <b>1.8B</b> (<a href="#rtx5090-2026-09">re-test</a>). "Does NF4 save energy?" has no
+      newer stack crossed near <b>1.8B</b> (raw; <a href="#rtx5090-2026-09">re-test</a>). "Does NF4 save energy?" has no
       answer that is not conditional on the card <em>and</em> the libraries it runs.
       <b>3 · The largest effect in the whole grid sits in the emptiest row</b> — llama.cpp GGUF <code>Q4_0</code>
       is −63% at 8B, and it is the <em>only</em> cell in that row. One point is not a trend; that row is a claim
@@ -381,11 +381,11 @@
       The break-even size where NF4 stops costing energy and starts saving it is the single number this site is most
       often asked for. We re-measured it on the <b>same RTX 5090</b> that produced our Blackwell anchors, months later
       on a current software stack (<b>bitsandbytes 0.50.2</b>, torch 2.14, CUDA 13.0, driver 580.76.05) — and it moved
-      from <b>≈4.8B to ≈1.8B</b>.
+      from <b>≈4.8B (fitted) to ≈1.8B (raw)</b>.
       Nothing about the hardware changed. <b>The crossover is a property of the card–stack pair: the
       architecture sets one part of it and the software stack sets another.</b> Turing, Ada and Blackwell cross at
       different sizes on a shared-era stack; this session shows the stack part — on one unchanged RTX 5090, a newer
-      stack moved the crossing from ≈4.8B to ≈1.8B. Neither factor alone explains a break-even figure, and every one
+      stack moved the crossing from ≈4.8B (fitted) to ≈1.8B (raw). Neither factor alone explains a break-even figure, and every one
       on this site — ours included — carries an implicit "with the libraries we had that month". The 2026-09-25
       <a href="#nf4-retest-2026-09">two-card 4090 re-test</a> shows the stack's move is not universal: the same
       newer stack left Ada at break-even.

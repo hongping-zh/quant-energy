@@ -74,6 +74,24 @@
     reconstructed.</p>
 
     <div class="entry">
+      <div class="ehead"><span class="edate">2026-11-24</span><span class="etag site">site</span><span class="etag data">data</span><span class="etag container">container</span></div>
+      <h2>Fitted vs raw, and the container catches up: the Ada numbers converge</h2>
+      <p>An external audit caught a real inconsistency: the container’s no-GPU reference still mirrored the
+      <b>pre-July-2026</b> curves.json (RTX 4090D-only, drawn to 3B, A&gt;S so no crossover existed), so its dry-run
+      reported ada/7B/NF4 at <b>+20.2%</b> while the measured cell on this site is <b>−33.7%</b> (n=2,
+      <b>data/coverage_matrix.csv</b>). The container
+      (<a href="https://github.com/hongping-zh/ecocompute-mlcube/commit/db738527efb180d8fdc328e81ae383bc14b9fae2" target="_blank" rel="noopener">db73852</a>)
+      now mirrors the live pooled fit exactly — ada/NF4 crossover 3.728B, pooled FP16 anchors through 7B, the
+      ada/INT8 curve added — and its dry-run 7B reads <b>−20.5%</b>, on the published curve. Two wording rules
+      adopted site-wide: <b>fitted crossovers and raw break-evens are labelled as such and never mixed in one
+      comparison</b> (the ≈4.8B → ≈1.8B sentence is now ≈4.8B fitted → ≈1.8B raw), and the
+      <b>0.50.2-stack break-even is quoted as “below 3B” wherever no data page sits next to it</b>, until a
+      fitted curve for that stack is published (planned as a curves.json v2). The bench caption’s −33.7%
+      (n=2) and +18.4% (n=4) were re-confirmed against data/coverage_matrix.csv; the file is now cited explicitly
+      where the reference had been dropped. The 7B Ada anchor is n=1 — replicating it is the highest-value
+      open measurement on the board.</p>
+    </div>
+    <div class="entry">
       <div class="ehead"><span class="edate">2026-11-23</span><span class="etag site">site</span></div>
       <h2>Crossover wording unified: one number per stack (≈4.8B → ≈1.8B)</h2>
       <p>The v1.1.0-stack NF4 crossover on the RTX 5090 had been quoted as <b>≈5B</b> in some prose and

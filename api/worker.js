@@ -214,7 +214,7 @@ const SCOPE_NOTE =
   "Your card not covered? Measure it and submit: github.com/hongping-zh/ecocompute-mlcube (CC BY 4.0).";
 const CROSSOVER_NOTE =
   "A crossover belongs to a card + software-stack combination, not to an architecture: a September 2026 re-run on a newer " +
-  "stack moved the RTX 5090 NF4 crossover from ≈4.8B to ≈1.8B. Treat these as today's reading, not a constant.";
+  "stack moved the RTX 5090 NF4 crossing from ≈4.8B (fitted, v1.1.0 stack) to ≈1.8B (raw break-even of the re-measured 0.50.2 sessions; no fitted curve is published for that stack yet). Treat these as today's reading, not a constant.";
 
 const mcpText = (text) => ({ type: "text", text });
 
